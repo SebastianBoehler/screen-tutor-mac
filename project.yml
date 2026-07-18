@@ -1,0 +1,42 @@
+name: ScreenTutor
+options:
+  bundleIdPrefix: com.sebastianboehler
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  ScreenTutor:
+    type: application
+    platform: macOS
+    sources:
+      - ScreenTutor
+    entitlements:
+      path: ScreenTutor/ScreenTutor.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sebastianboehler.ScreenTutor
+        PRODUCT_NAME: ScreenTutor
+        GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_FILE: ScreenTutor/Info.plist
+        ENABLE_APP_SANDBOX: true
+        CODE_SIGN_ENTITLEMENTS: ScreenTutor/ScreenTutor.entitlements
+    scheme:
+      testTargets:
+        - ScreenTutorTests
+  ScreenTutorTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ScreenTutorTests
+    dependencies:
+      - target: ScreenTutor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sebastianboehler.ScreenTutorTests
+        GENERATE_INFOPLIST_FILE: true

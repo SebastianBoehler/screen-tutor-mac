@@ -1,0 +1,593 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00024AB9E1753CC3D7C1FF14 /* MicrophonePermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BBDB71E3BCF2860A05B1C /* MicrophonePermissionService.swift */; };
+		016A787AAD20CC1C0EDA0433 /* HUDPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D901021C032F388B6DD2D221 /* HUDPanel.swift */; };
+		076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF0070CA6332F9C015108D /* RealtimeServerEvent.swift */; };
+		07CDC81EAA198271E7536E09 /* RealtimeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188CC79254B862A2921BDB9 /* RealtimeConstants.swift */; };
+		175B3F9FAA93CE91E7F0872C /* ScreenTutorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */; };
+		22DC367A2E9FED98B5DF683F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F73EFB56CA764096F961B6 /* SettingsView.swift */; };
+		2A71D07F66683AA2983C4597 /* AppSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DFF47E9985FB626EA356724 /* AppSettingsModel.swift */; };
+		2FB3F29BE2A23E6D9D1A79BC /* AudioIOError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108333ED2DFB3AB67CCF6104 /* AudioIOError.swift */; };
+		2FF67246972E25DFD24802AF /* RealtimeFunctionTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */; };
+		3858558AEE28439113328A24 /* AppModelError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC81371287DBDFDB5A213E10 /* AppModelError.swift */; };
+		3DE7EBE6EDAC00E49C9F65B4 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF5EC4ABA584F21ED62234B /* MenuBarView.swift */; };
+		43AD30009CB3877B4141C8DF /* TeachingHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */; };
+		4C0CB064B9FCA1A17A6ED0B7 /* TeachingPointerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27054BADA2A6A2864C21525B /* TeachingPointerController.swift */; };
+		5656DFC355F6A16902325286 /* RealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9228FA9CD75A1435FE03B04D /* RealtimeClient.swift */; };
+		608243EE6EFF96A764BAAD1D /* GlobalHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5C323090174C5A47E437B2 /* GlobalHotKeyController.swift */; };
+		63E2FB550905344FB30C3BD4 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4046F19CEC11783AD3F7ECB5 /* AppModel.swift */; };
+		6AF705A7CCFF53E3260BF820 /* PlaybackCutoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245F033723A1BFF4BF9FD984 /* PlaybackCutoff.swift */; };
+		6FEC79116631097C909D0FA7 /* TeachingHighlightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07FEE8BEB13212D08DC1089D /* TeachingHighlightTests.swift */; };
+		808F3FB7BD9CAF0501ACC4F2 /* LaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A309C989F3110BE402DD6C43 /* LaunchAtLoginService.swift */; };
+		8472A417AF8C2B0212201C6A /* RealtimeSessionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326AD58538843DF17A9E09CB /* RealtimeSessionConfiguration.swift */; };
+		8E7085BAE802D2A553CA1684 /* RealtimeClientEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F68CC1A99E2CD60B9AF126 /* RealtimeClientEvents.swift */; };
+		9CB5C0BB00DA5945A0A33E5D /* ActiveApplicationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DDCE422B7DA7A9ECFFB7D /* ActiveApplicationTracker.swift */; };
+		A2F8822CCA79B45830D4503A /* HUDPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01261761EB9B3E54F4630FB5 /* HUDPanelController.swift */; };
+		BA9E0E6C8D557D350DF22054 /* PCMInputConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7367A46A1226178667D40EC /* PCMInputConverter.swift */; };
+		BB875F0EC6453BDDD2E74D52 /* SessionPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */; };
+		CA3670ADD72B6B1F5F5C462F /* ActiveWindowSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FCBED1663FC1AD5A1DABB1 /* ActiveWindowSnapshot.swift */; };
+		CA3DE3E9A4B5B487E9F3071E /* PCM16AccumulatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F06DD943BCFC9D69263DD2D /* PCM16AccumulatorTests.swift */; };
+		CCB55A0FD9B1F78A6F7E8289 /* ActiveWindowCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCAE36B8B0898BA8403CB6A /* ActiveWindowCaptureService.swift */; };
+		D5AD738A4914F595995D3881 /* TeachingHighlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF557E5063E24C05F9B470AB /* TeachingHighlightView.swift */; };
+		D6D2841C2625BCD535B3F261 /* APIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B919D8EE01A25CBC5529BF /* APIKeyStore.swift */; };
+		D75972839D24B23BD1C8FA6A /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C40B9A611F4571811A57F9C /* HUDView.swift */; };
+		E2A800C3BF9ED1713BD12E7D /* RealtimeAudioIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A7EEF22F08EB5CB1D79F43 /* RealtimeAudioIO.swift */; };
+		F152C27D2F581DDDCF203D0D /* PCM16Accumulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */; };
+		F707CE1B971EADA0C7686983 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */; };
+		F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BFC38C921FCE2E010D454555 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6CC1748393BF817C095C162F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A901CD9217FF7BC54927D758;
+			remoteInfo = ScreenTutor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01261761EB9B3E54F4630FB5 /* HUDPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDPanelController.swift; sourceTree = "<group>"; };
+		07FEE8BEB13212D08DC1089D /* TeachingHighlightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingHighlightTests.swift; sourceTree = "<group>"; };
+		0AF5EC4ABA584F21ED62234B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		0BCAE36B8B0898BA8403CB6A /* ActiveWindowCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWindowCaptureService.swift; sourceTree = "<group>"; };
+		108333ED2DFB3AB67CCF6104 /* AudioIOError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioIOError.swift; sourceTree = "<group>"; };
+		201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingHighlight.swift; sourceTree = "<group>"; };
+		227326732489E491784BDD84 /* ScreenTutorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenTutorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		245F033723A1BFF4BF9FD984 /* PlaybackCutoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackCutoff.swift; sourceTree = "<group>"; };
+		27054BADA2A6A2864C21525B /* TeachingPointerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingPointerController.swift; sourceTree = "<group>"; };
+		326AD58538843DF17A9E09CB /* RealtimeSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeSessionConfiguration.swift; sourceTree = "<group>"; };
+		38A7EEF22F08EB5CB1D79F43 /* RealtimeAudioIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeAudioIO.swift; sourceTree = "<group>"; };
+		38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPhase.swift; sourceTree = "<group>"; };
+		390784576F39C03836FE445F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4046F19CEC11783AD3F7ECB5 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		407BBDB71E3BCF2860A05B1C /* MicrophonePermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophonePermissionService.swift; sourceTree = "<group>"; };
+		43B919D8EE01A25CBC5529BF /* APIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyStore.swift; sourceTree = "<group>"; };
+		4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeProtocolTests.swift; sourceTree = "<group>"; };
+		4F06DD943BCFC9D69263DD2D /* PCM16AccumulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCM16AccumulatorTests.swift; sourceTree = "<group>"; };
+		5E6FF901E90FFA6A3BAAD5E6 /* ScreenTutor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScreenTutor.entitlements; sourceTree = "<group>"; };
+		5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTutorApp.swift; sourceTree = "<group>"; };
+		6DFF47E9985FB626EA356724 /* AppSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsModel.swift; sourceTree = "<group>"; };
+		75DF0070CA6332F9C015108D /* RealtimeServerEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeServerEvent.swift; sourceTree = "<group>"; };
+		76F68CC1A99E2CD60B9AF126 /* RealtimeClientEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeClientEvents.swift; sourceTree = "<group>"; };
+		7D5C323090174C5A47E437B2 /* GlobalHotKeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyController.swift; sourceTree = "<group>"; };
+		8C40B9A611F4571811A57F9C /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		9228FA9CD75A1435FE03B04D /* RealtimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeClient.swift; sourceTree = "<group>"; };
+		93FCBED1663FC1AD5A1DABB1 /* ActiveWindowSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWindowSnapshot.swift; sourceTree = "<group>"; };
+		94E30E9A5F0B36E3B2FBB917 /* ScreenTutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenTutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A309C989F3110BE402DD6C43 /* LaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginService.swift; sourceTree = "<group>"; };
+		B188CC79254B862A2921BDB9 /* RealtimeConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeConstants.swift; sourceTree = "<group>"; };
+		B87DDCE422B7DA7A9ECFFB7D /* ActiveApplicationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveApplicationTracker.swift; sourceTree = "<group>"; };
+		BC81371287DBDFDB5A213E10 /* AppModelError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelError.swift; sourceTree = "<group>"; };
+		C7367A46A1226178667D40EC /* PCMInputConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCMInputConverter.swift; sourceTree = "<group>"; };
+		D901021C032F388B6DD2D221 /* HUDPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDPanel.swift; sourceTree = "<group>"; };
+		DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DF557E5063E24C05F9B470AB /* TeachingHighlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingHighlightView.swift; sourceTree = "<group>"; };
+		E4F73EFB56CA764096F961B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCM16Accumulator.swift; sourceTree = "<group>"; };
+		F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeFunctionTool.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		021B303DB039F3B507BFDD85 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				D901021C032F388B6DD2D221 /* HUDPanel.swift */,
+				01261761EB9B3E54F4630FB5 /* HUDPanelController.swift */,
+				8C40B9A611F4571811A57F9C /* HUDView.swift */,
+				0AF5EC4ABA584F21ED62234B /* MenuBarView.swift */,
+				E4F73EFB56CA764096F961B6 /* SettingsView.swift */,
+				DF557E5063E24C05F9B470AB /* TeachingHighlightView.swift */,
+				27054BADA2A6A2864C21525B /* TeachingPointerController.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		11AB013AD69731C2804F8C45 /* ScreenTutorTests */ = {
+			isa = PBXGroup;
+			children = (
+				4F06DD943BCFC9D69263DD2D /* PCM16AccumulatorTests.swift */,
+				4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */,
+				07FEE8BEB13212D08DC1089D /* TeachingHighlightTests.swift */,
+			);
+			path = ScreenTutorTests;
+			sourceTree = "<group>";
+		};
+		5C0B75D23B9E40E95CD6E723 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */,
+				201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6440CE32E221541566262CE0 = {
+			isa = PBXGroup;
+			children = (
+				AE624A9DF3B3336C1041D7D6 /* ScreenTutor */,
+				11AB013AD69731C2804F8C45 /* ScreenTutorTests */,
+				7B2C08269B708FDC7736D19C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7B2C08269B708FDC7736D19C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				94E30E9A5F0B36E3B2FBB917 /* ScreenTutor.app */,
+				227326732489E491784BDD84 /* ScreenTutorTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		941F6ED2E2931EB24EA9844D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */,
+				4046F19CEC11783AD3F7ECB5 /* AppModel.swift */,
+				BC81371287DBDFDB5A213E10 /* AppModelError.swift */,
+				6DFF47E9985FB626EA356724 /* AppSettingsModel.swift */,
+				5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9BDFA8D8EA27720EEF777513 /* Screen */ = {
+			isa = PBXGroup;
+			children = (
+				0BCAE36B8B0898BA8403CB6A /* ActiveWindowCaptureService.swift */,
+				93FCBED1663FC1AD5A1DABB1 /* ActiveWindowSnapshot.swift */,
+			);
+			path = Screen;
+			sourceTree = "<group>";
+		};
+		A261F0A7DFCC27B79ED6D9F9 /* Realtime */ = {
+			isa = PBXGroup;
+			children = (
+				9228FA9CD75A1435FE03B04D /* RealtimeClient.swift */,
+				76F68CC1A99E2CD60B9AF126 /* RealtimeClientEvents.swift */,
+				B188CC79254B862A2921BDB9 /* RealtimeConstants.swift */,
+				F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */,
+				75DF0070CA6332F9C015108D /* RealtimeServerEvent.swift */,
+				326AD58538843DF17A9E09CB /* RealtimeSessionConfiguration.swift */,
+			);
+			path = Realtime;
+			sourceTree = "<group>";
+		};
+		A9325FF008F6BE8D311979FF /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				43B919D8EE01A25CBC5529BF /* APIKeyStore.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		AE624A9DF3B3336C1041D7D6 /* ScreenTutor */ = {
+			isa = PBXGroup;
+			children = (
+				390784576F39C03836FE445F /* Info.plist */,
+				5E6FF901E90FFA6A3BAAD5E6 /* ScreenTutor.entitlements */,
+				941F6ED2E2931EB24EA9844D /* App */,
+				D47E8428AA82F8096DC87C64 /* Audio */,
+				5C0B75D23B9E40E95CD6E723 /* Models */,
+				A261F0A7DFCC27B79ED6D9F9 /* Realtime */,
+				9BDFA8D8EA27720EEF777513 /* Screen */,
+				A9325FF008F6BE8D311979FF /* Security */,
+				E38B3E69BC00B7060B5A5BD3 /* System */,
+				021B303DB039F3B507BFDD85 /* UI */,
+			);
+			path = ScreenTutor;
+			sourceTree = "<group>";
+		};
+		D47E8428AA82F8096DC87C64 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				108333ED2DFB3AB67CCF6104 /* AudioIOError.swift */,
+				407BBDB71E3BCF2860A05B1C /* MicrophonePermissionService.swift */,
+				EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */,
+				C7367A46A1226178667D40EC /* PCMInputConverter.swift */,
+				245F033723A1BFF4BF9FD984 /* PlaybackCutoff.swift */,
+				38A7EEF22F08EB5CB1D79F43 /* RealtimeAudioIO.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		E38B3E69BC00B7060B5A5BD3 /* System */ = {
+			isa = PBXGroup;
+			children = (
+				B87DDCE422B7DA7A9ECFFB7D /* ActiveApplicationTracker.swift */,
+				7D5C323090174C5A47E437B2 /* GlobalHotKeyController.swift */,
+				A309C989F3110BE402DD6C43 /* LaunchAtLoginService.swift */,
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A901CD9217FF7BC54927D758 /* ScreenTutor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A927179E7FC019407F43EBC6 /* Build configuration list for PBXNativeTarget "ScreenTutor" */;
+			buildPhases = (
+				312B204F32BCDE56F0542B79 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ScreenTutor;
+			packageProductDependencies = (
+			);
+			productName = ScreenTutor;
+			productReference = 94E30E9A5F0B36E3B2FBB917 /* ScreenTutor.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D2EFBD3C181D77365EEAA547 /* ScreenTutorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DF302ADA00BFCD847C5A9D13 /* Build configuration list for PBXNativeTarget "ScreenTutorTests" */;
+			buildPhases = (
+				BD3E9273C4A67A60E641237C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CB51876FD1FF4E34843B732C /* PBXTargetDependency */,
+			);
+			name = ScreenTutorTests;
+			packageProductDependencies = (
+			);
+			productName = ScreenTutorTests;
+			productReference = 227326732489E491784BDD84 /* ScreenTutorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6CC1748393BF817C095C162F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = CCA3A88C61452C797A35C04D /* Build configuration list for PBXProject "ScreenTutor" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6440CE32E221541566262CE0;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7B2C08269B708FDC7736D19C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A901CD9217FF7BC54927D758 /* ScreenTutor */,
+				D2EFBD3C181D77365EEAA547 /* ScreenTutorTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		312B204F32BCDE56F0542B79 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6D2841C2625BCD535B3F261 /* APIKeyStore.swift in Sources */,
+				9CB5C0BB00DA5945A0A33E5D /* ActiveApplicationTracker.swift in Sources */,
+				CCB55A0FD9B1F78A6F7E8289 /* ActiveWindowCaptureService.swift in Sources */,
+				CA3670ADD72B6B1F5F5C462F /* ActiveWindowSnapshot.swift in Sources */,
+				F707CE1B971EADA0C7686983 /* AppDelegate.swift in Sources */,
+				63E2FB550905344FB30C3BD4 /* AppModel.swift in Sources */,
+				3858558AEE28439113328A24 /* AppModelError.swift in Sources */,
+				2A71D07F66683AA2983C4597 /* AppSettingsModel.swift in Sources */,
+				2FB3F29BE2A23E6D9D1A79BC /* AudioIOError.swift in Sources */,
+				608243EE6EFF96A764BAAD1D /* GlobalHotKeyController.swift in Sources */,
+				016A787AAD20CC1C0EDA0433 /* HUDPanel.swift in Sources */,
+				A2F8822CCA79B45830D4503A /* HUDPanelController.swift in Sources */,
+				D75972839D24B23BD1C8FA6A /* HUDView.swift in Sources */,
+				808F3FB7BD9CAF0501ACC4F2 /* LaunchAtLoginService.swift in Sources */,
+				3DE7EBE6EDAC00E49C9F65B4 /* MenuBarView.swift in Sources */,
+				00024AB9E1753CC3D7C1FF14 /* MicrophonePermissionService.swift in Sources */,
+				F152C27D2F581DDDCF203D0D /* PCM16Accumulator.swift in Sources */,
+				BA9E0E6C8D557D350DF22054 /* PCMInputConverter.swift in Sources */,
+				6AF705A7CCFF53E3260BF820 /* PlaybackCutoff.swift in Sources */,
+				E2A800C3BF9ED1713BD12E7D /* RealtimeAudioIO.swift in Sources */,
+				5656DFC355F6A16902325286 /* RealtimeClient.swift in Sources */,
+				8E7085BAE802D2A553CA1684 /* RealtimeClientEvents.swift in Sources */,
+				07CDC81EAA198271E7536E09 /* RealtimeConstants.swift in Sources */,
+				2FF67246972E25DFD24802AF /* RealtimeFunctionTool.swift in Sources */,
+				076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */,
+				8472A417AF8C2B0212201C6A /* RealtimeSessionConfiguration.swift in Sources */,
+				175B3F9FAA93CE91E7F0872C /* ScreenTutorApp.swift in Sources */,
+				BB875F0EC6453BDDD2E74D52 /* SessionPhase.swift in Sources */,
+				22DC367A2E9FED98B5DF683F /* SettingsView.swift in Sources */,
+				43AD30009CB3877B4141C8DF /* TeachingHighlight.swift in Sources */,
+				D5AD738A4914F595995D3881 /* TeachingHighlightView.swift in Sources */,
+				4C0CB064B9FCA1A17A6ED0B7 /* TeachingPointerController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD3E9273C4A67A60E641237C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA3DE3E9A4B5B487E9F3071E /* PCM16AccumulatorTests.swift in Sources */,
+				F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */,
+				6FEC79116631097C909D0FA7 /* TeachingHighlightTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CB51876FD1FF4E34843B732C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A901CD9217FF7BC54927D758 /* ScreenTutor */;
+			targetProxy = BFC38C921FCE2E010D454555 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		19178A4FEEB18C5292122EFA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		4E1BF1C8006EEC98A275564B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ScreenTutor/ScreenTutor.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ScreenTutor/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebastianboehler.ScreenTutor;
+				PRODUCT_NAME = ScreenTutor;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		562523B9A43168876447C0FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ScreenTutor/ScreenTutor.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ScreenTutor/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebastianboehler.ScreenTutor;
+				PRODUCT_NAME = ScreenTutor;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		739D3C034FB0D997E23A06EA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		9EF3566753B39B6D02A006FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebastianboehler.ScreenTutorTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenTutor.app/Contents/MacOS/ScreenTutor";
+			};
+			name = Debug;
+		};
+		F2BBACD1F90E8CA3F1382D66 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebastianboehler.ScreenTutorTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenTutor.app/Contents/MacOS/ScreenTutor";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A927179E7FC019407F43EBC6 /* Build configuration list for PBXNativeTarget "ScreenTutor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E1BF1C8006EEC98A275564B /* Debug */,
+				562523B9A43168876447C0FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CCA3A88C61452C797A35C04D /* Build configuration list for PBXProject "ScreenTutor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				739D3C034FB0D997E23A06EA /* Debug */,
+				19178A4FEEB18C5292122EFA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DF302ADA00BFCD847C5A9D13 /* Build configuration list for PBXNativeTarget "ScreenTutorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9EF3566753B39B6D02A006FF /* Debug */,
+				F2BBACD1F90E8CA3F1382D66 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6CC1748393BF817C095C162F /* Project object */;
+}
