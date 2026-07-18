@@ -26,7 +26,7 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 - Shows prior turns and compact tool activity badges in a native history window
 - Offers Automatic, Deutsch, and English speech-language settings
 - Stores the OpenAI API key in macOS Keychain
-- Uses Command-Shift-Space to start, pause, or resume listening while the Realtime session remains connected
+- Uses a configurable global shortcut (default: Command-Shift-Space) to start, pause, or resume listening
 - Automatically pauses the microphone after 20 seconds of listening inactivity
 - Offers an explicit New conversation action when you want to replace the current context
 - Supports launch at login through `SMAppService`
@@ -65,7 +65,9 @@ The window list and capture calls are serial, recoverable tools. A closed window
 5. Start a conversation and grant Microphone and Screen Recording access. macOS may require one app restart after Screen Recording is first granted.
 6. Keep a notebook, paper, browser, or editor open and press Command-Shift-Space.
 
-Press the shortcut again to pause the microphone. While the Realtime session remains connected, press it later to resume the same conversation, including prior voice turns. Realtime sessions last at most 60 minutes. The menu also shows the current Listening, Thinking, Speaking, or Paused state. Choose New conversation when you want an empty context.
+Press the shortcut again to pause the microphone. While the Realtime session remains connected, press it later to resume the same conversation, including prior voice turns. Change the combination under Settings > System by clicking the shortcut recorder and typing a modified key combination. If macOS or another app already owns it, ScreenTutor keeps the prior working shortcut and reports the conflict.
+
+Realtime sessions last at most 60 minutes. The menu and draggable overlay show the current Listening, Thinking, Speaking, or Paused state. The overlay also provides state-aware pause/resume, end-conversation, and Settings controls. Choose New conversation when you want an empty context.
 
 Choose Conversation History… to browse prior text turns and tool activity, copy messages, or reveal the underlying JSONL file in Finder. Hotkey pause/resume keeps writing to the same conversation; New conversation starts a new one. A network disconnect or app restart cannot preserve the server-side Realtime context, although completed local transcripts remain available. The on-screen transcript can be hidden independently from the menu and dragged to a comfortable position.
 
