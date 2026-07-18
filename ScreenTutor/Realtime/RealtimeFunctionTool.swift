@@ -40,7 +40,7 @@ struct RealtimeFunctionTool: Encodable, Sendable {
     static let highlightScreenRegion = RealtimeFunctionTool(
         type: "function",
         name: "highlight_screen_region",
-        description: "Highlight one visible region when pointing will materially improve the explanation.",
+        description: "Move ScreenTutor's visible teaching cursor to one region and highlight it. Always use this after capture_window when the user explicitly asks to point, show where, direct them, or highlight something.",
         parameters: Parameters(
             type: "object",
             properties: [

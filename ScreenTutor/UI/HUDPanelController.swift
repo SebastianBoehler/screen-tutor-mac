@@ -6,11 +6,12 @@ import SwiftUI
 final class HUDPanelController {
     private let model: AppModel
     private let panel: HUDPanel
+    private var screenAnchor = HUDScreenAnchorPolicy<NSScreen>()
 
     init(model: AppModel) {
         self.model = model
         panel = HUDPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 76),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 76),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -51,13 +52,16 @@ final class HUDPanelController {
             .ignoresCycle
         ]
         panel.contentViewController = NSHostingController(rootView: HUDView(model: model))
-        positionPanel()
+        positionPanel(on: candidateScreen())
     }
 
     private func observeModel() {
         withObservationTracking {
             _ = model.phase
             _ = model.errorMessage
+            _ = model.latestUserTranscript
+            _ = model.assistantTranscript
+            _ = model.showsTranscriptOverlay
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.refreshVisibility()
@@ -68,19 +72,28 @@ final class HUDPanelController {
     }
 
     private func refreshVisibility() {
-        positionPanel()
-        if model.phase.isActive || model.errorMessage != nil {
+        let isVisible = model.phase.isActive || model.errorMessage != nil
+        panel.setContentSize(
+            NSSize(width: 420, height: model.ambientTranscriptPresentation.panelHeight)
+        )
+        positionPanel(
+            on: screenAnchor.resolve(isVisible: isVisible, candidate: candidateScreen())
+        )
+        if isVisible {
             panel.orderFrontRegardless()
         } else {
             panel.orderOut(nil)
         }
     }
 
-    private func positionPanel() {
+    private func candidateScreen() -> NSScreen? {
         let mouseLocation = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(mouseLocation) }
+        return NSScreen.screens.first { $0.frame.contains(mouseLocation) }
             ?? NSScreen.main
             ?? NSScreen.screens.first
+    }
+
+    private func positionPanel(on screen: NSScreen?) {
         guard let screen else { return }
         let frame = panel.frame
         panel.setFrameOrigin(
@@ -93,6 +106,26 @@ final class HUDPanelController {
 
     @objc
     private func screenConfigurationChanged() {
-        positionPanel()
+        let isVisible = model.phase.isActive || model.errorMessage != nil
+        let screen = isVisible ? candidateScreen() : nil
+        screenAnchor.retarget(to: screen)
+        positionPanel(on: screen)
+    }
+}
+
+struct HUDScreenAnchorPolicy<ScreenID> {
+    private(set) var anchor: ScreenID?
+
+    mutating func resolve(isVisible: Bool, candidate: ScreenID?) -> ScreenID? {
+        guard isVisible else {
+            anchor = nil
+            return nil
+        }
+        if anchor == nil { anchor = candidate }
+        return anchor
+    }
+
+    mutating func retarget(to candidate: ScreenID?) {
+        anchor = candidate
     }
 }

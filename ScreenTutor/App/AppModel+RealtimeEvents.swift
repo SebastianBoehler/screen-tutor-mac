@@ -26,6 +26,7 @@ extension AppModel {
                     isCurrentSession(generation: generation, connectionID: connectionID),
                     phase == .connecting
                 else { return }
+                beginConversationHistoryIfNeeded()
                 enterListening()
             case "input_audio_buffer.speech_started":
                 if phase != .paused && phase != .pausing {
@@ -41,6 +42,10 @@ extension AppModel {
                         connectionID: connectionID
                     )
                 }
+            case "conversation.item.input_audio_transcription.completed":
+                recordUserTranscript(itemID: event.itemID, transcript: event.transcript)
+            case "conversation.item.input_audio_transcription.failed":
+                recordUserTranscriptionFailure(itemID: event.itemID)
             case "response.created":
                 try await responseCreated(
                     event.response,
@@ -65,8 +70,10 @@ extension AppModel {
             case "response.output_audio_transcript.done":
                 if belongsToActiveResponse(event), let transcript = event.transcript {
                     assistantTranscript = transcript
+                    stageAssistantTranscript(event)
                 }
             case "response.done":
+                finalizeAssistantHistory(event.response)
                 try await handleResponseDone(
                     event.response,
                     generation: generation,
@@ -98,8 +105,10 @@ extension AppModel {
         errorMessage = nil
         userIsSpeaking = true
         phase = .listening
+        latestUserTranscript = ""
+        assistantTranscript = ""
         capturedApplicationName = nil
-        lastSnapshotWindowFrame = nil
+        lastSnapshotWindowContext = nil
         activeResponseID = nil
         activeResponseTurn = nil
         activeAssistantItemID = nil
@@ -149,6 +158,7 @@ extension AppModel {
         userIsSpeaking = false
         currentUserItemID = itemID
         currentUserItemTurn = turn
+        trackUserHistoryTurn(itemID: itemID, turn: turn)
         phase = .thinking
         try await requestResponse(
             for: turn,

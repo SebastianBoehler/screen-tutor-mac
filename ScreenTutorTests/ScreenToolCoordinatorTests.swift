@@ -35,7 +35,11 @@ final class ScreenToolCoordinatorTests: XCTestCase {
             jpegData: Data([0x01, 0x02]),
             applicationName: "JupyterLab",
             windowTitle: "Paper.ipynb",
-            windowFrame: CGRect(x: 10, y: 20, width: 800, height: 600)
+            windowContext: CapturedWindowContext(
+                windowID: 42,
+                processID: 7,
+                capturedFrame: CGRect(x: 10, y: 20, width: 800, height: 600)
+            )
         )
         let coordinator = ScreenToolCoordinator(captureService: service)
         let call = functionCall(
@@ -111,6 +115,10 @@ private final class StubWindowCaptureService: WindowCaptureServing {
         capturedWindowID = selectionID
         if let captureError { throw captureError }
         return try XCTUnwrap(snapshot)
+    }
+
+    func resolveWindowFrame(context: CapturedWindowContext) async throws -> CGRect {
+        context.capturedFrame
     }
 
     func invalidateWindowCatalog() {}

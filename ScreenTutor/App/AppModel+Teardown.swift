@@ -43,6 +43,8 @@ extension AppModel {
         }
         guard generation == sessionGeneration else { return }
 
+        finishPendingConversationHistory()
+        await history.flush()
         screenTools.invalidateWindowCatalog()
         activeResponseID = nil
         activeResponseTurn = nil
@@ -53,7 +55,8 @@ extension AppModel {
         activeAssistantItemID = nil
         userIsSpeaking = false
         capturedApplicationName = nil
-        lastSnapshotWindowFrame = nil
+        lastSnapshotWindowContext = nil
+        resetConversationHistorySession()
         clearHighlight?()
         phase = .idle
         errorMessage = message

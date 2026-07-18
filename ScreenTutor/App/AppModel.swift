@@ -7,8 +7,11 @@ final class AppModel {
     var phase: SessionPhase = .idle
     var errorMessage: String?
     var assistantTranscript = ""
+    var latestUserTranscript = ""
+    var showsTranscriptOverlay = true
     var capturedApplicationName: String?
     let settings: AppSettingsModel
+    let history: ConversationHistoryModel
 
     let captureService: ActiveWindowCaptureService
     let screenTools: ScreenToolCoordinator
@@ -31,14 +34,18 @@ final class AppModel {
     var pendingResponseCreates: [String: Int] = [:]
     var activeAssistantItemID: String?
     var userIsSpeaking = false
-    var lastSnapshotWindowFrame: CGRect?
-    @ObservationIgnored var showHighlight: ((TeachingHighlight) -> Void)?
+    var lastSnapshotWindowContext: CapturedWindowContext?
+    var historyIdentity = ConversationHistoryIdentity()
+    var pendingUserHistoryTurns: [String: PendingUserHistoryTurn] = [:]
+    var pendingAssistantHistory: [String: PendingAssistantHistoryMessage] = [:]
+    @ObservationIgnored var showHighlight: ((TeachingHighlight) throws -> Void)?
     @ObservationIgnored var clearHighlight: (() -> Void)?
 
-    init() {
+    init(history: ConversationHistoryModel? = nil) {
         let captureService = ActiveWindowCaptureService()
         self.captureService = captureService
         screenTools = ScreenToolCoordinator(captureService: captureService)
+        self.history = history ?? ConversationHistoryModel()
         settings = AppSettingsModel(
             apiKeyStore: APIKeyStore(),
             captureService: captureService,
@@ -55,6 +62,19 @@ final class AppModel {
         return phase == .idle
             ? "Command-Shift-Space to start"
             : "Screen-aware Realtime voice"
+    }
+
+    var ambientTranscriptPresentation: AmbientTranscriptPresentation {
+        AmbientTranscriptPresentation(
+            isEnabled: showsTranscriptOverlay,
+            phase: phase,
+            userText: latestUserTranscript,
+            assistantText: assistantTranscript
+        )
+    }
+
+    func toggleTranscriptOverlay() {
+        showsTranscriptOverlay.toggle()
     }
 
     func toggleSession() {
@@ -88,7 +108,7 @@ final class AppModel {
     }
 
     func configureTeachingPointer(
-        show: @escaping (TeachingHighlight) -> Void,
+        show: @escaping (TeachingHighlight) throws -> Void,
         clear: @escaping () -> Void
     ) {
         showHighlight = show

@@ -107,7 +107,7 @@ extension AppModel {
         if let snapshot = resolution.snapshot {
             guard let userItemID else { throw AppModelError.missingCommittedItemID }
             capturedApplicationName = snapshot.applicationName
-            lastSnapshotWindowFrame = snapshot.windowFrame
+            lastSnapshotWindowContext = snapshot.windowContext
             try await realtimeClient.send(
                 ConversationImageEvent(
                     jpegData: snapshot.jpegData,
@@ -140,21 +140,36 @@ extension AppModel {
             guard let arguments = item.arguments else {
                 throw TeachingHighlightError.invalidArguments
             }
-            guard let lastSnapshotWindowFrame else {
-                throw TeachingHighlightError.noWindowContext
+            guard let lastSnapshotWindowContext else { throw TeachingHighlightError.noWindowContext }
+            let windowFrame = try await screenTools.resolveWindowFrame(
+                for: lastSnapshotWindowContext
+            )
+            guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
+                try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
+                return
             }
             let highlight = try TeachingHighlight(
                 argumentsJSON: arguments,
-                windowFrame: lastSnapshotWindowFrame
+                windowFrame: windowFrame
             )
-            showHighlight?(highlight)
+            guard let showHighlight else {
+                throw TeachingPointerPresentationError.panelPresentationFailed
+            }
+            try showHighlight(highlight)
             output = try encodeToolOutput(HighlightSuccessOutput(ok: true, status: "highlighted"))
         } catch {
+            let code = if error is TeachingPointerPresentationError {
+                "highlight_presentation_failed"
+            } else if error is ScreenCaptureError {
+                "highlight_context_stale"
+            } else {
+                "invalid_highlight"
+            }
             output = try encodeToolOutput(
                 ToolFailureOutput(
                     ok: false,
                     error: ToolFailure(
-                        code: "invalid_highlight",
+                        code: code,
                         message: error.localizedDescription
                     )
                 )

@@ -4,6 +4,7 @@ import Foundation
 protocol WindowCaptureServing: AnyObject {
     func listWindows() async throws -> [AvailableWindow]
     func captureWindow(selectionID: String) async throws -> ActiveWindowSnapshot
+    func resolveWindowFrame(context: CapturedWindowContext) async throws -> CGRect
     func invalidateWindowCatalog()
 }
 
@@ -40,6 +41,10 @@ final class ScreenToolCoordinator {
 
     func invalidateWindowCatalog() {
         captureService.invalidateWindowCatalog()
+    }
+
+    func resolveWindowFrame(for context: CapturedWindowContext) async throws -> CGRect {
+        try await captureService.resolveWindowFrame(context: context)
     }
 
     private func listWindows(callID: String) async throws -> ScreenToolResolution {

@@ -4,5 +4,5 @@ struct ActiveWindowSnapshot: Sendable {
     let jpegData: Data
     let applicationName: String
     let windowTitle: String?
-    let windowFrame: CGRect
+    let windowContext: CapturedWindowContext
 }

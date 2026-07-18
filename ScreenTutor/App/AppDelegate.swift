@@ -14,7 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.teachingPointerController = teachingPointerController
         model.configureTeachingPointer(
             show: { [weak teachingPointerController] highlight in
-                teachingPointerController?.show(highlight)
+                guard let teachingPointerController else {
+                    throw TeachingPointerPresentationError.panelPresentationFailed
+                }
+                try teachingPointerController.show(highlight)
             },
             clear: { [weak teachingPointerController] in
                 teachingPointerController?.hide()

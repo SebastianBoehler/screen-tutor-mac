@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     private var statusTitle: String {
         model.errorMessage == nil ? model.phase.title : "Needs attention"
@@ -62,6 +63,30 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
+
+                Button(action: model.toggleTranscriptOverlay) {
+                    Label(
+                        model.showsTranscriptOverlay ? "Hide screen transcript" : "Show screen transcript",
+                        systemImage: model.showsTranscriptOverlay ? "captions.bubble.fill" : "captions.bubble"
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+
+            Button {
+                openWindow(id: "conversation-history")
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            } label: {
+                Label("Conversation History…", systemImage: "clock.arrow.circlepath")
+            }
+            .buttonStyle(.plain)
+
+            if let historyError = model.history.errorMessage {
+                Label("History: \(historyError)", systemImage: "externaldrive.badge.exclamationmark")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
             }
 
             HStack {

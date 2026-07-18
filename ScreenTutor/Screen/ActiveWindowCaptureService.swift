@@ -77,6 +77,26 @@ final class ActiveWindowCaptureService: WindowCaptureServing {
         )
     }
 
+    func resolveWindowFrame(context: CapturedWindowContext) async throws -> CGRect {
+        guard hasPermission else { throw ScreenCaptureError.permissionDenied }
+        let content: SCShareableContent
+        do {
+            content = try await shareableContent()
+        } catch {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        guard let window = orderedCaptureableWindows(in: content.windows).first(where: {
+            $0.windowID == context.windowID
+                && $0.owningApplication?.processID == context.processID
+        }) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        guard let frame = appKitFrame(for: window.frame, displays: content.displays) else {
+            throw ScreenCaptureError.displayMappingFailed
+        }
+        return try context.revalidatedFrame(currentFrame: frame)
+    }
+
     func invalidateWindowCatalog() {
         catalogState.invalidate()
     }
@@ -112,13 +132,20 @@ final class ActiveWindowCaptureService: WindowCaptureServing {
         guard let jpegData = jpegData(from: image) else {
             throw ScreenCaptureError.imageEncodingFailed
         }
+        guard let processID = window.owningApplication?.processID else {
+            throw ScreenCaptureError.windowUnavailable
+        }
 
         return ActiveWindowSnapshot(
             jpegData: jpegData,
             applicationName: window.owningApplication?.applicationName
                 ?? "Active application",
             windowTitle: window.title,
-            windowFrame: windowFrame
+            windowContext: CapturedWindowContext(
+                windowID: window.windowID,
+                processID: processID,
+                capturedFrame: windowFrame
+            )
         )
     }
 
@@ -237,9 +264,10 @@ struct CaptureWindowCatalogState {
     }
 }
 
-enum ScreenCaptureError: LocalizedError {
+enum ScreenCaptureError: LocalizedError, Equatable {
     case permissionDenied
     case windowUnavailable
+    case windowGeometryChanged
     case displayMappingFailed
     case imageEncodingFailed
 
@@ -249,6 +277,8 @@ enum ScreenCaptureError: LocalizedError {
             "Screen Recording permission is required for screen-aware answers."
         case .windowUnavailable:
             "That window is no longer available. List the visible windows again."
+        case .windowGeometryChanged:
+            "That window changed size. Capture it again before pointing."
         case .displayMappingFailed:
             "The selected window could not be mapped to a connected display."
         case .imageEncodingFailed:

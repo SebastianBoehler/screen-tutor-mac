@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HUDView: View {
     let model: AppModel
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     private var statusTitle: String {
         model.errorMessage == nil ? model.phase.title : "Needs attention"
@@ -12,29 +13,48 @@ struct HUDView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: statusSymbolName)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
-                .frame(width: 34, height: 34)
-                .background(.primary.opacity(0.08), in: Circle())
-                .accessibilityHidden(true)
+        let transcript = model.ambientTranscriptPresentation
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: statusSymbolName)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
+                    .frame(width: 34, height: 34)
+                    .background(.primary.opacity(0.08), in: Circle())
+                    .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(statusTitle)
-                    .font(.headline)
-                    .lineLimit(1)
-                Text(model.statusDetail)
-                    .font(.caption)
-                    .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(statusTitle)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(model.statusDetail)
+                        .font(.caption)
+                        .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+
+            if transcript.isExpanded {
+                Divider()
+                AmbientTranscriptView(
+                    userText: transcript.userText,
+                    assistantText: transcript.assistantText
+                )
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .frame(width: 360, height: 76)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .frame(width: 420, height: transcript.panelHeight, alignment: .top)
+        .background {
+            if reduceTransparency {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color(nsColor: .windowBackgroundColor))
+            } else {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            }
+        }
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(.white.opacity(0.12))

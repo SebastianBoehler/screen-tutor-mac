@@ -1,44 +1,63 @@
 import SwiftUI
 
 struct TeachingHighlightView: View {
-    let frame: CGRect
+    let layout: TeachingPointerLayout
     let label: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityDifferentiateWithoutColor)
+    private var differentiateWithoutColor
+    @State private var pointerPosition: CGPoint
     @State private var isVisible = false
+    @State private var hasArrived = false
+
+    init(layout: TeachingPointerLayout, label: String) {
+        self.layout = layout
+        self.label = label
+        _pointerPosition = State(initialValue: layout.startPoint)
+    }
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .stroke(Color.accentColor, lineWidth: 3)
-                    .background(
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .fill(Color.accentColor.opacity(0.09))
-                    )
-                    .shadow(color: Color.accentColor.opacity(0.55), radius: 10)
-                    .frame(width: max(frame.width, 28), height: max(frame.height, 24))
-                    .position(x: frame.midX, y: frame.midY)
+                TeachingTargetView(
+                    frame: layout.localHighlightFrame,
+                    label: label,
+                    containerSize: proxy.size,
+                    reduceTransparency: reduceTransparency,
+                    hasArrived: hasArrived
+                )
 
-                Label(label, systemImage: "cursorarrow.rays")
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.regularMaterial, in: Capsule())
-                    .overlay { Capsule().strokeBorder(Color.accentColor.opacity(0.45)) }
-                    .position(
-                        x: min(max(frame.midX, 90), proxy.size.width - 90),
-                        y: max(frame.minY - 20, 18)
-                    )
+                TutorCursorView(
+                    hasArrived: hasArrived,
+                    differentiateWithoutColor: differentiateWithoutColor
+                )
+                .position(pointerPosition)
             }
         }
         .opacity(isVisible ? 1 : 0)
-        .scaleEffect(isVisible || reduceMotion ? 1 : 0.96)
-        .onAppear {
-            withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.82)) {
+        .onAppear(perform: present)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Tutor pointing to \(label)")
+    }
+
+    private func present() {
+        if reduceMotion {
+            pointerPosition = layout.targetPoint
+            hasArrived = true
+            withAnimation(.easeOut(duration: 0.18)) {
                 isVisible = true
             }
+            return
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Highlighted: \(label)")
+
+        isVisible = true
+        withAnimation(.easeInOut(duration: 0.58)) {
+            pointerPosition = layout.targetPoint
+        } completion: {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.62)) {
+                hasArrived = true
+            }
+        }
     }
 }

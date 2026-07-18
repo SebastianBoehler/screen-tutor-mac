@@ -23,6 +23,9 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
             audio: RealtimeAudioConfiguration(
                 input: RealtimeInputAudioConfiguration(
                     format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
+                    transcription: RealtimeAudioTranscriptionConfiguration(
+                        model: "gpt-4o-mini-transcribe"
+                    ),
                     turnDetection: RealtimeTurnDetection(
                         type: "semantic_vad",
                         eagerness: "auto",
@@ -64,12 +67,17 @@ struct RealtimeAudioConfiguration: Encodable, Sendable {
 
 struct RealtimeInputAudioConfiguration: Encodable, Sendable {
     let format: RealtimeAudioFormat
+    let transcription: RealtimeAudioTranscriptionConfiguration
     let turnDetection: RealtimeTurnDetection
 
     enum CodingKeys: String, CodingKey {
-        case format
+        case format, transcription
         case turnDetection = "turn_detection"
     }
+}
+
+struct RealtimeAudioTranscriptionConfiguration: Encodable, Sendable {
+    let model: String
 }
 
 struct RealtimeOutputAudioConfiguration: Encodable, Sendable {

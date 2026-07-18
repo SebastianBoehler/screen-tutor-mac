@@ -3,7 +3,7 @@ import XCTest
 @testable import ScreenTutor
 
 final class RealtimeProtocolTests: XCTestCase {
-    func testSessionUsesNativeAudioWithoutTranscription() throws {
+    func testSessionKeepsNativeAudioAndAddsHistoryTranscription() throws {
         let data = try JSONEncoder().encode(RealtimeSessionUpdateEvent.screenTutor)
         let root = try XCTUnwrap(
             JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -16,7 +16,8 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(root["type"] as? String, "session.update")
         XCTAssertEqual(session["model"] as? String, "gpt-realtime-2.1")
         XCTAssertEqual(session["output_modalities"] as? [String], ["audio"])
-        XCTAssertNil(input["transcription"])
+        let transcription = try XCTUnwrap(input["transcription"] as? [String: Any])
+        XCTAssertEqual(transcription["model"] as? String, "gpt-4o-mini-transcribe")
         XCTAssertEqual(turnDetection["type"] as? String, "semantic_vad")
         XCTAssertEqual(turnDetection["create_response"] as? Bool, false)
         XCTAssertEqual(turnDetection["interrupt_response"] as? Bool, true)
@@ -43,6 +44,35 @@ final class RealtimeProtocolTests: XCTestCase {
         )
         XCTAssertEqual(captureProperties["window_id"]?["type"] as? String, "string")
         XCTAssertEqual(captureParameters["required"] as? [String], ["window_id"])
+
+        let highlightTool = try XCTUnwrap(
+            tools.first { $0["name"] as? String == "highlight_screen_region" }
+        )
+        XCTAssertTrue(
+            (highlightTool["description"] as? String)?.contains("Always use this") == true
+        )
+        let highlightParameters = try XCTUnwrap(highlightTool["parameters"] as? [String: Any])
+        XCTAssertEqual(
+            highlightParameters["required"] as? [String],
+            ["x", "y", "width", "height", "label"]
+        )
+    }
+
+    func testDecodesCompletedInputTranscriptForConversationHistory() throws {
+        let payload = Data(
+            """
+            {
+              "type": "conversation.item.input_audio_transcription.completed",
+              "item_id": "item_user_1",
+              "transcript": "Please point to the loss curve."
+            }
+            """.utf8
+        )
+
+        let event = try JSONDecoder().decode(RealtimeServerEvent.self, from: payload)
+
+        XCTAssertEqual(event.itemID, "item_user_1")
+        XCTAssertEqual(event.transcript, "Please point to the loss curve.")
     }
 
     func testScreenshotIsAHighDetailJPEGConversationItem() throws {
