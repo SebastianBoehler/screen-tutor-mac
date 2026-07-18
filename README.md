@@ -20,9 +20,11 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 - Uses semantic voice activity detection with natural barge-in and response truncation
 - Lets GPT inspect visible app/window titles and capture only the window relevant to the question
 - Uses native echo cancellation through `AVAudioEngine` voice processing
-- Lives in the menu bar with a click-through, translucent status and transcript HUD
+- Lives in the menu bar with a draggable, translucent status and transcript HUD
 - Moves an animated tutor cursor to a formula, plot, cell, or control and highlights the target
-- Saves text-only conversations as local JSONL and presents them in a native history window
+- Saves text-only conversations and privacy-safe tool status records as local JSONL
+- Shows prior turns and compact tool activity badges in a native history window
+- Offers Automatic, Deutsch, and English speech-language settings
 - Stores the OpenAI API key in macOS Keychain
 - Uses Command-Shift-Space to start, pause, or resume listening while the Realtime session remains connected
 - Automatically pauses the microphone after 20 seconds of listening inactivity
@@ -58,13 +60,16 @@ The window list and capture calls are serial, recoverable tools. A closed window
 1. Clone the repository.
 2. Copy `Config/LocalSigning.xcconfig.example` to `Config/LocalSigning.xcconfig` and replace `YOUR_TEAM_ID` with the Team ID shown in Xcode Settings > Accounts. The local file is ignored by Git and gives builds a stable signed identity; ad-hoc builds can lose their macOS privacy grants after every rebuild.
 3. Open `ScreenTutor.xcodeproj` in Xcode and run the `ScreenTutor` scheme on My Mac.
-4. Open the waveform menu-bar item, choose Settings, and save your API key.
+4. Open the waveform menu-bar item, choose Settings, save your API key, and optionally pin the
+   tutor's spoken language. Automatic follows the language of your latest spoken turn.
 5. Start a conversation and grant Microphone and Screen Recording access. macOS may require one app restart after Screen Recording is first granted.
 6. Keep a notebook, paper, browser, or editor open and press Command-Shift-Space.
 
 Press the shortcut again to pause the microphone. While the Realtime session remains connected, press it later to resume the same conversation, including prior voice turns. Realtime sessions last at most 60 minutes. The menu also shows the current Listening, Thinking, Speaking, or Paused state. Choose New conversation when you want an empty context.
 
-Choose Conversation History… to browse prior text turns, copy messages, or reveal the underlying JSONL file in Finder. Hotkey pause/resume keeps writing to the same conversation; New conversation starts a new one. A network disconnect or app restart cannot preserve the server-side Realtime context, although completed local transcripts remain available. The on-screen transcript can be hidden independently from the menu.
+Choose Conversation History… to browse prior text turns and tool activity, copy messages, or reveal the underlying JSONL file in Finder. Hotkey pause/resume keeps writing to the same conversation; New conversation starts a new one. A network disconnect or app restart cannot preserve the server-side Realtime context, although completed local transcripts remain available. The on-screen transcript can be hidden independently from the menu and dragged to a comfortable position.
+
+The spoken-language choice applies when a new Realtime conversation starts. Deutsch and English pin both the tutor's pronunciation instructions and the optional input-transcription language hint. Automatic leaves transcription language detection open and instructs the tutor to mirror the latest spoken language.
 
 The app has `LSUIElement` enabled, so it lives in the menu bar rather than the Dock.
 
@@ -116,7 +121,7 @@ xcodebuild \
 
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
 
-Completed user and assistant captions are retained as plain-text JSONL in ScreenTutor's sandboxed Application Support directory. The directory and files use owner-only permissions (`0700` and `0600`); ScreenTutor does not add application-level encryption. The logs contain transcript text and provider correlation IDs, not audio, screenshots, window titles, or tool payloads. Use Conversation History… > Reveal JSONL to find them. Hide the on-screen transcript when people nearby should not see it.
+Completed user and assistant captions are retained as plain-text JSONL in ScreenTutor's sandboxed Application Support directory. The directory and files use owner-only permissions (`0700` and `0600`); ScreenTutor does not add application-level encryption. The logs contain transcript text, provider correlation IDs, and tool names with success/failure status—not audio, screenshots, window titles, tool arguments, coordinates, or result payloads. Use Conversation History… > Reveal JSONL to find them. Hide the on-screen transcript when people nearby should not see it.
 
 Pausing stops microphone capture but intentionally keeps the Realtime WebSocket and its conversation context alive within the 60-minute session limit. New conversation and Quit disconnect that session. A network or API disconnect also ends the live context.
 
@@ -134,6 +139,8 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 - [Realtime WebSocket guide](https://developers.openai.com/api/docs/guides/realtime-websocket)
 - [Realtime conversations and audio](https://developers.openai.com/api/docs/guides/realtime-conversations)
+- [Realtime prompting: language constraints](https://developers.openai.com/api/docs/guides/realtime-models-prompting#language-constraint)
+- [Realtime transcription session fields](https://developers.openai.com/api/docs/guides/realtime-transcription#session-fields)
 - [Input audio transcription events](https://developers.openai.com/api/reference/resources/realtime/server-events#conversation.item.input_audio_transcription.completed)
 - [`gpt-realtime-2.1` model](https://developers.openai.com/api/docs/models/gpt-realtime-2.1)
 
