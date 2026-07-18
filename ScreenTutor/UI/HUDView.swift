@@ -16,23 +16,29 @@ struct HUDView: View {
         let transcript = model.ambientTranscriptPresentation
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                Image(systemName: statusSymbolName)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
-                    .frame(width: 34, height: 34)
-                    .background(.primary.opacity(0.08), in: Circle())
-                    .accessibilityHidden(true)
+                HStack(spacing: 12) {
+                    Image(systemName: statusSymbolName)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
+                        .frame(width: 34, height: 34)
+                        .background(.primary.opacity(0.08), in: Circle())
+                        .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(statusTitle)
-                        .font(.headline)
-                        .lineLimit(1)
-                    Text(model.statusDetail)
-                        .font(.caption)
-                        .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
-                        .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(statusTitle)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text(model.statusDetail)
+                            .font(.caption)
+                            .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
+                            .lineLimit(2)
+                    }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
+                .accessibilityHint("Drag the background to move the overlay.")
                 Spacer(minLength: 0)
+                HUDControlsView(model: model)
                 Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -64,8 +70,5 @@ struct HUDView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(.white.opacity(0.12))
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
-        .accessibilityHint("Drag the overlay to move it on screen.")
     }
 }

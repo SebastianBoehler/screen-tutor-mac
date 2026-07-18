@@ -77,6 +77,26 @@ struct SettingsView: View {
             }
 
             Section("System") {
+                HStack {
+                    Text("Global shortcut")
+                    Spacer()
+                    GlobalHotKeyShortcutRecorder(
+                        shortcut: model.hotKeyShortcut,
+                        onChange: model.setHotKeyShortcut,
+                        onError: model.reportHotKeyError
+                    )
+                    .frame(width: 160, height: 28)
+                }
+                HStack {
+                    Text("Click the shortcut, then press a modified key combination.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Restore Default") {
+                        model.restoreDefaultHotKeyShortcut()
+                    }
+                    .disabled(model.hotKeyShortcut == .defaultShortcut)
+                }
                 Toggle(
                     "Launch ScreenTutor at login",
                     isOn: Binding(
@@ -84,8 +104,6 @@ struct SettingsView: View {
                         set: { enabled in model.setLaunchAtLogin(enabled) }
                     )
                 )
-                Text("Global shortcut: Command-Shift-Space")
-                    .foregroundStyle(.secondary)
             }
 
             if let errorMessage = model.errorMessage {
@@ -96,7 +114,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 560)
+        .frame(width: 560, height: 620)
         .onAppear { model.refresh() }
     }
 

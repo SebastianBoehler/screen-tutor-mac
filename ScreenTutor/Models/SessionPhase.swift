@@ -82,6 +82,10 @@ enum SessionPhase: Equatable, Sendable {
         self != .idle
     }
 
+    var isStopActionEnabled: Bool {
+        self != .idle && self != .stopping
+    }
+
     var isActive: Bool {
         self != .idle && self != .stopping
     }

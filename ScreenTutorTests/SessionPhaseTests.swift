@@ -63,6 +63,23 @@ final class SessionPhaseTests: XCTestCase {
         }
     }
 
+    func testOverlayStopActionIsAvailableUntilStoppingBegins() {
+        XCTAssertFalse(SessionPhase.idle.isStopActionEnabled)
+        XCTAssertFalse(SessionPhase.stopping.isStopActionEnabled)
+        for phase in [
+            SessionPhase.requestingPermissions,
+            .connecting,
+            .listening,
+            .thinking,
+            .speaking,
+            .pausing,
+            .paused,
+            .resuming,
+        ] {
+            XCTAssertTrue(phase.isStopActionEnabled)
+        }
+    }
+
     private func assertPrimaryAction(
         _ phase: SessionPhase,
         label: String,

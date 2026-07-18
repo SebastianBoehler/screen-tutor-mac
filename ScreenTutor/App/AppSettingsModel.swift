@@ -9,14 +9,18 @@ final class AppSettingsModel {
     private(set) var microphonePermissionGranted = false
     private(set) var launchAtLoginState: LaunchAtLoginState = .disabled
     private(set) var tutorLanguage: TutorLanguage
+    private(set) var hotKeyShortcut: GlobalHotKeyShortcut
     private(set) var errorMessage: String?
 
     private let apiKeyStore: APIKeyStore
     private let captureService: ActiveWindowCaptureService
     private let launchAtLoginService: LaunchAtLoginService
     private let userDefaults: UserDefaults
+    @ObservationIgnored
+    private var hotKeyRegistration: ((GlobalHotKeyShortcut) throws -> Void)?
 
     private static let tutorLanguageKey = "com.sebastianboehler.ScreenTutor.tutorLanguage"
+    private static let hotKeyShortcutKey = "com.sebastianboehler.ScreenTutor.hotKeyShortcut"
 
     init(
         apiKeyStore: APIKeyStore,
@@ -30,6 +34,7 @@ final class AppSettingsModel {
         self.userDefaults = userDefaults
         tutorLanguage = userDefaults.string(forKey: Self.tutorLanguageKey)
             .flatMap(TutorLanguage.init(rawValue:)) ?? .automatic
+        hotKeyShortcut = Self.loadHotKeyShortcut(from: userDefaults)
         refresh()
     }
 
@@ -83,6 +88,35 @@ final class AppSettingsModel {
         userDefaults.set(language.rawValue, forKey: Self.tutorLanguageKey)
     }
 
+    func configureHotKeyRegistration(
+        _ registration: @escaping (GlobalHotKeyShortcut) throws -> Void
+    ) {
+        hotKeyRegistration = registration
+    }
+
+    @discardableResult
+    func setHotKeyShortcut(_ shortcut: GlobalHotKeyShortcut) -> Bool {
+        do {
+            let data = try JSONEncoder().encode(shortcut)
+            try hotKeyRegistration?(shortcut)
+            userDefaults.set(data, forKey: Self.hotKeyShortcutKey)
+            hotKeyShortcut = shortcut
+            errorMessage = nil
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    func restoreDefaultHotKeyShortcut() {
+        setHotKeyShortcut(.defaultShortcut)
+    }
+
+    func reportHotKeyError(_ error: Error) {
+        errorMessage = error.localizedDescription
+    }
+
     func refresh() {
         hasAPIKey = apiKeyStore.hasAPIKey
         screenPermissionGranted = captureService.hasPermission
@@ -95,5 +129,13 @@ final class AppSettingsModel {
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
         ) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    private static func loadHotKeyShortcut(from userDefaults: UserDefaults) -> GlobalHotKeyShortcut {
+        guard
+            let data = userDefaults.data(forKey: hotKeyShortcutKey),
+            let shortcut = try? JSONDecoder().decode(GlobalHotKeyShortcut.self, from: data)
+        else { return .defaultShortcut }
+        return shortcut
     }
 }

@@ -40,6 +40,7 @@ final class AppModel {
     var pendingAssistantHistory: [String: PendingAssistantHistoryMessage] = [:]
     @ObservationIgnored var showHighlight: ((TeachingHighlight) throws -> Void)?
     @ObservationIgnored var clearHighlight: (() -> Void)?
+    @ObservationIgnored private var hotKeyErrorMessage: String?
 
     init(history: ConversationHistoryModel? = nil) {
         let captureService = ActiveWindowCaptureService()
@@ -60,7 +61,7 @@ final class AppModel {
             return "Seeing \(capturedApplicationName)"
         }
         return phase == .idle
-            ? "Command-Shift-Space to start"
+            ? "\(settings.hotKeyShortcut.accessibilityName) to start"
             : "Screen-aware Realtime voice"
     }
 
@@ -104,7 +105,14 @@ final class AppModel {
     }
 
     func reportHotKeyError(_ error: Error) {
-        errorMessage = error.localizedDescription
+        let message = error.localizedDescription
+        hotKeyErrorMessage = message
+        errorMessage = message
+    }
+
+    func clearHotKeyError() {
+        if errorMessage == hotKeyErrorMessage { errorMessage = nil }
+        hotKeyErrorMessage = nil
     }
 
     func configureTeachingPointer(

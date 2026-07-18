@@ -27,9 +27,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             model?.toggleSession()
         }
         self.hotKeyController = hotKeyController
+        model.settings.configureHotKeyRegistration { [weak model, weak hotKeyController] shortcut in
+            guard let hotKeyController else { return }
+            try hotKeyController.register(shortcut)
+            model?.clearHotKeyError()
+        }
         do {
-            try hotKeyController.register()
+            try hotKeyController.register(model.settings.hotKeyShortcut)
         } catch {
+            model.settings.reportHotKeyError(error)
             model.reportHotKeyError(error)
         }
         model.settings.refresh()
