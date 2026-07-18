@@ -15,11 +15,12 @@ You need macOS 15 or newer, Xcode 16.4 or newer, and an OpenAI API key with Real
 
 ```bash
 brew install xcodegen
+cp Config/LocalSigning.xcconfig.example Config/LocalSigning.xcconfig
 xcodegen generate
 open ScreenTutor.xcodeproj
 ```
 
-Select your own development team in Xcode. Never commit API keys, signing identities, provisioning profiles, captured screens, or personal test data.
+Replace `YOUR_TEAM_ID` in `Config/LocalSigning.xcconfig` with the Team ID shown in Xcode Settings > Accounts. This developer-local file is ignored by Git and survives project regeneration without putting a maintainer-specific team in the shared project. Never commit API keys, signing identities, provisioning profiles, captured screens, or personal test data.
 
 ## Make a focused change
 
@@ -30,7 +31,7 @@ Select your own development team in Xcode. Never commit API keys, signing identi
 5. Add or update focused tests when behavior changes.
 6. Use a conventional commit such as `fix: handle interrupted playback` or `feat(ui): improve highlight contrast`.
 
-ScreenTutor deliberately highlights without clicking or typing. Changes that add computer control, broaden capture beyond the active-window turn, or change credential handling need prior design discussion and a clear safety model.
+ScreenTutor deliberately highlights without clicking or typing. Changes that add computer control, capture pixels without a model-selected user turn, or change credential handling need prior design discussion and a clear safety model.
 
 ## Validate
 
