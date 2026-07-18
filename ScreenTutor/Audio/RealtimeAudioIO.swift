@@ -146,8 +146,9 @@ actor RealtimeAudioIO {
         marker.mutableAudioBufferList.pointee.mBuffers.mData?
             .assumingMemoryBound(to: Int16.self).pointee = 0
         scheduledFrames += 1
-        player.scheduleBuffer(marker, completionCallbackType: .dataPlayedBack) { [weak self] _ in
-            Task { await self?.playbackDidDrain(itemID: itemID, markerID: markerID) }
+        let drainTarget = self
+        player.scheduleBuffer(marker, completionCallbackType: .dataPlayedBack) { _ in
+            Task { await drainTarget.playbackDidDrain(itemID: itemID, markerID: markerID) }
         }
     }
 
