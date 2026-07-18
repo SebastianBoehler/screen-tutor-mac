@@ -9,7 +9,7 @@ Talk naturally about whatever is open on your Mac.
 
 ScreenTutor is a native, open-source menu-bar tutor that combines the relevant Mac window with a low-latency voice conversation. Microphone audio streams directly to OpenAI's `gpt-realtime-2.1`, and the model's PCM audio streams straight back to the Mac speakers.
 
-There is no separate Whisper transcription request and no separate text-to-speech request. Assistant captions come from the same Realtime audio response.
+The answer path has no standalone transcription or text-to-speech step. Assistant captions come from the same Realtime audio response. An asynchronous `gpt-4o-mini-transcribe` input transcript runs alongside it only to make local conversation history readable; it is separate model usage and can differ from what the Realtime model understood.
 
 > [!IMPORTANT]
 > ScreenTutor is an early-stage, bring-your-own-key project for local development. It is not currently distributed as a signed or notarized app.
@@ -20,8 +20,9 @@ There is no separate Whisper transcription request and no separate text-to-speec
 - Uses semantic voice activity detection with natural barge-in and response truncation
 - Lets GPT inspect visible app/window titles and capture only the window relevant to the question
 - Uses native echo cancellation through `AVAudioEngine` voice processing
-- Lives in the menu bar with a nonactivating, notch-like status HUD
-- Lets the model place a temporary teaching highlight over a formula, plot, cell, or control
+- Lives in the menu bar with a click-through, translucent status and transcript HUD
+- Moves an animated tutor cursor to a formula, plot, cell, or control and highlights the target
+- Saves text-only conversations as local JSONL and presents them in a native history window
 - Stores the OpenAI API key in macOS Keychain
 - Uses Command-Shift-Space to start, pause, or resume listening while the Realtime session remains connected
 - Automatically pauses the microphone after 20 seconds of listening inactivity
@@ -29,7 +30,7 @@ There is no separate Whisper transcription request and no separate text-to-speec
 - Supports launch at login through `SMAppService`
 - Handles microphone, Screen Recording, network, and protocol errors explicitly
 
-The teaching highlight is visual and click-through. ScreenTutor never moves the real pointer, clicks, types, or autonomously controls the Mac.
+The tutor cursor is a visual, click-through overlay. ScreenTutor never moves the real pointer, clicks, types, or autonomously controls the Mac.
 
 ## How one turn works
 
@@ -39,8 +40,9 @@ The teaching highlight is visual and click-through. ScreenTutor never moves the 
 4. VAD commits the spoken turn and ScreenTutor asks GPT to respond.
 5. When screen context is needed, GPT calls `list_windows`, chooses from opaque IDs plus app/window titles, and calls `capture_window`.
 6. ScreenTutor validates that selection, appends only that window as a high-detail `input_image`, and asks GPT to continue.
-7. `response.output_audio.delta` chunks play immediately while the matching transcript updates the menu.
-8. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor draws a temporary overlay and asks GPT to continue speaking.
+7. `response.output_audio.delta` chunks play immediately while the matching transcript updates the menu and optional on-screen HUD.
+8. Separately, completed input transcription events are queued into the local history without blocking the audio event stream.
+9. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor animates its tutor cursor to the target and asks GPT to continue speaking.
 
 The window list and capture calls are serial, recoverable tools. A closed window produces a tool error so GPT can list again instead of ending the voice session.
 
@@ -62,6 +64,8 @@ The window list and capture calls are serial, recoverable tools. A closed window
 
 Press the shortcut again to pause the microphone. While the Realtime session remains connected, press it later to resume the same conversation, including prior voice turns. Realtime sessions last at most 60 minutes. The menu also shows the current Listening, Thinking, Speaking, or Paused state. Choose New conversation when you want an empty context.
 
+Choose Conversation History… to browse prior text turns, copy messages, or reveal the underlying JSONL file in Finder. Hotkey pause/resume keeps writing to the same conversation; New conversation starts a new one. A network disconnect or app restart cannot preserve the server-side Realtime context, although completed local transcripts remain available. The on-screen transcript can be hidden independently from the menu.
+
 The app has `LSUIElement` enabled, so it lives in the menu bar rather than the Dock.
 
 ## Architecture
@@ -72,7 +76,8 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | `Audio` | Microphone conversion, echo cancellation, and streamed playback |
 | `Realtime` | Typed OpenAI Realtime events and WebSocket transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
-| `UI` | Menu, HUD, settings, and click-through teaching highlight |
+| `History` | Ordered, private JSONL persistence and conversation projection |
+| `UI` | Menu, transcript HUD, history browser, settings, and tutor cursor |
 | `System` | Global hotkey and launch-at-login integration |
 
 The app uses Apple frameworks only: SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon.
@@ -109,11 +114,13 @@ xcodebuild \
 
 ## Privacy, credentials, and billing
 
-ScreenTutor sends spoken audio to OpenAI. For a screen-grounded question, it also sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
+ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
+
+Completed user and assistant captions are retained as plain-text JSONL in ScreenTutor's sandboxed Application Support directory. The directory and files use owner-only permissions (`0700` and `0600`); ScreenTutor does not add application-level encryption. The logs contain transcript text and provider correlation IDs, not audio, screenshots, window titles, or tool payloads. Use Conversation History… > Reveal JSONL to find them. Hide the on-screen transcript when people nearby should not see it.
 
 Pausing stops microphone capture but intentionally keeps the Realtime WebSocket and its conversation context alive within the 60-minute session limit. New conversation and Quit disconnect that session. A network or API disconnect also ends the live context.
 
-`gpt-realtime-2.1` is a cloud API model and incurs normal OpenAI API usage charges. Avoiding separate transcription and TTS reduces components; it does not make the Realtime model offline or free.
+`gpt-realtime-2.1` and `gpt-4o-mini-transcribe` are cloud API models and incur their respective OpenAI API usage charges. The auxiliary input transcript does not sit in the direct speech-to-speech answer path, but it is separately billed. ScreenTutor is not offline or free to run.
 
 The current BYOK design is intended for personal development: the long-lived key is stored in Keychain and never in source or `UserDefaults`. A distributed product should put credentials behind a backend, issue short-lived client tokens, and evaluate WebRTC instead of shipping a standard API key to clients.
 
@@ -127,6 +134,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 - [Realtime WebSocket guide](https://developers.openai.com/api/docs/guides/realtime-websocket)
 - [Realtime conversations and audio](https://developers.openai.com/api/docs/guides/realtime-conversations)
+- [Input audio transcription events](https://developers.openai.com/api/reference/resources/realtime/server-events#conversation.item.input_audio_transcription.completed)
 - [`gpt-realtime-2.1` model](https://developers.openai.com/api/docs/models/gpt-realtime-2.1)
 
 ## License
