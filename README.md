@@ -1,46 +1,56 @@
 # ScreenTutor for macOS
 
-ScreenTutor is a native menu-bar tutor that can see the active Mac window and hold a low-latency voice conversation about it. Microphone audio streams directly to OpenAI's `gpt-realtime-2.1`, and the model's PCM audio streams straight back to the Mac speakers.
+[![CI](https://github.com/SebastianBoehler/screen-tutor-mac/actions/workflows/ci.yml/badge.svg)](https://github.com/SebastianBoehler/screen-tutor-mac/actions/workflows/ci.yml)
+[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://www.swift.org/)
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-111111?logo=apple)](https://support.apple.com/macos)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Talk naturally about whatever is open on your Mac.
+
+ScreenTutor is a native, open-source menu-bar tutor that combines the active Mac window with a low-latency voice conversation. Microphone audio streams directly to OpenAI's `gpt-realtime-2.1`, and the model's PCM audio streams straight back to the Mac speakers.
 
 There is no separate Whisper transcription request and no separate text-to-speech request. Assistant captions come from the same Realtime audio response.
 
-## Current feature set
+> [!IMPORTANT]
+> ScreenTutor is an early-stage, bring-your-own-key project for local development. It is not currently distributed as a signed or notarized app.
 
-- Direct 24 kHz PCM16 speech-to-speech over the Realtime WebSocket API
-- Semantic VAD with natural barge-in and conversation truncation
-- A fresh active-window screenshot attached before every response
-- Native echo cancellation through AVAudioEngine voice processing
-- Menu-bar control plus a nonactivating, notch-like status HUD
-- An optional teaching highlight the model can place over a visible formula, plot, cell, or control
-- OpenAI API key storage in macOS Keychain
-- Command-Shift-Space global start/stop shortcut
-- Launch-at-login support through `SMAppService`
-- Explicit microphone, Screen Recording, network, and error handling
+## What it does
 
-The teaching highlight is visual only. ScreenTutor does not click, type, move the real pointer, or autonomously control the Mac.
+- Streams 24 kHz PCM16 speech-to-speech over the Realtime WebSocket API
+- Uses semantic voice activity detection with natural barge-in and response truncation
+- Attaches a fresh screenshot of the active window before each response
+- Uses native echo cancellation through `AVAudioEngine` voice processing
+- Lives in the menu bar with a nonactivating, notch-like status HUD
+- Lets the model place a temporary teaching highlight over a formula, plot, cell, or control
+- Stores the OpenAI API key in macOS Keychain
+- Supports a global Command-Shift-Space start/stop shortcut
+- Supports launch at login through `SMAppService`
+- Handles microphone, Screen Recording, network, and protocol errors explicitly
+
+The teaching highlight is visual and click-through. ScreenTutor never moves the real pointer, clicks, types, or autonomously controls the Mac.
 
 ## How one turn works
 
-1. AVAudioEngine captures the microphone and converts it to mono PCM16 at 24 kHz.
+1. `AVAudioEngine` captures the microphone and converts it to mono PCM16 at 24 kHz.
 2. Audio chunks stream through `input_audio_buffer.append`; GPT consumes the voice natively.
-3. Semantic VAD reports that speech started, which also interrupts any current answer.
+3. Semantic VAD reports that speech started, which interrupts any current answer.
 4. ScreenTutor captures the frontmost window of the last external application.
 5. VAD commits the spoken turn. ScreenTutor appends the JPEG as an `input_image`, then sends `response.create`.
-6. `response.output_audio.delta` chunks play immediately. The matching transcript updates the menu.
-7. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor draws a temporary, click-through overlay and asks GPT to continue speaking.
+6. `response.output_audio.delta` chunks play immediately while the matching transcript updates the menu.
+7. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor draws a temporary overlay and asks GPT to continue speaking.
 
-Automatic response creation is deliberately disabled in VAD. This prevents GPT from starting its answer before the screenshot reaches the conversation.
+Automatic response creation is deliberately disabled in VAD so GPT cannot begin answering before the screenshot reaches the conversation.
 
 ## Requirements
 
 - macOS 15 or newer
-- Xcode with Swift 6 support
+- Xcode 16.4 or newer with Swift 6 support
 - An OpenAI API key with access to `gpt-realtime-2.1`
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) only when regenerating the checked-in Xcode project
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.45 or newer only when regenerating the checked-in Xcode project
 
-## Run it
+## Run locally
 
-1. Open `ScreenTutor.xcodeproj` in Xcode.
+1. Clone the repository and open `ScreenTutor.xcodeproj` in Xcode.
 2. Select your development team under Signing & Capabilities.
 3. Run the `ScreenTutor` scheme on My Mac.
 4. Open the waveform menu-bar item, choose Settings, and save your API key.
@@ -49,9 +59,22 @@ Automatic response creation is deliberately disabled in VAD. This prevents GPT f
 
 The app has `LSUIElement` enabled, so it lives in the menu bar rather than the Dock.
 
+## Architecture
+
+| Area | Responsibility |
+| --- | --- |
+| `App` | Session lifecycle and application state |
+| `Audio` | Microphone conversion, echo cancellation, and streamed playback |
+| `Realtime` | Typed OpenAI Realtime events and WebSocket transport |
+| `Screen` | Frontmost-window discovery and one-shot capture |
+| `UI` | Menu, HUD, settings, and click-through teaching highlight |
+| `System` | Global hotkey, app tracking, and launch-at-login integration |
+
+The app uses Apple frameworks only: SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon.
+
 ## Development
 
-Regenerate the project after adding files:
+Regenerate the checked-in project after adding or moving source files:
 
 ```bash
 xcodegen generate
@@ -79,18 +102,26 @@ xcodebuild \
   test
 ```
 
-The project uses only Apple frameworks: SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon for the global hotkey.
-
 ## Privacy, credentials, and billing
 
-This implementation sends spoken audio and the captured active-window image to OpenAI. It captures a single window image per spoken turn, not a continuous screen recording.
+ScreenTutor sends spoken audio and the captured active-window image to OpenAI. It captures one window image per spoken turn, not a continuous screen recording. Review the visible window before speaking if it contains sensitive information.
 
 `gpt-realtime-2.1` is a cloud API model and incurs normal OpenAI API usage charges. Avoiding separate transcription and TTS reduces components; it does not make the Realtime model offline or free.
 
-The current BYOK design is appropriate for a personal build: the long-lived key is stored in Keychain and never in source or UserDefaults. A distributed product should put credentials behind a backend, issue short-lived client tokens, and evaluate WebRTC instead of shipping a standard API key to clients.
+The current BYOK design is intended for personal development: the long-lived key is stored in Keychain and never in source or `UserDefaults`. A distributed product should put credentials behind a backend, issue short-lived client tokens, and evaluate WebRTC instead of shipping a standard API key to clients.
+
+## Contributing
+
+Bug reports, accessibility improvements, documentation, focused tests, and well-scoped implementation changes are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Report security issues through the process in [SECURITY.md](SECURITY.md), not a public issue.
 
 ## Protocol references
 
 - [Realtime WebSocket guide](https://developers.openai.com/api/docs/guides/realtime-websocket)
 - [Realtime conversations and audio](https://developers.openai.com/api/docs/guides/realtime-conversations)
 - [`gpt-realtime-2.1` model](https://developers.openai.com/api/docs/models/gpt-realtime-2.1)
+
+## License
+
+ScreenTutor is available under the [MIT License](LICENSE).
