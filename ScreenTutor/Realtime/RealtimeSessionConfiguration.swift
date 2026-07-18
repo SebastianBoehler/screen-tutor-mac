@@ -10,36 +10,39 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
         case eventID = "event_id"
     }
 
-    static let screenTutor = RealtimeSessionUpdateEvent(
-        eventID: "evt_session_\(UUID().uuidString)",
-        session: RealtimeSessionConfiguration(
-            type: "realtime",
-            model: RealtimeConstants.model,
-            instructions: RealtimeConstants.tutorInstructions,
-            outputModalities: ["audio"],
-            tools: [.listWindows, .captureWindow, .highlightScreenRegion],
-            toolChoice: "auto",
-            parallelToolCalls: false,
-            audio: RealtimeAudioConfiguration(
-                input: RealtimeInputAudioConfiguration(
-                    format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
-                    transcription: RealtimeAudioTranscriptionConfiguration(
-                        model: "gpt-4o-mini-transcribe"
+    static func screenTutor(language: TutorLanguage) -> RealtimeSessionUpdateEvent {
+        RealtimeSessionUpdateEvent(
+            eventID: "evt_session_\(UUID().uuidString)",
+            session: RealtimeSessionConfiguration(
+                type: "realtime",
+                model: RealtimeConstants.model,
+                instructions: RealtimeConstants.tutorInstructions(language: language),
+                outputModalities: ["audio"],
+                tools: [.listWindows, .captureWindow, .highlightScreenRegion],
+                toolChoice: "auto",
+                parallelToolCalls: false,
+                audio: RealtimeAudioConfiguration(
+                    input: RealtimeInputAudioConfiguration(
+                        format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
+                        transcription: RealtimeAudioTranscriptionConfiguration(
+                            model: "gpt-4o-mini-transcribe",
+                            language: language.transcriptionLanguageCode
+                        ),
+                        turnDetection: RealtimeTurnDetection(
+                            type: "semantic_vad",
+                            eagerness: "auto",
+                            createResponse: false,
+                            interruptResponse: true
+                        )
                     ),
-                    turnDetection: RealtimeTurnDetection(
-                        type: "semantic_vad",
-                        eagerness: "auto",
-                        createResponse: false,
-                        interruptResponse: true
+                    output: RealtimeOutputAudioConfiguration(
+                        format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
+                        voice: RealtimeConstants.voice
                     )
-                ),
-                output: RealtimeOutputAudioConfiguration(
-                    format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
-                    voice: RealtimeConstants.voice
                 )
             )
         )
-    )
+    }
 }
 
 struct RealtimeSessionConfiguration: Encodable, Sendable {
@@ -78,6 +81,7 @@ struct RealtimeInputAudioConfiguration: Encodable, Sendable {
 
 struct RealtimeAudioTranscriptionConfiguration: Encodable, Sendable {
     let model: String
+    let language: String?
 }
 
 struct RealtimeOutputAudioConfiguration: Encodable, Sendable {

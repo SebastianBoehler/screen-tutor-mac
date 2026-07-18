@@ -1,3 +1,4 @@
+import CoreGraphics
 import XCTest
 @testable import ScreenTutor
 
@@ -55,5 +56,31 @@ final class AmbientTranscriptPresentationTests: XCTestCase {
         XCTAssertNil(policy.resolve(isVisible: false, candidate: "right"))
 
         XCTAssertEqual(policy.resolve(isVisible: true, candidate: "right"), "right")
+    }
+
+    func testDraggedPlacementKeepsItsCenterWhenTranscriptExpands() {
+        var policy = HUDPanelPlacementPolicy()
+        policy.recordUserFrame(CGRect(x: 100, y: 100, width: 420, height: 76))
+
+        let origin = policy.origin(
+            for: CGSize(width: 420, height: 204),
+            automaticOrigin: .zero,
+            visibleFrame: CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        )
+
+        XCTAssertEqual(origin, CGPoint(x: 100, y: 36))
+    }
+
+    func testDraggedPlacementStaysInsideTheVisibleScreen() {
+        var policy = HUDPanelPlacementPolicy()
+        policy.recordUserFrame(CGRect(x: 1_300, y: 850, width: 420, height: 76))
+
+        let origin = policy.origin(
+            for: CGSize(width: 420, height: 204),
+            automaticOrigin: .zero,
+            visibleFrame: CGRect(x: 0, y: 0, width: 1_440, height: 900)
+        )
+
+        XCTAssertEqual(origin, CGPoint(x: 1_012, y: 688))
     }
 }

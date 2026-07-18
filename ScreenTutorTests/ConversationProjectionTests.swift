@@ -25,9 +25,23 @@ final class ConversationProjectionTests: XCTestCase {
             responseID: nil,
             at: start.addingTimeInterval(1)
         )
+        let captureTool = ConversationRecord.toolCall(
+            conversationID: conversationID,
+            turn: 1,
+            name: "capture_window",
+            status: .succeeded,
+            at: start.addingTimeInterval(1.25)
+        )
+        let highlightTool = ConversationRecord.toolCall(
+            conversationID: conversationID,
+            turn: 1,
+            name: "highlight_screen_region",
+            status: .failed,
+            at: start.addingTimeInterval(1.5)
+        )
         let log = ConversationLog(
             conversationID: conversationID,
-            records: [started, assistant, user, assistant],
+            records: [started, assistant, captureTool, user, highlightTool, assistant],
             skippedLineCount: 1,
             fileURL: URL(fileURLWithPath: "/tmp/conversation.jsonl")
         )
@@ -40,6 +54,14 @@ final class ConversationProjectionTests: XCTestCase {
             "What does that curve show?",
             "That curve shows validation loss."
         ])
+        XCTAssertEqual(
+            projection.messages.last?.toolCalls.map(\.name),
+            ["capture_window", "highlight_screen_region"]
+        )
+        XCTAssertEqual(
+            projection.messages.last?.toolCalls.map(\.status),
+            [.succeeded, .failed]
+        )
         XCTAssertEqual(projection.skippedLineCount, 1)
     }
 }

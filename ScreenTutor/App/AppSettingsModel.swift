@@ -8,20 +8,28 @@ final class AppSettingsModel {
     private(set) var screenPermissionGranted = false
     private(set) var microphonePermissionGranted = false
     private(set) var launchAtLoginState: LaunchAtLoginState = .disabled
+    private(set) var tutorLanguage: TutorLanguage
     private(set) var errorMessage: String?
 
     private let apiKeyStore: APIKeyStore
     private let captureService: ActiveWindowCaptureService
     private let launchAtLoginService: LaunchAtLoginService
+    private let userDefaults: UserDefaults
+
+    private static let tutorLanguageKey = "com.sebastianboehler.ScreenTutor.tutorLanguage"
 
     init(
         apiKeyStore: APIKeyStore,
         captureService: ActiveWindowCaptureService,
-        launchAtLoginService: LaunchAtLoginService
+        launchAtLoginService: LaunchAtLoginService,
+        userDefaults: UserDefaults = .standard
     ) {
         self.apiKeyStore = apiKeyStore
         self.captureService = captureService
         self.launchAtLoginService = launchAtLoginService
+        self.userDefaults = userDefaults
+        tutorLanguage = userDefaults.string(forKey: Self.tutorLanguageKey)
+            .flatMap(TutorLanguage.init(rawValue:)) ?? .automatic
         refresh()
     }
 
@@ -68,6 +76,11 @@ final class AppSettingsModel {
             errorMessage = error.localizedDescription
             launchAtLoginState = launchAtLoginService.state
         }
+    }
+
+    func setTutorLanguage(_ language: TutorLanguage) {
+        tutorLanguage = language
+        userDefaults.set(language.rawValue, forKey: Self.tutorLanguageKey)
     }
 
     func refresh() {

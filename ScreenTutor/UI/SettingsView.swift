@@ -27,6 +27,26 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Tutor") {
+                Picker(
+                    "Spoken language",
+                    selection: Binding(
+                        get: { model.tutorLanguage },
+                        set: { model.setTutorLanguage($0) }
+                    )
+                ) {
+                    ForEach(TutorLanguage.allCases) { language in
+                        Text(language.displayName).tag(language)
+                    }
+                }
+                Text(
+                    "Automatic follows your latest spoken language. A fixed language also helps "
+                        + "transcription. Changes apply to new conversations."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
             Section("Permissions") {
                 HStack {
                     Label(
@@ -76,7 +96,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 470)
+        .frame(width: 520, height: 560)
         .onAppear { model.refresh() }
     }
 

@@ -3,10 +3,12 @@ import Observation
 import SwiftUI
 
 @MainActor
-final class HUDPanelController {
+final class HUDPanelController: NSObject, NSWindowDelegate {
     private let model: AppModel
     private let panel: HUDPanel
     private var screenAnchor = HUDScreenAnchorPolicy<NSScreen>()
+    private var placement = HUDPanelPlacementPolicy()
+    private var isApplyingAutomaticFrame = false
 
     init(model: AppModel) {
         self.model = model
@@ -16,6 +18,8 @@ final class HUDPanelController {
             backing: .buffered,
             defer: false
         )
+        super.init()
+        panel.delegate = self
         configurePanel()
         observeModel()
         NotificationCenter.default.addObserver(
@@ -43,7 +47,8 @@ final class HUDPanelController {
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = false
+        panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [
             .canJoinAllSpaces,
@@ -73,11 +78,13 @@ final class HUDPanelController {
 
     private func refreshVisibility() {
         let isVisible = model.phase.isActive || model.errorMessage != nil
+        isApplyingAutomaticFrame = true
         panel.setContentSize(
             NSSize(width: 420, height: model.ambientTranscriptPresentation.panelHeight)
         )
+        isApplyingAutomaticFrame = false
         positionPanel(
-            on: screenAnchor.resolve(isVisible: isVisible, candidate: candidateScreen())
+            on: screenAnchor.resolve(isVisible: isVisible, candidate: preferredScreen())
         )
         if isVisible {
             panel.orderFrontRegardless()
@@ -93,23 +100,46 @@ final class HUDPanelController {
             ?? NSScreen.screens.first
     }
 
+    private func preferredScreen() -> NSScreen? {
+        if let userCenter = placement.userCenter {
+            return NSScreen.screens.first { $0.frame.contains(userCenter) }
+                ?? panel.screen
+                ?? candidateScreen()
+        }
+        return candidateScreen()
+    }
+
     private func positionPanel(on screen: NSScreen?) {
         guard let screen else { return }
         let frame = panel.frame
-        panel.setFrameOrigin(
-            NSPoint(
-                x: screen.visibleFrame.midX - frame.width / 2,
-                y: screen.visibleFrame.maxY - frame.height - 8
-            )
+        let automaticOrigin = NSPoint(
+            x: screen.visibleFrame.midX - frame.width / 2,
+            y: screen.visibleFrame.maxY - frame.height - 8
         )
+        let origin = placement.origin(
+            for: frame.size,
+            automaticOrigin: automaticOrigin,
+            visibleFrame: screen.visibleFrame
+        )
+        isApplyingAutomaticFrame = true
+        panel.setFrameOrigin(origin)
+        isApplyingAutomaticFrame = false
     }
 
     @objc
     private func screenConfigurationChanged() {
         let isVisible = model.phase.isActive || model.errorMessage != nil
-        let screen = isVisible ? candidateScreen() : nil
+        let screen = isVisible ? preferredScreen() : nil
         screenAnchor.retarget(to: screen)
         positionPanel(on: screen)
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        guard panel.isVisible, !isApplyingAutomaticFrame else { return }
+        placement.recordUserFrame(panel.frame)
+        let screen = NSScreen.screens.first { $0.frame.contains(panel.frame.center) }
+            ?? panel.screen
+        screenAnchor.retarget(to: screen)
     }
 }
 
@@ -127,5 +157,40 @@ struct HUDScreenAnchorPolicy<ScreenID> {
 
     mutating func retarget(to candidate: ScreenID?) {
         anchor = candidate
+    }
+}
+
+struct HUDPanelPlacementPolicy {
+    private(set) var userCenter: CGPoint?
+
+    mutating func recordUserFrame(_ frame: CGRect) {
+        userCenter = frame.center
+    }
+
+    func origin(
+        for size: CGSize,
+        automaticOrigin: CGPoint,
+        visibleFrame: CGRect
+    ) -> CGPoint {
+        guard let userCenter else { return automaticOrigin }
+        let proposed = CGPoint(
+            x: userCenter.x - size.width / 2,
+            y: userCenter.y - size.height / 2
+        )
+        let margin: CGFloat = 8
+        let minimumX = visibleFrame.minX + margin
+        let minimumY = visibleFrame.minY + margin
+        let maximumX = max(minimumX, visibleFrame.maxX - margin - size.width)
+        let maximumY = max(minimumY, visibleFrame.maxY - margin - size.height)
+        return CGPoint(
+            x: min(max(proposed.x, minimumX), maximumX),
+            y: min(max(proposed.y, minimumY), maximumY)
+        )
+    }
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }

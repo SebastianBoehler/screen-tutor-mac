@@ -12,6 +12,7 @@ struct ScreenToolResolution: Sendable {
     let callID: String
     let output: String
     let snapshot: ActiveWindowSnapshot?
+    let succeeded: Bool
 }
 
 @MainActor
@@ -53,7 +54,8 @@ final class ScreenToolCoordinator {
             return ScreenToolResolution(
                 callID: callID,
                 output: try encode(WindowListOutput(ok: true, windows: windows)),
-                snapshot: nil
+                snapshot: nil,
+                succeeded: true
             )
         } catch {
             return try failure(error, callID: callID)
@@ -82,7 +84,8 @@ final class ScreenToolCoordinator {
                         title: snapshot.windowTitle
                     )
                 ),
-                snapshot: snapshot
+                snapshot: snapshot,
+                succeeded: true
             )
         } catch {
             return try failure(error, callID: callID)
@@ -108,7 +111,8 @@ final class ScreenToolCoordinator {
         return ScreenToolResolution(
             callID: callID,
             output: try encode(output),
-            snapshot: nil
+            snapshot: nil,
+            succeeded: false
         )
     }
 

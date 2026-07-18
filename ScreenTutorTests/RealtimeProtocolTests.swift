@@ -4,7 +4,9 @@ import XCTest
 
 final class RealtimeProtocolTests: XCTestCase {
     func testSessionKeepsNativeAudioAndAddsHistoryTranscription() throws {
-        let data = try JSONEncoder().encode(RealtimeSessionUpdateEvent.screenTutor)
+        let data = try JSONEncoder().encode(
+            RealtimeSessionUpdateEvent.screenTutor(language: .automatic)
+        )
         let root = try XCTUnwrap(
             JSONSerialization.jsonObject(with: data) as? [String: Any]
         )
@@ -18,6 +20,7 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(session["output_modalities"] as? [String], ["audio"])
         let transcription = try XCTUnwrap(input["transcription"] as? [String: Any])
         XCTAssertEqual(transcription["model"] as? String, "gpt-4o-mini-transcribe")
+        XCTAssertNil(transcription["language"])
         XCTAssertEqual(turnDetection["type"] as? String, "semantic_vad")
         XCTAssertEqual(turnDetection["create_response"] as? Bool, false)
         XCTAssertEqual(turnDetection["interrupt_response"] as? Bool, true)
@@ -55,6 +58,25 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(
             highlightParameters["required"] as? [String],
             ["x", "y", "width", "height", "label"]
+        )
+    }
+
+    func testGermanLanguagePinsSpeechAndTranscriptHint() throws {
+        let data = try JSONEncoder().encode(
+            RealtimeSessionUpdateEvent.screenTutor(language: .german)
+        )
+        let root = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let session = try XCTUnwrap(root["session"] as? [String: Any])
+        let audio = try XCTUnwrap(session["audio"] as? [String: Any])
+        let input = try XCTUnwrap(audio["input"] as? [String: Any])
+        let transcription = try XCTUnwrap(input["transcription"] as? [String: Any])
+
+        XCTAssertEqual(transcription["language"] as? String, "de")
+        XCTAssertTrue(
+            (session["instructions"] as? String)?.contains("Standard German pronunciation")
+                == true
         )
     }
 

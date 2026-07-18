@@ -140,6 +140,13 @@ private struct ConversationMessageView: View {
             Text(message.text)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            if !message.toolCalls.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(message.toolCalls) { toolCall in
+                        ConversationToolTag(toolCall: toolCall)
+                    }
+                }
+            }
         }
         .padding(12)
         .background(
@@ -147,5 +154,47 @@ private struct ConversationMessageView: View {
             in: RoundedRectangle(cornerRadius: 12, style: .continuous)
         )
         .accessibilityElement(children: .combine)
+    }
+}
+
+private struct ConversationToolTag: View {
+    let toolCall: ConversationToolCall
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(tint.opacity(0.11), in: Capsule())
+            .help(toolCall.name)
+            .accessibilityLabel("\(title), \(statusDescription)")
+    }
+
+    private var title: String {
+        switch toolCall.name {
+        case "list_windows": "Checked windows"
+        case "capture_window": "Viewed window"
+        case "highlight_screen_region": "Pointed on screen"
+        default: toolCall.name.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+
+    private var systemImage: String {
+        if toolCall.status == .failed { return "exclamationmark.circle.fill" }
+        return switch toolCall.name {
+        case "list_windows": "macwindow.on.rectangle"
+        case "capture_window": "eye.fill"
+        case "highlight_screen_region": "scope"
+        default: "wrench.and.screwdriver.fill"
+        }
+    }
+
+    private var tint: Color {
+        toolCall.status == .succeeded ? .secondary : .orange
+    }
+
+    private var statusDescription: String {
+        toolCall.status == .succeeded ? "succeeded" : "failed"
     }
 }

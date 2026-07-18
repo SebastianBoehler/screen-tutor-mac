@@ -100,6 +100,26 @@ extension AppModel {
         )
     }
 
+    func recordToolActivity(
+        name: String?,
+        status: ConversationToolStatus,
+        turn: Int
+    ) {
+        guard
+            let conversationID = historyIdentity.current,
+            let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !name.isEmpty
+        else { return }
+        history.record(
+            .toolCall(
+                conversationID: conversationID,
+                turn: turn,
+                name: name,
+                status: status
+            )
+        )
+    }
+
     func finalizeAssistantHistory(_ response: RealtimeResponse?) {
         guard let responseID = response?.id else { return }
         guard let pending = pendingAssistantHistory.removeValue(forKey: responseID) else { return }

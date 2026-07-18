@@ -12,6 +12,7 @@
 		076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF0070CA6332F9C015108D /* RealtimeServerEvent.swift */; };
 		07CDC81EAA198271E7536E09 /* RealtimeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188CC79254B862A2921BDB9 /* RealtimeConstants.swift */; };
 		0D8AA4126F765725BAE9E42C /* AmbientTranscriptPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */; };
+		0F0F21DBAA1BE7F4DB915D15 /* TutorLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A56421872CD694035CA56D1 /* TutorLanguage.swift */; };
 		0F117E9FF158ED8C73BF4327 /* SessionPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF2CAD1C74DC9D80A257A74 /* SessionPhaseTests.swift */; };
 		0FB387E67CC7A922753E1C1C /* ConversationHistoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0E58A16D8EBEEB1A20D13B /* ConversationHistoryModel.swift */; };
 		13BD148CE0543EA403E248F2 /* ConversationTurnTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B27BE13F2A0669D29B3F41F /* ConversationTurnTracker.swift */; };
@@ -73,6 +74,7 @@
 		F1A2959C7766AF793D94EF6E /* ConversationLogStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFEA17211E7B8461B191B9E /* ConversationLogStoreTests.swift */; };
 		F43EC9695EB49595D1AC3204 /* ConversationProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBBAD514C2DA4D55221623C /* ConversationProjection.swift */; };
 		F49376ED4EE2259B051B9F6D /* ConversationHistoryIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E281781BDA195577F571995C /* ConversationHistoryIdentityTests.swift */; };
+		F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC3E2F06531E6856B099445 /* ScreenToolCallOutput.swift */; };
 		F707CE1B971EADA0C7686983 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */; };
 		F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */; };
 		FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD7BB048BE24C0D76C94BB8 /* ScreenToolCoordinator.swift */; };
@@ -138,6 +140,7 @@
 		934C80C840705D3C0459107E /* CapturedWindowContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedWindowContext.swift; sourceTree = "<group>"; };
 		93FCBED1663FC1AD5A1DABB1 /* ActiveWindowSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWindowSnapshot.swift; sourceTree = "<group>"; };
 		94E30E9A5F0B36E3B2FBB917 /* ScreenTutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenTutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A56421872CD694035CA56D1 /* TutorLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorLanguage.swift; sourceTree = "<group>"; };
 		A309C989F3110BE402DD6C43 /* LaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginService.swift; sourceTree = "<group>"; };
 		AB5CB8F01C6710050E9BFC2C /* TeachingPointerLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingPointerLayout.swift; sourceTree = "<group>"; };
 		AC706863B308191E7A362C58 /* AppModel+ResponseLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+ResponseLifecycle.swift"; sourceTree = "<group>"; };
@@ -165,6 +168,7 @@
 		F81D2A95438331BD6C089F74 /* ConversationLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationLogStore.swift; sourceTree = "<group>"; };
 		FC1C1BABEDE52E252F816F1D /* TeachingTargetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingTargetView.swift; sourceTree = "<group>"; };
 		FC762868F2BEF857A086CEE3 /* AppModel+RealtimeEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+RealtimeEvents.swift"; sourceTree = "<group>"; };
+		FEC3E2F06531E6856B099445 /* ScreenToolCallOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenToolCallOutput.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -229,6 +233,7 @@
 				F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */,
 				38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */,
 				201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */,
+				9A56421872CD694035CA56D1 /* TutorLanguage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -267,6 +272,7 @@
 				6DFF47E9985FB626EA356724 /* AppSettingsModel.swift */,
 				3B27BE13F2A0669D29B3F41F /* ConversationTurnTracker.swift */,
 				58246F9B785E2EABB3AE3193 /* ListeningIdleTimer.swift */,
+				FEC3E2F06531E6856B099445 /* ScreenToolCallOutput.swift */,
 				BBD7BB048BE24C0D76C94BB8 /* ScreenToolCoordinator.swift */,
 				5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */,
 			);
@@ -472,6 +478,7 @@
 				2FF67246972E25DFD24802AF /* RealtimeFunctionTool.swift in Sources */,
 				076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */,
 				8472A417AF8C2B0212201C6A /* RealtimeSessionConfiguration.swift in Sources */,
+				F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */,
 				FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */,
 				175B3F9FAA93CE91E7F0872C /* ScreenTutorApp.swift in Sources */,
 				BB875F0EC6453BDDD2E74D52 /* SessionPhase.swift in Sources */,
@@ -483,6 +490,7 @@
 				66BF945161DCA8CD28A9B9D9 /* TeachingPointerPresentationError.swift in Sources */,
 				FCF358EF0E4CE5E241D4FDE8 /* TeachingTargetView.swift in Sources */,
 				36D07B478A2C4D43C7602F9B /* TutorCursorView.swift in Sources */,
+				0F0F21DBAA1BE7F4DB915D15 /* TutorLanguage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

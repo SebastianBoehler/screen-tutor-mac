@@ -33,6 +33,11 @@ struct HUDView: View {
                         .lineLimit(2)
                 }
                 Spacer(minLength: 0)
+                Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .help("Drag to move ScreenTutor")
+                    .accessibilityHidden(true)
             }
 
             if transcript.isExpanded {
@@ -61,5 +66,6 @@ struct HUDView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
+        .accessibilityHint("Drag the overlay to move it on screen.")
     }
 }

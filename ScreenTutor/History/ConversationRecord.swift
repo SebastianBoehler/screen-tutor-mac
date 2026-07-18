@@ -8,6 +8,12 @@ enum ConversationRole: String, Codable, Sendable {
 enum ConversationRecordType: String, Codable, Sendable {
     case started = "conversation_started"
     case message
+    case toolCall = "tool_call"
+}
+
+enum ConversationToolStatus: String, Codable, Sendable {
+    case succeeded
+    case failed
 }
 
 struct ConversationRecord: Codable, Identifiable, Sendable {
@@ -21,13 +27,15 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
     let text: String?
     let providerItemID: String?
     let responseID: String?
+    let toolName: String?
+    let toolStatus: ConversationToolStatus?
 
     static func started(
         conversationID: UUID,
         at timestamp: Date = Date()
     ) -> ConversationRecord {
         ConversationRecord(
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: UUID(),
             conversationID: conversationID,
             timestamp: timestamp,
@@ -36,7 +44,9 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
             role: nil,
             text: nil,
             providerItemID: nil,
-            responseID: nil
+            responseID: nil,
+            toolName: nil,
+            toolStatus: nil
         )
     }
 
@@ -50,7 +60,7 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
         at timestamp: Date = Date()
     ) -> ConversationRecord {
         ConversationRecord(
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: UUID(),
             conversationID: conversationID,
             timestamp: timestamp,
@@ -59,7 +69,32 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
             role: role,
             text: text,
             providerItemID: providerItemID,
-            responseID: responseID
+            responseID: responseID,
+            toolName: nil,
+            toolStatus: nil
+        )
+    }
+
+    static func toolCall(
+        conversationID: UUID,
+        turn: Int,
+        name: String,
+        status: ConversationToolStatus,
+        at timestamp: Date = Date()
+    ) -> ConversationRecord {
+        ConversationRecord(
+            schemaVersion: 2,
+            id: UUID(),
+            conversationID: conversationID,
+            timestamp: timestamp,
+            type: .toolCall,
+            turn: turn,
+            role: nil,
+            text: nil,
+            providerItemID: nil,
+            responseID: nil,
+            toolName: name,
+            toolStatus: status
         )
     }
 
@@ -72,6 +107,8 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
         case type
         case providerItemID = "provider_item_id"
         case responseID = "response_id"
+        case toolName = "tool_name"
+        case toolStatus = "tool_status"
     }
 }
 

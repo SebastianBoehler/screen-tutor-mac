@@ -76,6 +76,7 @@ extension AppModel {
         }
 
         guard let resolution = try await screenTools.handle(item) else {
+            recordToolActivity(name: item.name, status: .failed, turn: turn)
             try await sendToolFailure(
                 item: item,
                 code: "unknown_tool",
@@ -90,6 +91,11 @@ extension AppModel {
             try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
             return
         }
+        recordToolActivity(
+            name: item.name,
+            status: resolution.succeeded ? .succeeded : .failed,
+            turn: turn
+        )
 
         phase = .thinking
         try await realtimeClient.send(
@@ -136,6 +142,7 @@ extension AppModel {
     ) async throws {
         guard let callID = item.callID else { throw TeachingHighlightError.invalidArguments }
         let output: String
+        let status: ConversationToolStatus
         do {
             guard let arguments = item.arguments else {
                 throw TeachingHighlightError.invalidArguments
@@ -157,6 +164,7 @@ extension AppModel {
             }
             try showHighlight(highlight)
             output = try encodeToolOutput(HighlightSuccessOutput(ok: true, status: "highlighted"))
+            status = .succeeded
         } catch {
             let code = if error is TeachingPointerPresentationError {
                 "highlight_presentation_failed"
@@ -174,12 +182,14 @@ extension AppModel {
                     )
                 )
             )
+            status = .failed
         }
 
         guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
             try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
             return
         }
+        recordToolActivity(name: item.name, status: status, turn: turn)
         phase = .thinking
         try await realtimeClient.send(
             FunctionCallOutputEvent(
@@ -268,32 +278,5 @@ extension AppModel {
             throw ScreenToolCallError.outputEncodingFailed
         }
         return json
-    }
-}
-
-private struct HighlightSuccessOutput: Encodable {
-    let ok: Bool
-    let status: String
-}
-
-private struct ToolFailureOutput: Encodable {
-    let ok: Bool
-    let error: ToolFailure
-}
-
-private struct ToolFailure: Encodable {
-    let code: String
-    let message: String
-}
-
-private enum ScreenToolCallError: LocalizedError {
-    case missingCallID
-    case outputEncodingFailed
-
-    var errorDescription: String? {
-        switch self {
-        case .missingCallID: "The Realtime screen tool call was missing its call ID."
-        case .outputEncodingFailed: "The screen tool result could not be encoded."
-        }
     }
 }
