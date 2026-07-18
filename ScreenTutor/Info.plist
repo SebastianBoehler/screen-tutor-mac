@@ -31,6 +31,6 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ScreenTutor needs microphone access so you can talk naturally with your tutor.</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>ScreenTutor captures the active window only when you ask for screen-aware help.</string>
+	<string>ScreenTutor lists visible app and window names and captures the window selected for screen-aware help.</string>
 </dict>
 </plist>

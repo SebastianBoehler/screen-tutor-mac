@@ -3,9 +3,17 @@ import SwiftUI
 struct HUDView: View {
     let model: AppModel
 
+    private var statusTitle: String {
+        model.errorMessage == nil ? model.phase.title : "Needs attention"
+    }
+
+    private var statusSymbolName: String {
+        model.errorMessage == nil ? model.phase.symbolName : "exclamationmark.triangle.fill"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: model.errorMessage == nil ? model.phase.symbolName : "exclamationmark.triangle.fill")
+            Image(systemName: statusSymbolName)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
                 .frame(width: 34, height: 34)
@@ -13,12 +21,12 @@ struct HUDView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(model.errorMessage == nil ? model.phase.title : "Needs attention")
+                Text(statusTitle)
                     .font(.headline)
                     .lineLimit(1)
                 Text(model.statusDetail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
                     .lineLimit(2)
             }
             Spacer(minLength: 0)
@@ -32,6 +40,6 @@ struct HUDView: View {
                 .strokeBorder(.white.opacity(0.12))
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("ScreenTutor \(model.phase.title). \(model.statusDetail)")
+        .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
     }
 }

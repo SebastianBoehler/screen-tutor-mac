@@ -9,22 +9,38 @@ struct InputAudioAppendEvent: Encodable, Sendable {
     }
 }
 
+struct InputAudioClearEvent: Encodable, Sendable {
+    let type = "input_audio_buffer.clear"
+}
+
 struct ConversationImageEvent: Encodable, Sendable {
     let eventID: String
     let type = "conversation.item.create"
+    let previousItemID: String
     let item: MessageItem
 
-    init(jpegData: Data) {
+    init(
+        jpegData: Data,
+        applicationName: String,
+        windowTitle: String?,
+        previousItemID: String
+    ) {
         let identifier = UUID().uuidString
         eventID = "evt_screen_\(identifier)"
+        self.previousItemID = previousItemID
+        let windowDescription = if let windowTitle, !windowTitle.isEmpty {
+            "\(applicationName) — \(windowTitle)"
+        } else {
+            applicationName
+        }
         item = MessageItem(
-            id: "screen_\(identifier)",
             type: "message",
             role: "user",
             content: [
                 ContentPart(
                     type: "input_text",
-                    text: "Current active-window view for the next spoken turn.",
+                    text: "Selected window: \(windowDescription). "
+                        + "Use this image for the current spoken turn.",
                     imageURL: nil,
                     detail: nil
                 ),
@@ -41,10 +57,10 @@ struct ConversationImageEvent: Encodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case type, item
         case eventID = "event_id"
+        case previousItemID = "previous_item_id"
     }
 
     struct MessageItem: Encodable, Sendable {
-        let id: String
         let type: String
         let role: String
         let content: [ContentPart]
@@ -80,29 +96,53 @@ struct ConversationTruncateEvent: Encodable, Sendable {
 struct ResponseCreateEvent: Encodable, Sendable {
     let eventID = "evt_response_\(UUID().uuidString)"
     let type = "response.create"
+    let response: Response
+
+    init(turnID: Int) {
+        response = Response(metadata: ["screen_tutor_turn": String(turnID)])
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, response
+        case eventID = "event_id"
+    }
+
+    struct Response: Encodable, Sendable {
+        let metadata: [String: String]
+    }
+}
+
+struct ResponseCancelEvent: Encodable, Sendable {
+    let eventID = "evt_cancel_\(UUID().uuidString)"
+    let type = "response.cancel"
+    let responseID: String
 
     enum CodingKeys: String, CodingKey {
         case type
         case eventID = "event_id"
+        case responseID = "response_id"
     }
 }
 
 struct FunctionCallOutputEvent: Encodable, Sendable {
     let eventID = "evt_tool_\(UUID().uuidString)"
     let type = "conversation.item.create"
+    let previousItemID: String?
     let item: Item
 
-    init(callID: String) {
+    init(callID: String, output: String, previousItemID: String? = nil) {
+        self.previousItemID = previousItemID
         item = Item(
             type: "function_call_output",
             callID: callID,
-            output: "{\"status\":\"highlighted\"}"
+            output: output
         )
     }
 
     enum CodingKeys: String, CodingKey {
         case type, item
         case eventID = "event_id"
+        case previousItemID = "previous_item_id"
     }
 
     struct Item: Encodable, Sendable {

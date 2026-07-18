@@ -30,11 +30,18 @@ struct RealtimeAPIError: Decodable, Sendable {
     let code: String?
     let message: String
     let param: String?
+    let eventID: String?
+
+    enum CodingKeys: String, CodingKey {
+        case type, code, message, param
+        case eventID = "event_id"
+    }
 }
 
 struct RealtimeResponse: Decodable, Sendable {
     let id: String?
     let status: String?
+    let metadata: [String: String]?
     let output: [RealtimeItem]?
 }
 

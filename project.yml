@@ -16,6 +16,9 @@ targets:
     platform: macOS
     sources:
       - ScreenTutor
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     entitlements:
       path: ScreenTutor/ScreenTutor.entitlements
       properties:

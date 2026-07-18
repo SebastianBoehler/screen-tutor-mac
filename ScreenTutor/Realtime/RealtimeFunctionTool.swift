@@ -6,6 +6,37 @@ struct RealtimeFunctionTool: Encodable, Sendable {
     let description: String
     let parameters: Parameters
 
+    static let listWindows = RealtimeFunctionTool(
+        type: "function",
+        name: "list_windows",
+        description: "List visible windows that are currently available for one-shot capture.",
+        parameters: Parameters(
+            type: "object",
+            properties: [:],
+            required: [],
+            additionalProperties: false
+        )
+    )
+
+    static let captureWindow = RealtimeFunctionTool(
+        type: "function",
+        name: "capture_window",
+        description: "Capture one window returned by list_windows before discussing its contents.",
+        parameters: Parameters(
+            type: "object",
+            properties: [
+                "window_id": Property(
+                    type: "string",
+                    description: "Opaque window ID returned by the latest list_windows call.",
+                    minimum: nil,
+                    maximum: nil
+                )
+            ],
+            required: ["window_id"],
+            additionalProperties: false
+        )
+    )
+
     static let highlightScreenRegion = RealtimeFunctionTool(
         type: "function",
         name: "highlight_screen_region",

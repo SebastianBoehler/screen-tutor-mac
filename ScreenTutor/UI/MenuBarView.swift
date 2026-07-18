@@ -4,9 +4,38 @@ import SwiftUI
 struct MenuBarView: View {
     let model: AppModel
 
+    private var statusTitle: String {
+        model.errorMessage == nil ? model.phase.title : "Needs attention"
+    }
+
+    private var statusSymbolName: String {
+        model.errorMessage == nil ? model.phase.symbolName : "exclamationmark.triangle.fill"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            header
+            Text("ScreenTutor")
+                .font(.headline)
+
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(statusTitle)
+                        .font(.headline)
+                    Text(model.statusDetail)
+                        .font(.caption)
+                        .foregroundStyle(model.errorMessage == nil ? Color.secondary : Color.red)
+                        .lineLimit(2)
+                }
+            } icon: {
+                Image(systemName: statusSymbolName)
+                    .font(.title2)
+                    .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Status: \(statusTitle). \(model.statusDetail)")
 
             if !model.assistantTranscript.isEmpty {
                 Text(model.assistantTranscript)
@@ -18,23 +47,22 @@ struct MenuBarView: View {
                     .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
             }
 
-            if let errorMessage = model.errorMessage {
-                Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
             Button(action: model.toggleSession) {
-                Label(
-                    model.phase.isActive ? "Stop conversation" : "Start conversation",
-                    systemImage: model.phase.isActive ? "stop.fill" : "mic.fill"
-                )
-                .frame(maxWidth: .infinity)
+                Label(model.phase.primaryActionLabel, systemImage: model.phase.primaryActionSymbolName)
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .disabled(model.phase == .requestingPermissions || model.phase == .connecting)
+            .disabled(!model.phase.isPrimaryActionEnabled)
+
+            if model.phase.hasConversation {
+                Button(action: model.startNewConversation) {
+                    Label("New conversation", systemImage: "plus.bubble")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
 
             HStack {
                 SettingsLink {
@@ -48,27 +76,5 @@ struct MenuBarView: View {
         }
         .padding(16)
         .frame(width: 340)
-    }
-
-    private var header: some View {
-        HStack(spacing: 10) {
-            Image(systemName: model.phase.symbolName)
-                .font(.title2)
-                .foregroundStyle(Color.accentColor)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("ScreenTutor").font(.headline)
-                Text(model.statusDetail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
-            Spacer()
-            Text(model.phase.title)
-                .font(.caption.weight(.medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.secondary.opacity(0.1), in: Capsule())
-        }
     }
 }

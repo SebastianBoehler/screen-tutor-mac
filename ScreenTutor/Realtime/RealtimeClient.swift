@@ -1,22 +1,46 @@
 import Foundation
 
+struct RealtimeConnectionID: Equatable, Sendable {
+    private let value = UUID()
+}
+
+struct RealtimeConnectionState: Sendable {
+    private var current: RealtimeConnectionID?
+
+    mutating func activate(_ connectionID: RealtimeConnectionID) throws {
+        guard current == nil else { throw RealtimeClientError.alreadyConnected }
+        current = connectionID
+    }
+
+    func matches(_ connectionID: RealtimeConnectionID) -> Bool {
+        current == connectionID
+    }
+
+    @discardableResult
+    mutating func clear(ifCurrent connectionID: RealtimeConnectionID) -> Bool {
+        guard current == connectionID else { return false }
+        current = nil
+        return true
+    }
+}
+
 actor RealtimeClient {
     typealias EventHandler = @Sendable (RealtimeServerEvent) async -> Void
     typealias DisconnectHandler = @Sendable (String) async -> Void
 
+    private var connectionState = RealtimeConnectionState()
     private var webSocket: URLSessionWebSocketTask?
     private var receiveTask: Task<Void, Never>?
-    private var eventHandler: EventHandler?
-    private var disconnectHandler: DisconnectHandler?
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     func connect(
+        connectionID: RealtimeConnectionID,
         apiKey: String,
         onEvent: @escaping EventHandler,
         onDisconnect: @escaping DisconnectHandler
     ) throws {
-        guard webSocket == nil else { throw RealtimeClientError.alreadyConnected }
+        try connectionState.activate(connectionID)
 
         var request = URLRequest(url: RealtimeConstants.endpoint)
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -24,39 +48,53 @@ actor RealtimeClient {
 
         let socket = URLSession.shared.webSocketTask(with: request)
         webSocket = socket
-        eventHandler = onEvent
-        disconnectHandler = onDisconnect
         socket.resume()
 
         receiveTask = Task { [weak self] in
-            await self?.receiveLoop()
+            await self?.receiveLoop(
+                socket: socket,
+                connectionID: connectionID,
+                eventHandler: onEvent,
+                disconnectHandler: onDisconnect
+            )
         }
     }
 
-    func send<Event: Encodable & Sendable>(_ event: Event) async throws {
-        guard let webSocket else { throw RealtimeClientError.notConnected }
+    func send<Event: Encodable & Sendable>(
+        _ event: Event,
+        connectionID: RealtimeConnectionID
+    ) async throws {
+        guard connectionState.matches(connectionID), let webSocket else {
+            throw RealtimeClientError.notConnected
+        }
         let data = try encoder.encode(event)
         guard let text = String(data: data, encoding: .utf8) else {
             throw RealtimeClientError.encodingFailed
         }
         try await webSocket.send(.string(text))
+        guard connectionState.matches(connectionID) else {
+            throw RealtimeClientError.notConnected
+        }
     }
 
-    func disconnect() {
+    func disconnect(connectionID: RealtimeConnectionID) {
+        guard connectionState.clear(ifCurrent: connectionID) else { return }
         receiveTask?.cancel()
         receiveTask = nil
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
-        eventHandler = nil
-        disconnectHandler = nil
     }
 
-    private func receiveLoop() async {
-        guard let webSocket else { return }
-
+    private func receiveLoop(
+        socket: URLSessionWebSocketTask,
+        connectionID: RealtimeConnectionID,
+        eventHandler: @escaping EventHandler,
+        disconnectHandler: @escaping DisconnectHandler
+    ) async {
         do {
             while !Task.isCancelled {
-                let message = try await webSocket.receive()
+                let message = try await socket.receive()
+                guard connectionState.matches(connectionID) else { return }
                 let data: Data
                 switch message {
                 case .string(let text):
@@ -67,15 +105,17 @@ actor RealtimeClient {
                     continue
                 }
                 let event = try decoder.decode(RealtimeServerEvent.self, from: data)
-                await eventHandler?(event)
+                await eventHandler(event)
             }
         } catch is CancellationError {
             return
         } catch {
+            guard connectionState.clear(ifCurrent: connectionID) else { return }
             let message = Self.describe(error)
-            webSocket.cancel(with: .abnormalClosure, reason: nil)
-            self.webSocket = nil
-            await disconnectHandler?(message)
+            socket.cancel(with: .abnormalClosure, reason: nil)
+            if webSocket === socket { webSocket = nil }
+            receiveTask = nil
+            await disconnectHandler(message)
         }
     }
 

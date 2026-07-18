@@ -3,8 +3,9 @@ import CoreGraphics
 @preconcurrency import ScreenCaptureKit
 
 @MainActor
-final class ActiveWindowCaptureService {
+final class ActiveWindowCaptureService: WindowCaptureServing {
     private let maximumPixelDimension = 1_920
+    private var catalogState = CaptureWindowCatalogState()
 
     var hasPermission: Bool {
         CGPreflightScreenCaptureAccess()
@@ -14,17 +15,88 @@ final class ActiveWindowCaptureService {
         CGRequestScreenCaptureAccess()
     }
 
-    func capture(processID: pid_t, applicationName: String?) async throws -> ActiveWindowSnapshot {
+    func listWindows() async throws -> [AvailableWindow] {
+        let revision = catalogState.beginListing()
         guard hasPermission else { throw ScreenCaptureError.permissionDenied }
 
-        let content = try await SCShareableContent.excludingDesktopWindows(
+        let content = try await shareableContent()
+        guard catalogState.isCurrent(revision) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        let candidates = orderedCaptureableWindows(in: content.windows)
+            .enumerated()
+            .compactMap { element -> CaptureWindowCandidate? in
+                let (rank, window) = element
+                guard let application = window.owningApplication else { return nil }
+                return CaptureWindowCandidate(
+                    windowID: window.windowID,
+                    processID: application.processID,
+                    applicationName: application.applicationName,
+                    title: window.title,
+                    frame: window.frame,
+                    layer: window.windowLayer,
+                    frontToBackRank: rank
+                )
+            }
+        let catalog = CaptureWindowCatalog(
+            candidates: candidates,
+            excludingProcessID: ProcessInfo.processInfo.processIdentifier,
+            tokenProvider: {
+                UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+            }
+        )
+        guard catalogState.publish(catalog, for: revision) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        return catalog.windows
+    }
+
+    func captureWindow(selectionID: String) async throws -> ActiveWindowSnapshot {
+        guard hasPermission else {
+            catalogState.invalidate()
+            throw ScreenCaptureError.permissionDenied
+        }
+        guard let operation = catalogState.consume(selectionID: selectionID) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+
+        let content = try await shareableContent()
+        guard catalogState.isCurrent(operation.revision) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        guard let window = orderedCaptureableWindows(in: content.windows).first(where: {
+            $0.windowID == operation.selection.windowID
+                && $0.owningApplication?.processID == operation.selection.processID
+        }) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
+        return try await capture(
+            window: window,
+            displays: content.displays,
+            revision: operation.revision
+        )
+    }
+
+    func invalidateWindowCatalog() {
+        catalogState.invalidate()
+    }
+
+    private func shareableContent() async throws -> SCShareableContent {
+        try await SCShareableContent.excludingDesktopWindows(
             true,
             onScreenWindowsOnly: true
         )
-        guard let window = frontmostWindow(in: content.windows, processID: processID) else {
-            throw ScreenCaptureError.noShareableWindow(applicationName)
+    }
+
+    private func capture(
+        window: SCWindow,
+        displays: [SCDisplay],
+        revision: UInt64
+    ) async throws -> ActiveWindowSnapshot {
+        guard catalogState.isCurrent(revision) else {
+            throw ScreenCaptureError.windowUnavailable
         }
-        guard let windowFrame = appKitFrame(for: window.frame, displays: content.displays) else {
+        guard let windowFrame = appKitFrame(for: window.frame, displays: displays) else {
             throw ScreenCaptureError.displayMappingFailed
         }
 
@@ -34,24 +106,30 @@ final class ActiveWindowCaptureService {
             contentFilter: filter,
             configuration: configuration
         )
+        guard catalogState.isCurrent(revision) else {
+            throw ScreenCaptureError.windowUnavailable
+        }
         guard let jpegData = jpegData(from: image) else {
             throw ScreenCaptureError.imageEncodingFailed
         }
 
         return ActiveWindowSnapshot(
             jpegData: jpegData,
-            applicationName: applicationName ?? window.owningApplication?.applicationName
+            applicationName: window.owningApplication?.applicationName
                 ?? "Active application",
             windowTitle: window.title,
             windowFrame: windowFrame
         )
     }
 
-    private func frontmostWindow(in windows: [SCWindow], processID: pid_t) -> SCWindow? {
+    private func orderedCaptureableWindows(in windows: [SCWindow]) -> [SCWindow] {
+        let ownProcessID = ProcessInfo.processInfo.processIdentifier
         let candidates = Dictionary(
             uniqueKeysWithValues: windows
                 .filter {
-                    $0.owningApplication?.processID == processID
+                    $0.isOnScreen
+                        && $0.owningApplication != nil
+                        && $0.owningApplication?.processID != ownProcessID
                         && $0.windowLayer == 0
                         && $0.frame.width >= 240
                         && $0.frame.height >= 160
@@ -62,18 +140,19 @@ final class ActiveWindowCaptureService {
         let windowInfo = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
             as? [[String: Any]] ?? []
 
+        var ordered: [SCWindow] = []
         for details in windowInfo {
             guard
                 let ownerPID = details[kCGWindowOwnerPID as String] as? Int,
-                ownerPID == Int(processID),
                 let layer = details[kCGWindowLayer as String] as? Int,
                 layer == 0,
                 let rawID = details[kCGWindowNumber as String] as? UInt32,
-                let window = candidates[CGWindowID(rawID)]
+                let window = candidates[CGWindowID(rawID)],
+                ownerPID == Int(window.owningApplication?.processID ?? -1)
             else { continue }
-            return window
+            ordered.append(window)
         }
-        return nil
+        return ordered
     }
 
     private func configuration(for size: CGSize) -> SCStreamConfiguration {
@@ -115,9 +194,52 @@ final class ActiveWindowCaptureService {
     }
 }
 
+struct CaptureWindowCatalogState {
+    private var revision: UInt64 = 0
+    private var catalog: CaptureWindowCatalog?
+
+    mutating func beginListing() -> UInt64 {
+        advance()
+        catalog = nil
+        return revision
+    }
+
+    mutating func publish(
+        _ catalog: CaptureWindowCatalog,
+        for revision: UInt64
+    ) -> Bool {
+        guard isCurrent(revision) else { return false }
+        self.catalog = catalog
+        return true
+    }
+
+    mutating func consume(
+        selectionID: String
+    ) -> (selection: CaptureWindowSelection, revision: UInt64)? {
+        let selection = catalog?.selection(for: selectionID)
+        advance()
+        catalog = nil
+        guard let selection else { return nil }
+        return (selection, revision)
+    }
+
+    mutating func invalidate() {
+        advance()
+        catalog = nil
+    }
+
+    func isCurrent(_ revision: UInt64) -> Bool {
+        self.revision == revision
+    }
+
+    private mutating func advance() {
+        revision &+= 1
+    }
+}
+
 enum ScreenCaptureError: LocalizedError {
     case permissionDenied
-    case noShareableWindow(String?)
+    case windowUnavailable
     case displayMappingFailed
     case imageEncodingFailed
 
@@ -125,12 +247,12 @@ enum ScreenCaptureError: LocalizedError {
         switch self {
         case .permissionDenied:
             "Screen Recording permission is required for screen-aware answers."
-        case .noShareableWindow(let applicationName):
-            "No visible window could be captured for \(applicationName ?? "the active application")."
+        case .windowUnavailable:
+            "That window is no longer available. List the visible windows again."
         case .displayMappingFailed:
-            "The active window could not be mapped to a connected display."
+            "The selected window could not be mapped to a connected display."
         case .imageEncodingFailed:
-            "The active-window screenshot could not be encoded."
+            "The selected-window screenshot could not be encoded."
         }
     }
 }

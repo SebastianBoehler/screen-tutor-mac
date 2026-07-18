@@ -5,6 +5,7 @@ actor RealtimeAudioIO {
     typealias PlaybackHandler = @Sendable (String) async -> Void
 
     private var engine: AVAudioEngine?
+    private var ownerID: RealtimeConnectionID?
     private var player: AVAudioPlayerNode?
     private var networkFormat: AVAudioFormat?
     private var inputContinuation: AsyncThrowingStream<Data, any Error>.Continuation?
@@ -17,15 +18,24 @@ actor RealtimeAudioIO {
     private var playbackOriginFrame: AVAudioFramePosition?
     private var drainMarkerID: UUID?
 
-    func start(onPlaybackDrained: @escaping PlaybackHandler) throws
+    func start(
+        ownerID: RealtimeConnectionID,
+        onPlaybackDrained: @escaping PlaybackHandler
+    ) throws
         -> AsyncThrowingStream<Data, any Error> {
         guard engine == nil else { throw AudioIOError.alreadyRunning }
-        guard let format = AVAudioFormat(
-            commonFormat: .pcmFormatInt16,
-            sampleRate: RealtimeConstants.sampleRate,
-            channels: 1,
-            interleaved: true
-        ) else {
+        guard
+            let networkFormat = AVAudioFormat(
+                commonFormat: .pcmFormatInt16,
+                sampleRate: RealtimeConstants.sampleRate,
+                channels: 1,
+                interleaved: true
+            ),
+            let voiceProcessingFormat = AVAudioFormat(
+                standardFormatWithSampleRate: RealtimeConstants.sampleRate,
+                channels: 1
+            )
+        else {
             throw AudioIOError.invalidInputFormat
         }
 
@@ -38,23 +48,23 @@ actor RealtimeAudioIO {
             throw AudioIOError.voiceProcessingUnavailable(error.localizedDescription)
         }
 
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
+        let inputDeviceFormat = inputNode.outputFormat(forBus: 0)
+        guard inputDeviceFormat.sampleRate > 0, inputDeviceFormat.channelCount > 0 else {
             throw AudioIOError.noInputDevice
         }
         let converter = try PCMInputConverter(
-            inputFormat: inputFormat,
-            outputFormat: format
+            inputFormat: voiceProcessingFormat,
+            outputFormat: networkFormat
         )
         let pair = AsyncThrowingStream<Data, any Error>.makeStream(
             bufferingPolicy: .bufferingNewest(20)
         )
         let continuation = pair.continuation
-        let bufferSize = AVAudioFrameCount(inputFormat.sampleRate * 0.1)
+        let bufferSize = AVAudioFrameCount(voiceProcessingFormat.sampleRate * 0.1)
         inputNode.installTap(
             onBus: 0,
             bufferSize: bufferSize,
-            format: inputFormat
+            format: voiceProcessingFormat
         ) { buffer, _ in
             do {
                 let data = try converter.convert(buffer)
@@ -75,7 +85,12 @@ actor RealtimeAudioIO {
         }
 
         engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: format)
+        engine.connect(player, to: engine.mainMixerNode, format: networkFormat)
+        engine.connect(
+            engine.mainMixerNode,
+            to: engine.outputNode,
+            format: voiceProcessingFormat
+        )
         engine.prepare()
         do {
             try engine.start()
@@ -92,15 +107,24 @@ actor RealtimeAudioIO {
             continuation.finish(throwing: AudioIOError.deviceConfigurationChanged)
         }
         self.engine = engine
+        self.ownerID = ownerID
         self.player = player
-        networkFormat = format
+        self.networkFormat = networkFormat
         inputContinuation = continuation
         playbackHandler = onPlaybackDrained
         return pair.stream
     }
 
-    func enqueueAssistantPCM16(_ data: Data, itemID: String) throws {
-        guard let player, let networkFormat else { throw RealtimeClientError.notConnected }
+    func enqueueAssistantPCM16(
+        _ data: Data,
+        itemID: String,
+        ownerID: RealtimeConnectionID
+    ) throws {
+        guard
+            self.ownerID == ownerID,
+            let player,
+            let networkFormat
+        else { throw RealtimeClientError.notConnected }
         let alignedData = accumulator.append(data)
         guard !alignedData.isEmpty else { return }
 
@@ -133,7 +157,8 @@ actor RealtimeAudioIO {
         }
     }
 
-    func finishAssistantAudio(itemID: String) throws {
+    func finishAssistantAudio(itemID: String, ownerID: RealtimeConnectionID) throws {
+        guard self.ownerID == ownerID else { return }
         try accumulator.finish()
         guard currentItemID == itemID, let player, let networkFormat else { return }
 
@@ -152,7 +177,8 @@ actor RealtimeAudioIO {
         }
     }
 
-    func interruptAssistantAudio() -> PlaybackCutoff? {
+    func interruptAssistantAudio(ownerID: RealtimeConnectionID) -> PlaybackCutoff? {
+        guard self.ownerID == ownerID else { return nil }
         guard let itemID = currentItemID, let player else { return nil }
         let renderedFrame = currentPlayerFrame() ?? playbackOriginFrame ?? 0
         let origin = playbackOriginFrame ?? 0
@@ -176,7 +202,8 @@ actor RealtimeAudioIO {
         return clampedFrames < generatedForItem ? cutoff : nil
     }
 
-    func stop() {
+    func stop(ownerID: RealtimeConnectionID) {
+        guard self.ownerID == ownerID else { return }
         if let engine {
             engine.inputNode.removeTap(onBus: 0)
             player?.stop()
@@ -192,6 +219,7 @@ actor RealtimeAudioIO {
         networkFormat = nil
         player = nil
         engine = nil
+        self.ownerID = nil
         resetPlaybackState()
     }
 

@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard model.phase.isActive, !isPreparingToTerminate else { return .terminateNow }
+        guard model.phase.needsTeardown, !isPreparingToTerminate else { return .terminateNow }
         isPreparingToTerminate = true
         Task {
             await model.stopSession()

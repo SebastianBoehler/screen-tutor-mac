@@ -17,8 +17,9 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
             model: RealtimeConstants.model,
             instructions: RealtimeConstants.tutorInstructions,
             outputModalities: ["audio"],
-            tools: [.highlightScreenRegion],
+            tools: [.listWindows, .captureWindow, .highlightScreenRegion],
             toolChoice: "auto",
+            parallelToolCalls: false,
             audio: RealtimeAudioConfiguration(
                 input: RealtimeInputAudioConfiguration(
                     format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
@@ -45,12 +46,14 @@ struct RealtimeSessionConfiguration: Encodable, Sendable {
     let outputModalities: [String]
     let tools: [RealtimeFunctionTool]
     let toolChoice: String
+    let parallelToolCalls: Bool
     let audio: RealtimeAudioConfiguration
 
     enum CodingKeys: String, CodingKey {
         case type, model, instructions, tools, audio
         case outputModalities = "output_modalities"
         case toolChoice = "tool_choice"
+        case parallelToolCalls = "parallel_tool_calls"
     }
 }
 
