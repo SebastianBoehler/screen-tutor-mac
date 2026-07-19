@@ -82,6 +82,7 @@ extension AppModel {
                     stageAssistantTranscript(event)
                 }
             case "response.done":
+                recordResponseUsage(event.response)
                 finalizeAssistantHistory(event.response)
                 try await handleResponseDone(
                     event.response,

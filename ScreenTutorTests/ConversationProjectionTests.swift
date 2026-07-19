@@ -64,4 +64,52 @@ final class ConversationProjectionTests: XCTestCase {
         )
         XCTAssertEqual(projection.skippedLineCount, 1)
     }
+
+    func testAggregatesUsageAcrossEveryResponseInConversation() {
+        let conversationID = UUID()
+        let firstUsage = TokenUsage(
+            inputTokens: 100,
+            outputTokens: 20,
+            totalTokens: 120,
+            inputAudioTokens: 60,
+            cachedInputTokens: 40,
+            outputAudioTokens: 12
+        )
+        let secondUsage = TokenUsage(
+            inputTokens: 180,
+            outputTokens: 30,
+            totalTokens: 210,
+            inputAudioTokens: 80,
+            cachedInputTokens: 120,
+            outputAudioTokens: 18
+        )
+        let log = ConversationLog(
+            conversationID: conversationID,
+            records: [
+                .usage(
+                    conversationID: conversationID,
+                    turn: 1,
+                    responseID: "response_1",
+                    usage: firstUsage
+                ),
+                .usage(
+                    conversationID: conversationID,
+                    turn: 1,
+                    responseID: "response_tool_followup",
+                    usage: secondUsage
+                )
+            ],
+            skippedLineCount: 0,
+            fileURL: URL(fileURLWithPath: "/tmp/conversation.jsonl")
+        )
+
+        let usage = ConversationProjection(log: log).usage
+
+        XCTAssertEqual(usage.inputTokens, 280)
+        XCTAssertEqual(usage.outputTokens, 50)
+        XCTAssertEqual(usage.totalTokens, 330)
+        XCTAssertEqual(usage.cachedInputTokens, 160)
+        XCTAssertEqual(usage.inputAudioTokens, 140)
+        XCTAssertEqual(usage.outputAudioTokens, 30)
+    }
 }

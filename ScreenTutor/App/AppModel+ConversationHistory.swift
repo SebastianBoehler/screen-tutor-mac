@@ -150,6 +150,23 @@ extension AppModel {
         )
     }
 
+    func recordResponseUsage(_ response: RealtimeResponse?) {
+        guard
+            let conversationID = historyIdentity.current,
+            let responseID = response?.id,
+            let turn = response?.metadata?["screen_tutor_turn"].flatMap(Int.init),
+            let usage = response?.usage
+        else { return }
+        history.record(
+            .usage(
+                conversationID: conversationID,
+                turn: turn,
+                responseID: responseID,
+                usage: usage
+            )
+        )
+    }
+
     private func recordUnavailableUserTranscript(
         itemID: String,
         turn: PendingUserHistoryTurn

@@ -25,6 +25,7 @@ struct ConversationProjection: Identifiable, Sendable {
     let startedAt: Date?
     let messages: [ConversationMessage]
     let toolCalls: [ConversationToolCall]
+    let usage: TokenUsage
     let skippedLineCount: Int
     let fileURL: URL
 
@@ -35,6 +36,7 @@ struct ConversationProjection: Identifiable, Sendable {
 
         var seenRecordIDs = Set<UUID>()
         let uniqueRecords = log.records.filter { seenRecordIDs.insert($0.id).inserted }
+        usage = uniqueRecords.compactMap(\.usage).reduce(TokenUsage(), +)
         startedAt = uniqueRecords
             .filter { $0.type == .started }
             .map(\.timestamp)

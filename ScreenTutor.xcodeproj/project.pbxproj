@@ -42,6 +42,7 @@
 		608243EE6EFF96A764BAAD1D /* GlobalHotKeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5C323090174C5A47E437B2 /* GlobalHotKeyController.swift */; };
 		632C407180D5662C5CE33E1A /* AppModel+Teardown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0700B2187A29C22317C76A1C /* AppModel+Teardown.swift */; };
 		63E2FB550905344FB30C3BD4 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4046F19CEC11783AD3F7ECB5 /* AppModel.swift */; };
+		66981A724F5558DE8B4F579C /* TokenUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4735F55EACE893C9731965 /* TokenUsage.swift */; };
 		66BF945161DCA8CD28A9B9D9 /* TeachingPointerPresentationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C1CFC3EA375B7721EA342E /* TeachingPointerPresentationError.swift */; };
 		680AD1D74A2A4BD95BD64307 /* ConversationRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3434DE6FC23D1BA1BD478DF8 /* ConversationRecord.swift */; };
 		6AF705A7CCFF53E3260BF820 /* PlaybackCutoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245F033723A1BFF4BF9FD984 /* PlaybackCutoff.swift */; };
@@ -85,6 +86,7 @@
 		F707CE1B971EADA0C7686983 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */; };
 		F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */; };
 		FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD7BB048BE24C0D76C94BB8 /* ScreenToolCoordinator.swift */; };
+		FC3466DF181DE2B3C7076070 /* ConversationUsageSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF38DF20C43D4E35AB4F2CE /* ConversationUsageSummaryView.swift */; };
 		FCF358EF0E4CE5E241D4FDE8 /* TeachingTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1BABEDE52E252F816F1D /* TeachingTargetView.swift */; };
 /* End PBXBuildFile section */
 
@@ -161,6 +163,7 @@
 		BBD7BB048BE24C0D76C94BB8 /* ScreenToolCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenToolCoordinator.swift; sourceTree = "<group>"; };
 		BC81371287DBDFDB5A213E10 /* AppModelError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelError.swift; sourceTree = "<group>"; };
 		BD85933D340EE7FFC1C52C71 /* GlobalHotKeyShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyShortcutTests.swift; sourceTree = "<group>"; };
+		BE4735F55EACE893C9731965 /* TokenUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenUsage.swift; sourceTree = "<group>"; };
 		BEBBAD514C2DA4D55221623C /* ConversationProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationProjection.swift; sourceTree = "<group>"; };
 		BF0E58A16D8EBEEB1A20D13B /* ConversationHistoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryModel.swift; sourceTree = "<group>"; };
 		C0F984FFEC7DAC95B611D90F /* GlobalHotKeyShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyShortcut.swift; sourceTree = "<group>"; };
@@ -175,6 +178,7 @@
 		DF557E5063E24C05F9B470AB /* TeachingHighlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingHighlightView.swift; sourceTree = "<group>"; };
 		E281781BDA195577F571995C /* ConversationHistoryIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryIdentityTests.swift; sourceTree = "<group>"; };
 		E4F73EFB56CA764096F961B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EBF38DF20C43D4E35AB4F2CE /* ConversationUsageSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationUsageSummaryView.swift; sourceTree = "<group>"; };
 		EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCM16Accumulator.swift; sourceTree = "<group>"; };
 		F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientTranscriptPresentation.swift; sourceTree = "<group>"; };
 		F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeFunctionTool.swift; sourceTree = "<group>"; };
@@ -192,6 +196,7 @@
 				09581DE546D97C59394F6F55 /* AmbientTranscriptView.swift */,
 				5F582A32F2EEF5D8A7CE86DF /* ConversationHistoryView.swift */,
 				5CDCB160027ECCB114F118F4 /* ConversationStorageSettingsView.swift */,
+				EBF38DF20C43D4E35AB4F2CE /* ConversationUsageSummaryView.swift */,
 				4A7B3F6A2269E514E8E2830F /* GlobalHotKeyShortcutRecorder.swift */,
 				B8997C9D737C7433B29DE7FD /* HUDControlsView.swift */,
 				D901021C032F388B6DD2D221 /* HUDPanel.swift */,
@@ -253,6 +258,7 @@
 				5DE44D1DF8323D2A4C69ACCB /* ReasoningEffort.swift */,
 				38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */,
 				201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */,
+				BE4735F55EACE893C9731965 /* TokenUsage.swift */,
 				9A56421872CD694035CA56D1 /* TutorLanguage.swift */,
 			);
 			path = Models;
@@ -482,6 +488,7 @@
 				680AD1D74A2A4BD95BD64307 /* ConversationRecord.swift in Sources */,
 				0642B05D56185F1BAFB3C366 /* ConversationStorageSettingsView.swift in Sources */,
 				13BD148CE0543EA403E248F2 /* ConversationTurnTracker.swift in Sources */,
+				FC3466DF181DE2B3C7076070 /* ConversationUsageSummaryView.swift in Sources */,
 				608243EE6EFF96A764BAAD1D /* GlobalHotKeyController.swift in Sources */,
 				37CC2F3BE7F50ED6DBEC0AAE /* GlobalHotKeyShortcut.swift in Sources */,
 				9F1B07C2D4952EDF59060992 /* GlobalHotKeyShortcutRecorder.swift in Sources */,
@@ -515,6 +522,7 @@
 				7A36A2129D7F5730E6EDB453 /* TeachingPointerLayout.swift in Sources */,
 				66BF945161DCA8CD28A9B9D9 /* TeachingPointerPresentationError.swift in Sources */,
 				FCF358EF0E4CE5E241D4FDE8 /* TeachingTargetView.swift in Sources */,
+				66981A724F5558DE8B4F579C /* TokenUsage.swift in Sources */,
 				36D07B478A2C4D43C7602F9B /* TutorCursorView.swift in Sources */,
 				0F0F21DBAA1BE7F4DB915D15 /* TutorLanguage.swift in Sources */,
 			);

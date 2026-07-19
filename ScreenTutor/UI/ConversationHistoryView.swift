@@ -116,7 +116,14 @@ struct ConversationHistoryView: View {
                         Text(startedAt, format: .dateTime.day().month().hour().minute())
                     }
                     Spacer()
-                    Text("\(conversation.messages.count)")
+                    if conversation.usage.totalTokens > 0 {
+                        Text(
+                            "\(conversation.messages.count) messages · "
+                                + "\(conversation.usage.totalTokens.formatted()) tokens"
+                        )
+                    } else {
+                        Text("\(conversation.messages.count) messages")
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -140,6 +147,9 @@ struct ConversationHistoryView: View {
         if let conversation = selectedConversation {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 14) {
+                    if conversation.usage.totalTokens > 0 {
+                        ConversationUsageSummaryView(usage: conversation.usage)
+                    }
                     if conversation.skippedLineCount > 0 {
                         Label(
                             "Skipped \(conversation.skippedLineCount) unreadable JSONL record(s).",

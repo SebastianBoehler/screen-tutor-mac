@@ -283,6 +283,56 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(event.response?.metadata?["screen_tutor_turn"], "42")
     }
 
+    func testDecodesDetailedUsageFromCompletedRealtimeResponse() throws {
+        let payload = Data(
+            """
+            {
+              "type": "response.done",
+              "response": {
+                "id": "resp_usage",
+                "status": "completed",
+                "usage": {
+                  "input_tokens": 120,
+                  "output_tokens": 30,
+                  "total_tokens": 150,
+                  "input_token_details": {
+                    "text_tokens": 40,
+                    "audio_tokens": 70,
+                    "image_tokens": 10,
+                    "cached_tokens": 80,
+                    "cached_tokens_details": {
+                      "text_tokens": 30,
+                      "audio_tokens": 45,
+                      "image_tokens": 5
+                    }
+                  },
+                  "output_token_details": {
+                    "text_tokens": 12,
+                    "audio_tokens": 18
+                  }
+                }
+              }
+            }
+            """.utf8
+        )
+
+        let event = try JSONDecoder().decode(RealtimeServerEvent.self, from: payload)
+        let usage = try XCTUnwrap(event.response?.usage)
+
+        XCTAssertEqual(usage.inputTokens, 120)
+        XCTAssertEqual(usage.outputTokens, 30)
+        XCTAssertEqual(usage.totalTokens, 150)
+        XCTAssertEqual(usage.inputTextTokens, 40)
+        XCTAssertEqual(usage.inputAudioTokens, 70)
+        XCTAssertEqual(usage.inputImageTokens, 10)
+        XCTAssertEqual(usage.cachedInputTokens, 80)
+        XCTAssertEqual(usage.cachedTextTokens, 30)
+        XCTAssertEqual(usage.cachedAudioTokens, 45)
+        XCTAssertEqual(usage.cachedImageTokens, 5)
+        XCTAssertEqual(usage.outputTextTokens, 12)
+        XCTAssertEqual(usage.outputAudioTokens, 18)
+    }
+
     func testDecodesClientEventIDFromRealtimeError() throws {
         let payload = Data(
             """

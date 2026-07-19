@@ -48,6 +48,34 @@ final class ConversationHistoryLifecycleTests: XCTestCase {
         XCTAssertTrue(model.history.conversations.first?.messages.isEmpty == true)
     }
 
+    func testCompletedResponseUsageIsPersistedForCurrentConversation() async throws {
+        let model = makeModel()
+        model.beginConversationHistoryIfNeeded()
+        let turn = model.turnTracker.advance()
+        let usage = TokenUsage(
+            inputTokens: 90,
+            outputTokens: 25,
+            totalTokens: 115,
+            inputAudioTokens: 40,
+            cachedInputTokens: 50,
+            outputAudioTokens: 15
+        )
+
+        model.recordResponseUsage(
+            RealtimeResponse(
+                id: "response_usage",
+                status: "completed",
+                metadata: ["screen_tutor_turn": String(turn)],
+                output: [],
+                usage: usage
+            )
+        )
+        await model.history.flush()
+
+        let conversation = try XCTUnwrap(model.history.conversations.first)
+        XCTAssertEqual(conversation.usage, usage)
+    }
+
     private func makeModel() -> AppModel {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScreenTutorHistoryLifecycleTests-\(UUID().uuidString)")

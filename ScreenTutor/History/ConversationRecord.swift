@@ -9,6 +9,7 @@ enum ConversationRecordType: String, Codable, Sendable {
     case started = "conversation_started"
     case message
     case toolCall = "tool_call"
+    case usage
 }
 
 enum ConversationToolStatus: String, Codable, Sendable {
@@ -29,6 +30,7 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
     let responseID: String?
     let toolName: String?
     let toolStatus: ConversationToolStatus?
+    let usage: TokenUsage?
 
     static func started(
         conversationID: UUID,
@@ -46,7 +48,8 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
             providerItemID: nil,
             responseID: nil,
             toolName: nil,
-            toolStatus: nil
+            toolStatus: nil,
+            usage: nil
         )
     }
 
@@ -71,7 +74,8 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
             providerItemID: providerItemID,
             responseID: responseID,
             toolName: nil,
-            toolStatus: nil
+            toolStatus: nil,
+            usage: nil
         )
     }
 
@@ -94,7 +98,32 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
             providerItemID: nil,
             responseID: nil,
             toolName: name,
-            toolStatus: status
+            toolStatus: status,
+            usage: nil
+        )
+    }
+
+    static func usage(
+        conversationID: UUID,
+        turn: Int,
+        responseID: String,
+        usage: TokenUsage,
+        at timestamp: Date = Date()
+    ) -> ConversationRecord {
+        ConversationRecord(
+            schemaVersion: 3,
+            id: UUID(),
+            conversationID: conversationID,
+            timestamp: timestamp,
+            type: .usage,
+            turn: turn,
+            role: nil,
+            text: nil,
+            providerItemID: nil,
+            responseID: responseID,
+            toolName: nil,
+            toolStatus: nil,
+            usage: usage
         )
     }
 
@@ -109,6 +138,7 @@ struct ConversationRecord: Codable, Identifiable, Sendable {
         case responseID = "response_id"
         case toolName = "tool_name"
         case toolStatus = "tool_status"
+        case usage
     }
 }
 

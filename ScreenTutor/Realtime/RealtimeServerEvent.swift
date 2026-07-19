@@ -43,6 +43,21 @@ struct RealtimeResponse: Decodable, Sendable {
     let status: String?
     let metadata: [String: String]?
     let output: [RealtimeItem]?
+    let usage: TokenUsage?
+
+    init(
+        id: String?,
+        status: String?,
+        metadata: [String: String]?,
+        output: [RealtimeItem]?,
+        usage: TokenUsage? = nil
+    ) {
+        self.id = id
+        self.status = status
+        self.metadata = metadata
+        self.output = output
+        self.usage = usage
+    }
 }
 
 struct RealtimeItem: Decodable, Sendable {
