@@ -22,6 +22,11 @@ extension AppModel {
                 )
             case "session.updated":
                 guard phase == .connecting else { return }
+                try await replayConversationHistory(connectionID: connectionID)
+                guard
+                    isCurrentSession(generation: generation, connectionID: connectionID),
+                    phase == .connecting
+                else { return }
                 try await startAudioStreaming(
                     generation: generation,
                     connectionID: connectionID

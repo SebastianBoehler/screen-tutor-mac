@@ -79,6 +79,41 @@ struct ConversationImageEvent: Encodable, Sendable {
     }
 }
 
+struct ConversationReplayEvent: Encodable, Sendable {
+    let eventID = "evt_history_\(UUID().uuidString)"
+    let type = "conversation.item.create"
+    let item: MessageItem
+
+    init(role: ConversationRole, text: String) {
+        item = MessageItem(
+            type: "message",
+            role: role.rawValue,
+            content: [
+                ContentPart(
+                    type: role == .user ? "input_text" : "output_text",
+                    text: text
+                )
+            ]
+        )
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, item
+        case eventID = "event_id"
+    }
+
+    struct MessageItem: Encodable, Sendable {
+        let type: String
+        let role: String
+        let content: [ContentPart]
+    }
+
+    struct ContentPart: Encodable, Sendable {
+        let type: String
+        let text: String
+    }
+}
+
 struct ConversationTruncateEvent: Encodable, Sendable {
     let type = "conversation.item.truncate"
     let itemID: String

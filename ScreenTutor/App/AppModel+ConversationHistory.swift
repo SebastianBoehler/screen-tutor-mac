@@ -15,6 +15,10 @@ struct ConversationHistoryIdentity {
     mutating func clear() {
         current = nil
     }
+
+    mutating func resume(_ conversationID: UUID) {
+        current = conversationID
+    }
 }
 
 struct PendingUserHistoryTurn {
@@ -166,6 +170,7 @@ extension AppModel {
 
     func resetConversationHistorySession() {
         historyIdentity.clear()
+        pendingHistoryReplay.removeAll()
         pendingUserHistoryTurns.removeAll()
         pendingAssistantHistory.removeAll()
         latestUserTranscript = ""

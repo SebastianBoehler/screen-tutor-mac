@@ -73,6 +73,30 @@ final class ConversationHistoryModel {
         }
     }
 
+    func deleteConversation(id: UUID) async {
+        await flush()
+        do {
+            try await store.deleteConversation(id)
+            logsByID[id] = nil
+            conversations.removeAll { $0.id == id }
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteAllConversations() async {
+        await flush()
+        do {
+            try await store.deleteAllConversations()
+            logsByID.removeAll()
+            conversations.removeAll()
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     private static func newestFirst(
         _ lhs: ConversationProjection,
         _ rhs: ConversationProjection

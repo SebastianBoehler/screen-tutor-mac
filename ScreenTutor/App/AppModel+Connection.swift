@@ -1,7 +1,7 @@
 import Foundation
 
 extension AppModel {
-    func startSession() async {
+    func startSession(continuing conversation: ConversationProjection? = nil) async {
         guard phase == .idle else { return }
         errorMessage = nil
         assistantTranscript = ""
@@ -9,7 +9,12 @@ extension AppModel {
         phase = .requestingPermissions
         sessionGeneration &+= 1
         let generation = sessionGeneration
-        turnTracker = ConversationTurnTracker()
+        pendingHistoryReplay = conversation?.messages ?? []
+        if let conversation {
+            historyIdentity.resume(conversation.id)
+        }
+        let latestArchivedTurn = conversation?.messages.map(\.turn).max() ?? 0
+        turnTracker = ConversationTurnTracker(initialTurn: latestArchivedTurn)
 
         do {
             guard let apiKey = try settings.loadAPIKey() else {
@@ -58,6 +63,18 @@ extension AppModel {
             guard generation == sessionGeneration else { return }
             await teardownSession(preserving: error.localizedDescription)
         }
+    }
+
+    func replayConversationHistory(
+        connectionID: RealtimeConnectionID
+    ) async throws {
+        for message in pendingHistoryReplay {
+            try await realtimeClient.send(
+                ConversationReplayEvent(role: message.role, text: message.text),
+                connectionID: connectionID
+            )
+        }
+        pendingHistoryReplay.removeAll()
     }
 
     func startAudioStreaming(

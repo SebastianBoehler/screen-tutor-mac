@@ -21,7 +21,7 @@ struct ScreenTutorApp: App {
         }
 
         Window("Conversation History", id: "conversation-history") {
-            ConversationHistoryView(model: appDelegate.model.history)
+            ConversationHistoryView(appModel: appDelegate.model)
         }
         .defaultSize(width: 820, height: 620)
     }

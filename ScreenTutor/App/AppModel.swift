@@ -38,6 +38,7 @@ final class AppModel {
     var historyIdentity = ConversationHistoryIdentity()
     var pendingUserHistoryTurns: [String: PendingUserHistoryTurn] = [:]
     var pendingAssistantHistory: [String: PendingAssistantHistoryMessage] = [:]
+    var pendingHistoryReplay: [ConversationMessage] = []
     @ObservationIgnored var showHighlight: ((TeachingHighlight) throws -> Void)?
     @ObservationIgnored var clearHighlight: (() -> Void)?
     @ObservationIgnored private var hotKeyErrorMessage: String?
@@ -97,6 +98,13 @@ final class AppModel {
         Task {
             await teardownSession(preserving: nil)
             await startSession()
+        }
+    }
+
+    func continueConversation(_ conversation: ConversationProjection) {
+        guard phase == .idle else { return }
+        Task {
+            await startSession(continuing: conversation)
         }
     }
 

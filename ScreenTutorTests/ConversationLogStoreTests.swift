@@ -95,6 +95,45 @@ final class ConversationLogStoreTests: XCTestCase {
         let permissions = try XCTUnwrap(attributes[.posixPermissions] as? NSNumber)
         XCTAssertEqual(permissions.intValue & 0o777, 0o600)
     }
+
+    func testDeleteConversationRemovesOnlyRequestedJSONL() async throws {
+        let fixture = try Fixture()
+        let deletedID = UUID()
+        let retainedID = UUID()
+        let store = ConversationLogStore(rootDirectoryURL: fixture.directory)
+        try await store.append(.started(conversationID: deletedID))
+        try await store.append(.started(conversationID: retainedID))
+
+        try await store.deleteConversation(deletedID)
+
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: store.fileURL(for: deletedID).path)
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: store.fileURL(for: retainedID).path)
+        )
+    }
+
+    func testDeleteAllConversationsPreservesUnrelatedFiles() async throws {
+        let fixture = try Fixture()
+        let store = ConversationLogStore(rootDirectoryURL: fixture.directory)
+        let firstID = UUID()
+        let secondID = UUID()
+        try await store.append(.started(conversationID: firstID))
+        try await store.append(.started(conversationID: secondID))
+        let notesURL = fixture.directory.appendingPathComponent("notes.jsonl")
+        try Data("keep me".utf8).write(to: notesURL)
+
+        try await store.deleteAllConversations()
+
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: store.fileURL(for: firstID).path)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: store.fileURL(for: secondID).path)
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: notesURL.path))
+    }
 }
 
 private struct Fixture {

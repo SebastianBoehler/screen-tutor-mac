@@ -159,6 +159,32 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(image["image_url"] as? String, "data:image/jpeg;base64,AQID")
     }
 
+    func testReplayUserMessageUsesInputTextConversationItem() throws {
+        let root = try encodedJSONObject(
+            ConversationReplayEvent(role: .user, text: "Why does this converge?")
+        )
+        let item = try XCTUnwrap(root["item"] as? [String: Any])
+        let content = try XCTUnwrap(item["content"] as? [[String: Any]])
+
+        XCTAssertEqual(root["type"] as? String, "conversation.item.create")
+        XCTAssertEqual(item["type"] as? String, "message")
+        XCTAssertEqual(item["role"] as? String, "user")
+        XCTAssertEqual(content.first?["type"] as? String, "input_text")
+        XCTAssertEqual(content.first?["text"] as? String, "Why does this converge?")
+    }
+
+    func testReplayAssistantMessageUsesOutputTextConversationItem() throws {
+        let root = try encodedJSONObject(
+            ConversationReplayEvent(role: .assistant, text: "Because the loss is bounded.")
+        )
+        let item = try XCTUnwrap(root["item"] as? [String: Any])
+        let content = try XCTUnwrap(item["content"] as? [[String: Any]])
+
+        XCTAssertEqual(item["role"] as? String, "assistant")
+        XCTAssertEqual(content.first?["type"] as? String, "output_text")
+        XCTAssertEqual(content.first?["text"] as? String, "Because the loss is bounded.")
+    }
+
     func testDecodesCurrentOutputAudioDeltaEvent() throws {
         let payload = Data(
             """
@@ -176,6 +202,15 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(event.responseID, "resp_1")
         XCTAssertEqual(event.itemID, "item_1")
         XCTAssertEqual(event.delta, "AQI=")
+    }
+
+    private func encodedJSONObject<Event: Encodable>(
+        _ event: Event
+    ) throws -> [String: Any] {
+        let data = try JSONEncoder().encode(event)
+        return try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
     }
 
     func testFunctionOutputPreservesCallIDAndArbitraryJSON() throws {

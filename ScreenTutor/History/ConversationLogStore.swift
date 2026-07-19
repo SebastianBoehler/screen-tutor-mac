@@ -102,6 +102,24 @@ actor ConversationLogStore {
         }
     }
 
+    func deleteConversation(_ conversationID: UUID) throws {
+        let destination = fileURL(for: conversationID)
+        guard fileManager.fileExists(atPath: destination.path) else { return }
+        try fileManager.removeItem(at: destination)
+    }
+
+    func deleteAllConversations() throws {
+        guard fileManager.fileExists(atPath: rootDirectoryURL.path) else { return }
+        let files = try fileManager.contentsOfDirectory(
+            at: rootDirectoryURL,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )
+        for url in files where Self.isConversationFile(url) {
+            try fileManager.removeItem(at: url)
+        }
+    }
+
     static func applicationSupportDirectory(
         fileManager: FileManager = .default
     ) -> URL {
@@ -137,5 +155,10 @@ actor ConversationLogStore {
             [.posixPermissions: 0o600],
             ofItemAtPath: url.path
         )
+    }
+
+    private static func isConversationFile(_ url: URL) -> Bool {
+        url.pathExtension == "jsonl"
+            && UUID(uuidString: url.deletingPathExtension().lastPathComponent) != nil
     }
 }

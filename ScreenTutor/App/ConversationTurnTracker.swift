@@ -1,5 +1,9 @@
 struct ConversationTurnTracker: Sendable {
-    private(set) var current = 0
+    private(set) var current: Int
+
+    init(initialTurn: Int = 0) {
+        current = initialTurn
+    }
 
     mutating func advance() -> Int {
         current &+= 1

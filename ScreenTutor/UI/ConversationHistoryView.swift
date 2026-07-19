@@ -2,8 +2,15 @@ import AppKit
 import SwiftUI
 
 struct ConversationHistoryView: View {
-    let model: ConversationHistoryModel
+    let appModel: AppModel
     @State private var selection: UUID?
+    @State private var conversationPendingDeletion: ConversationProjection?
+    @State private var showsDeleteConversationConfirmation = false
+    @State private var showsDeleteAllConfirmation = false
+
+    private var model: ConversationHistoryModel {
+        appModel.history
+    }
 
     private var selectedConversation: ConversationProjection? {
         model.conversations.first { $0.id == selection }
@@ -38,6 +45,17 @@ struct ConversationHistoryView: View {
         }
         .toolbar {
             ToolbarItemGroup {
+                Button("Continue", systemImage: "arrow.forward.bubble") {
+                    if let selectedConversation {
+                        appModel.continueConversation(selectedConversation)
+                    }
+                }
+                .disabled(selectedConversation == nil || appModel.phase != .idle)
+                .help(
+                    appModel.phase == .idle
+                        ? "Continue this conversation with its saved context"
+                        : "End the active session before continuing another conversation"
+                )
                 Button("Reload", systemImage: "arrow.clockwise") {
                     Task { await model.reload() }
                 }
@@ -45,6 +63,44 @@ struct ConversationHistoryView: View {
                     revealSelectedLog()
                 }
                 .disabled(selectedConversation == nil)
+                Button("Delete", systemImage: "trash", role: .destructive) {
+                    conversationPendingDeletion = selectedConversation
+                    showsDeleteConversationConfirmation = true
+                }
+                .disabled(selectedConversation == nil || appModel.phase != .idle)
+                .confirmationDialog(
+                    "Delete conversation?",
+                    isPresented: $showsDeleteConversationConfirmation,
+                    titleVisibility: .visible,
+                    presenting: conversationPendingDeletion
+                ) { conversation in
+                    Button("Delete Conversation", role: .destructive) {
+                        Task { await model.deleteConversation(id: conversation.id) }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: { conversation in
+                    Text(
+                        "This permanently deletes “\(conversation.title)” and its JSONL file."
+                    )
+                }
+                Menu("More", systemImage: "ellipsis.circle") {
+                    Button("Delete All Conversations…", systemImage: "trash", role: .destructive) {
+                        showsDeleteAllConfirmation = true
+                    }
+                    .disabled(model.conversations.isEmpty || appModel.phase != .idle)
+                }
+                .confirmationDialog(
+                    "Delete all conversations?",
+                    isPresented: $showsDeleteAllConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Delete All Conversations", role: .destructive) {
+                        Task { await model.deleteAllConversations() }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This permanently deletes every saved conversation and JSONL file.")
+                }
             }
         }
     }
