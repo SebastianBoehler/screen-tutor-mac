@@ -25,6 +25,10 @@ final class ConversationHistoryModel {
         store.rootDirectoryURL
     }
 
+    var conversationFileURLs: [URL] {
+        conversations.map(\.fileURL)
+    }
+
     func append(_ record: ConversationRecord) async throws {
         try await store.append(record)
         apply(record)

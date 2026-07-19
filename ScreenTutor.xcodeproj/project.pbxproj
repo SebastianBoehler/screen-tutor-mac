@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00024AB9E1753CC3D7C1FF14 /* MicrophonePermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BBDB71E3BCF2860A05B1C /* MicrophonePermissionService.swift */; };
 		016A787AAD20CC1C0EDA0433 /* HUDPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D901021C032F388B6DD2D221 /* HUDPanel.swift */; };
+		0642B05D56185F1BAFB3C366 /* ConversationStorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDCB160027ECCB114F118F4 /* ConversationStorageSettingsView.swift */; };
 		076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DF0070CA6332F9C015108D /* RealtimeServerEvent.swift */; };
 		07CDC81EAA198271E7536E09 /* RealtimeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188CC79254B862A2921BDB9 /* RealtimeConstants.swift */; };
 		0D8AA4126F765725BAE9E42C /* AmbientTranscriptPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */; };
@@ -125,6 +126,7 @@
 		4F06DD943BCFC9D69263DD2D /* PCM16AccumulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCM16AccumulatorTests.swift; sourceTree = "<group>"; };
 		54F78D0AD33988CABB914106 /* TeachingPointerLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingPointerLayoutTests.swift; sourceTree = "<group>"; };
 		58246F9B785E2EABB3AE3193 /* ListeningIdleTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningIdleTimer.swift; sourceTree = "<group>"; };
+		5CDCB160027ECCB114F118F4 /* ConversationStorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStorageSettingsView.swift; sourceTree = "<group>"; };
 		5D5F5DDEF81063C6132F53E8 /* ListeningIdleTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningIdleTimerTests.swift; sourceTree = "<group>"; };
 		5DE44D1DF8323D2A4C69ACCB /* ReasoningEffort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningEffort.swift; sourceTree = "<group>"; };
 		5E6FF901E90FFA6A3BAAD5E6 /* ScreenTutor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScreenTutor.entitlements; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 			children = (
 				09581DE546D97C59394F6F55 /* AmbientTranscriptView.swift */,
 				5F582A32F2EEF5D8A7CE86DF /* ConversationHistoryView.swift */,
+				5CDCB160027ECCB114F118F4 /* ConversationStorageSettingsView.swift */,
 				4A7B3F6A2269E514E8E2830F /* GlobalHotKeyShortcutRecorder.swift */,
 				B8997C9D737C7433B29DE7FD /* HUDControlsView.swift */,
 				D901021C032F388B6DD2D221 /* HUDPanel.swift */,
@@ -477,6 +480,7 @@
 				38C21A3E3C5F6DECD0A0924C /* ConversationLogStore.swift in Sources */,
 				F43EC9695EB49595D1AC3204 /* ConversationProjection.swift in Sources */,
 				680AD1D74A2A4BD95BD64307 /* ConversationRecord.swift in Sources */,
+				0642B05D56185F1BAFB3C366 /* ConversationStorageSettingsView.swift in Sources */,
 				13BD148CE0543EA403E248F2 /* ConversationTurnTracker.swift in Sources */,
 				608243EE6EFF96A764BAAD1D /* GlobalHotKeyController.swift in Sources */,
 				37CC2F3BE7F50ED6DBEC0AAE /* GlobalHotKeyShortcut.swift in Sources */,

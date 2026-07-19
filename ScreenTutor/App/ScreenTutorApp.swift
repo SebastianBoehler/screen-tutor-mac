@@ -14,7 +14,10 @@ struct ScreenTutorApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            SettingsView(model: appDelegate.model.settings)
+            SettingsView(
+                model: appDelegate.model.settings,
+                historyModel: appDelegate.model.history
+            )
         }
 
         Window("Conversation History", id: "conversation-history") {

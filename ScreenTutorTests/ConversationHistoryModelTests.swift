@@ -36,5 +36,9 @@ final class ConversationHistoryModelTests: XCTestCase {
         let stored = try await store.loadConversation(conversationID)
         XCTAssertEqual(stored.records.map(\.providerItemID), [nil, "assistant", "user"])
         XCTAssertEqual(model.conversations.first?.messages.map(\.role), [.user, .assistant])
+        XCTAssertEqual(
+            model.conversationFileURLs,
+            [store.fileURL(for: conversationID)]
+        )
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     let model: AppSettingsModel
+    let historyModel: ConversationHistoryModel
     @State private var apiKey = ""
     @State private var tutorInstructionsDraft = ""
 
@@ -157,6 +158,8 @@ struct SettingsView: View {
                     )
                 )
             }
+
+            ConversationStorageSettingsView(model: historyModel)
 
             if let errorMessage = model.errorMessage {
                 Section {
