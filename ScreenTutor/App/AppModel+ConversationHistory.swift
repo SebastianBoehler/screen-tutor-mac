@@ -110,10 +110,11 @@ extension AppModel {
         turn: Int
     ) {
         guard
-            let conversationID = historyIdentity.current,
             let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
             !name.isEmpty
         else { return }
+        updateLiveToolActivity(name: name, status: LiveToolActivityStatus(status), turn: turn)
+        guard let conversationID = historyIdentity.current else { return }
         history.record(
             .toolCall(
                 conversationID: conversationID,
@@ -122,6 +123,30 @@ extension AppModel {
                 status: status
             )
         )
+    }
+
+    func beginToolActivity(name: String?, turn: Int) {
+        guard
+            let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !name.isEmpty
+        else { return }
+        if name == "list_windows" || name == "capture_window" {
+            playScreenInspectionCue()
+        }
+        updateLiveToolActivity(name: name, status: .started, turn: turn)
+    }
+
+    private func updateLiveToolActivity(
+        name: String,
+        status: LiveToolActivityStatus,
+        turn: Int
+    ) {
+        let activity = LiveToolActivity(name: name, status: status, turn: turn)
+        liveToolActivities.removeAll { $0.id == activity.id }
+        liveToolActivities.append(activity)
+        if liveToolActivities.count > 3 {
+            liveToolActivities.removeFirst(liveToolActivities.count - 3)
+        }
     }
 
     func finalizeAssistantHistory(_ response: RealtimeResponse?) {

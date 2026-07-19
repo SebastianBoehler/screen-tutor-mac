@@ -24,47 +24,39 @@ actor RealtimeAudioIO {
     ) throws
         -> AsyncThrowingStream<Data, any Error> {
         guard engine == nil else { throw AudioIOError.alreadyRunning }
-        guard
-            let networkFormat = AVAudioFormat(
-                commonFormat: .pcmFormatInt16,
-                sampleRate: RealtimeConstants.sampleRate,
-                channels: 1,
-                interleaved: true
-            ),
-            let voiceProcessingFormat = AVAudioFormat(
-                standardFormatWithSampleRate: RealtimeConstants.sampleRate,
-                channels: 1
-            )
-        else {
+        guard let networkFormat = AVAudioFormat(
+            commonFormat: .pcmFormatInt16,
+            sampleRate: RealtimeConstants.sampleRate,
+            channels: 1,
+            interleaved: true
+        ) else {
             throw AudioIOError.invalidInputFormat
         }
 
         let engine = AVAudioEngine()
         let player = AVAudioPlayerNode()
         let inputNode = engine.inputNode
-        do {
-            try inputNode.setVoiceProcessingEnabled(true)
-        } catch {
-            throw AudioIOError.voiceProcessingUnavailable(error.localizedDescription)
-        }
-
         let inputDeviceFormat = inputNode.outputFormat(forBus: 0)
+        let outputDeviceFormat = engine.outputNode.inputFormat(forBus: 0)
         guard inputDeviceFormat.sampleRate > 0, inputDeviceFormat.channelCount > 0 else {
             throw AudioIOError.noInputDevice
         }
+        guard outputDeviceFormat.sampleRate > 0, outputDeviceFormat.channelCount > 0 else {
+            throw AudioIOError.invalidInputFormat
+        }
         let converter = try PCMInputConverter(
-            inputFormat: voiceProcessingFormat,
+            inputFormat: inputDeviceFormat,
             outputFormat: networkFormat
         )
         let pair = AsyncThrowingStream<Data, any Error>.makeStream(
             bufferingPolicy: .bufferingNewest(20)
         )
         let continuation = pair.continuation
-        let bufferSize = AVAudioFrameCount(voiceProcessingFormat.sampleRate * 0.1)
+        let bufferSize = AVAudioFrameCount(inputDeviceFormat.sampleRate * 0.1)
         inputNode.installTap(
             onBus: 0,
             bufferSize: bufferSize,
-            format: voiceProcessingFormat
+            format: inputDeviceFormat
         ) { buffer, _ in
             do {
                 let data = try converter.convert(buffer)
@@ -89,7 +81,7 @@ actor RealtimeAudioIO {
         engine.connect(
             engine.mainMixerNode,
             to: engine.outputNode,
-            format: voiceProcessingFormat
+            format: outputDeviceFormat
         )
         engine.prepare()
         do {

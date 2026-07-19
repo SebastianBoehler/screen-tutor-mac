@@ -1,7 +1,10 @@
 import Foundation
 
 extension AppModel {
-    func teardownSession(preserving message: String?) async {
+    func teardownSession(
+        preserving message: String?,
+        retainingConversationForReconnect: Bool = false
+    ) async {
         if let teardownTask {
             await teardownTask.value
             return
@@ -11,7 +14,10 @@ extension AppModel {
         teardownTaskID = taskID
         let task = Task<Void, Never> { @MainActor [weak self] in
             guard let self else { return }
-            await self.performTeardown(preserving: message)
+            await self.performTeardown(
+                preserving: message,
+                retainingConversationForReconnect: retainingConversationForReconnect
+            )
             guard self.teardownTaskID == taskID else { return }
             self.teardownTask = nil
             self.teardownTaskID = nil
@@ -20,7 +26,12 @@ extension AppModel {
         await task.value
     }
 
-    private func performTeardown(preserving message: String?) async {
+    private func performTeardown(
+        preserving message: String?,
+        retainingConversationForReconnect: Bool
+    ) async {
+        let recoveryID = retainingConversationForReconnect ? historyIdentity.current : nil
+        let existingRecovery = recoverableConversation
         sessionGeneration &+= 1
         _ = turnTracker.advance()
         let generation = sessionGeneration
@@ -45,6 +56,11 @@ extension AppModel {
 
         finishPendingConversationHistory()
         await history.flush()
+        let recoveredConversation: ConversationProjection? = if let recoveryID {
+            await history.conversation(id: recoveryID)
+        } else {
+            nil
+        }
         screenTools.invalidateWindowCatalog()
         activeResponseID = nil
         activeResponseTurn = nil
@@ -54,9 +70,14 @@ extension AppModel {
         pendingResponseCreates.removeAll()
         activeAssistantItemID = nil
         userIsSpeaking = false
+        isMicrophoneMuted = true
+        liveToolActivities.removeAll()
         capturedApplicationName = nil
         lastSnapshotWindowContext = nil
         resetConversationHistorySession()
+        recoverableConversation = retainingConversationForReconnect
+            ? recoveredConversation ?? existingRecovery
+            : nil
         clearHighlight?()
         phase = .idle
         errorMessage = message

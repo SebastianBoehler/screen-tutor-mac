@@ -4,20 +4,12 @@ struct HUDView: View {
     let model: AppModel
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    private var statusTitle: String {
-        model.errorMessage == nil ? model.phase.title : "Needs attention"
-    }
-
-    private var statusSymbolName: String {
-        model.errorMessage == nil ? model.phase.symbolName : "exclamationmark.triangle.fill"
-    }
-
     var body: some View {
         let transcript = model.ambientTranscriptPresentation
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    Image(systemName: statusSymbolName)
+                    Image(systemName: model.statusSymbolName)
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
                         .frame(width: 34, height: 34)
@@ -25,7 +17,7 @@ struct HUDView: View {
                         .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(statusTitle)
+                        Text(model.statusTitle)
                             .font(.headline)
                             .lineLimit(1)
                         Text(model.statusDetail)
@@ -35,7 +27,7 @@ struct HUDView: View {
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
+                .accessibilityLabel("ScreenTutor \(model.statusTitle). \(model.statusDetail)")
                 .accessibilityHint("Drag the background to move the overlay.")
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
@@ -43,6 +35,10 @@ struct HUDView: View {
                     .foregroundStyle(.tertiary)
                     .help("Drag to move ScreenTutor")
                     .accessibilityHidden(true)
+            }
+
+            if !model.liveToolActivities.isEmpty {
+                LiveToolActivityStrip(activities: model.liveToolActivities)
             }
 
             if transcript.isExpanded {

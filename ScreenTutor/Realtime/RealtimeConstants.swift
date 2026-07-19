@@ -1,7 +1,6 @@
 import Foundation
 
 enum RealtimeConstants {
-    static let model = "gpt-realtime-2.1"
     static let sampleRate = 24_000.0
     static let voice = "marin"
 
@@ -11,9 +10,9 @@ enum RealtimeConstants {
         question when useful. Keep spoken answers concise unless I ask for more depth.
         """
 
-    static var endpoint: URL {
+    static func endpoint(for model: RealtimeModel) -> URL {
         var components = URLComponents(string: "wss://api.openai.com/v1/realtime")!
-        components.queryItems = [URLQueryItem(name: "model", value: model)]
+        components.queryItems = [URLQueryItem(name: "model", value: model.rawValue)]
         return components.url!
     }
 

@@ -14,6 +14,7 @@ extension AppModel {
             case "session.created":
                 try await realtimeClient.send(
                     RealtimeSessionUpdateEvent.screenTutor(
+                        model: settings.realtimeModel,
                         language: settings.tutorLanguage,
                         tutorInstructions: settings.tutorInstructions,
                         reasoningEffort: settings.reasoningEffort
@@ -36,6 +37,7 @@ extension AppModel {
                     phase == .connecting
                 else { return }
                 beginConversationHistoryIfNeeded()
+                recoverableConversation = nil
                 enterListening()
             case "input_audio_buffer.speech_started":
                 if phase != .paused && phase != .pausing {
@@ -98,7 +100,10 @@ extension AppModel {
             guard isCurrentSession(generation: generation, connectionID: connectionID) else {
                 return
             }
-            await teardownSession(preserving: error.localizedDescription)
+            await teardownSession(
+                preserving: error.localizedDescription,
+                retainingConversationForReconnect: true
+            )
         }
     }
 
@@ -112,6 +117,7 @@ extension AppModel {
         let turn = turnTracker.advance()
         idleTimer.cancel()
         screenTools.invalidateWindowCatalog()
+        liveToolActivities.removeAll()
         errorMessage = nil
         userIsSpeaking = true
         phase = .listening

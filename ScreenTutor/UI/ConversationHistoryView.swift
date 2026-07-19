@@ -45,17 +45,6 @@ struct ConversationHistoryView: View {
         }
         .toolbar {
             ToolbarItemGroup {
-                Button("Continue", systemImage: "arrow.forward.bubble") {
-                    if let selectedConversation {
-                        appModel.continueConversation(selectedConversation)
-                    }
-                }
-                .disabled(selectedConversation == nil || appModel.phase != .idle)
-                .help(
-                    appModel.phase == .idle
-                        ? "Continue this conversation with its saved context"
-                        : "End the active session before continuing another conversation"
-                )
                 Button("Reload", systemImage: "arrow.clockwise") {
                     Task { await model.reload() }
                 }
@@ -147,6 +136,20 @@ struct ConversationHistoryView: View {
         if let conversation = selectedConversation {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Button("Continue conversation", systemImage: "arrow.forward.bubble.fill") {
+                            appModel.continueConversation(conversation)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .disabled(appModel.phase != .idle)
+                        .help(
+                            appModel.phase == .idle
+                                ? "Continue with this saved context"
+                                : "End the active conversation first"
+                        )
+                        Spacer()
+                    }
                     if conversation.usage.totalTokens > 0 {
                         ConversationUsageSummaryView(usage: conversation.usage)
                     }
@@ -228,7 +231,7 @@ private struct ConversationToolTag: View {
 
     var body: some View {
         Label(title, systemImage: systemImage)
-            .font(.caption2.weight(.medium))
+            .font(.caption.weight(.medium))
             .foregroundStyle(tint)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -242,7 +245,7 @@ private struct ConversationToolTag: View {
         case "list_windows": "Checked windows"
         case "capture_window": "Viewed window"
         case "highlight_screen_region": "Pointed on screen"
-        default: toolCall.name.replacingOccurrences(of: "_", with: " ").capitalized
+        default: toolCall.name.replacing("_", with: " ").capitalized
         }
     }
 

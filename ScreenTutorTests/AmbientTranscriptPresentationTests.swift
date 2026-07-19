@@ -83,4 +83,23 @@ final class AmbientTranscriptPresentationTests: XCTestCase {
 
         XCTAssertEqual(origin, CGPoint(x: 1_012, y: 688))
     }
+
+    func testToolActivityAddsRoomToTheDraggableOverlay() {
+        let withoutTools = AmbientTranscriptPresentation(
+            isEnabled: true,
+            phase: .thinking,
+            userText: "Explain this chart.",
+            assistantText: "",
+            hasToolActivity: false
+        )
+        let withTools = AmbientTranscriptPresentation(
+            isEnabled: true,
+            phase: .thinking,
+            userText: "Explain this chart.",
+            assistantText: "",
+            hasToolActivity: true
+        )
+
+        XCTAssertGreaterThan(withTools.panelHeight, withoutTools.panelHeight)
+    }
 }

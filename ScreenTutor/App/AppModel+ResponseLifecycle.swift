@@ -146,7 +146,10 @@ extension AppModel {
             return
         }
         if phase == .connecting {
-            await teardownSession(preserving: message)
+            await teardownSession(
+                preserving: message,
+                retainingConversationForReconnect: historyIdentity.current != nil
+            )
             return
         }
         errorMessage = message

@@ -67,6 +67,17 @@ final class AppSettingsModelTests: XCTestCase {
     }
 
     @MainActor
+    func testRealtimeModelDefaultsToFlagshipAndPersistsEconomyChoice() {
+        let model = makeModel()
+        XCTAssertEqual(model.realtimeModel, .flagship)
+
+        model.setRealtimeModel(.economy)
+
+        XCTAssertEqual(model.realtimeModel, .economy)
+        XCTAssertEqual(makeModel().realtimeModel, .economy)
+    }
+
+    @MainActor
     private func makeModel() -> AppSettingsModel {
         AppSettingsModel(
             apiKeyStore: APIKeyStore(),

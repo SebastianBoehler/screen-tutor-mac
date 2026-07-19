@@ -11,6 +11,7 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
     }
 
     static func screenTutor(
+        model: RealtimeModel,
         language: TutorLanguage,
         tutorInstructions: String,
         reasoningEffort: ReasoningEffort
@@ -19,7 +20,7 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
             eventID: "evt_session_\(UUID().uuidString)",
             session: RealtimeSessionConfiguration(
                 type: "realtime",
-                model: RealtimeConstants.model,
+                model: model.rawValue,
                 instructions: RealtimeConstants.tutorInstructions(
                     language: language,
                     customTutorInstructions: tutorInstructions

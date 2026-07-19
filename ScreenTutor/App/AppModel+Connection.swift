@@ -4,6 +4,7 @@ extension AppModel {
     func startSession(continuing conversation: ConversationProjection? = nil) async {
         guard phase == .idle else { return }
         errorMessage = nil
+        isMicrophoneMuted = false
         assistantTranscript = ""
         capturedApplicationName = nil
         phase = .requestingPermissions
@@ -40,6 +41,7 @@ extension AppModel {
             try await realtimeClient.connect(
                 connectionID: connectionID,
                 apiKey: apiKey,
+                model: settings.realtimeModel,
                 onEvent: { [weak self] event in
                     await self?.handle(
                         event,
@@ -61,7 +63,10 @@ extension AppModel {
             }
         } catch {
             guard generation == sessionGeneration else { return }
-            await teardownSession(preserving: error.localizedDescription)
+            await teardownSession(
+                preserving: error.localizedDescription,
+                retainingConversationForReconnect: conversation != nil
+            )
         }
     }
 
@@ -105,6 +110,7 @@ extension AppModel {
                             connectionID: connectionID
                         )
                     else { return }
+                    guard self.shouldUploadMicrophoneAudio else { continue }
                     try await self.realtimeClient.send(
                         InputAudioAppendEvent(pcmData: pcmData),
                         connectionID: connectionID
@@ -127,109 +133,32 @@ extension AppModel {
 
     func enterListening() {
         phase = .listening
+        guard !isMicrophoneMuted else {
+            idleTimer.cancel()
+            return
+        }
         idleTimer.arm { [weak self] in
             Task { @MainActor [weak self] in
                 guard
                     let self,
                     self.phase == .listening,
-                    !self.userIsSpeaking
+                    !self.userIsSpeaking,
+                    !self.isMicrophoneMuted
                 else { return }
-                await self.pauseListening()
+                await self.setMicrophoneMuted(true)
             }
         }
     }
 
-    func resumeListening() async {
-        guard phase == .paused, let connectionID = realtimeConnectionID else { return }
-        let generation = sessionGeneration
-        errorMessage = nil
-        phase = .resuming
-        do {
-            try await startAudioStreaming(
-                generation: generation,
-                connectionID: connectionID
-            )
-            guard
-                isCurrentSession(generation: generation, connectionID: connectionID),
-                phase == .resuming
-            else { return }
-            enterListening()
-        } catch {
-            guard isCurrentSession(generation: generation, connectionID: connectionID) else {
-                return
-            }
-            phase = .paused
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func pauseListening() async {
-        guard
-            phase == .listening || phase == .thinking || phase == .speaking,
-            let connectionID = realtimeConnectionID
-        else { return }
-        let generation = sessionGeneration
-        idleTimer.cancel()
-        phase = .pausing
-        let pauseTurn = turnTracker.advance()
-        userIsSpeaking = false
-        screenTools.invalidateWindowCatalog()
-        clearHighlight?()
-        let responseID = activeResponseID
-        activeResponseID = nil
-        activeResponseTurn = nil
-        activeAssistantItemID = nil
-        let uploadTask = audioUploadTask
-        audioUploadTask = nil
-        uploadTask?.cancel()
-        let cutoff = await audioIO.interruptAssistantAudio(ownerID: connectionID)
-        await settleScreenToolTask(cancelling: false)
-        guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-            return
-        }
-        if let uploadTask { await uploadTask.value }
-        guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-            return
-        }
-        await audioIO.stop(ownerID: connectionID)
-        guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-            return
-        }
-        do {
-            if let responseID {
-                try await sendResponseCancel(
-                    responseID: responseID,
-                    connectionID: connectionID
-                )
-            }
-            guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-                return
-            }
-            if let cutoff {
-                try await realtimeClient.send(
-                    ConversationTruncateEvent(
-                        itemID: cutoff.itemID,
-                        audioEndMilliseconds: cutoff.audioEndMilliseconds
-                    ),
-                    connectionID: connectionID
-                )
-            }
-            guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-                return
-            }
-            try await realtimeClient.send(
-                InputAudioClearEvent(),
-                connectionID: connectionID
-            )
-            guard isCurrentPause(pauseTurn, generation: generation, connectionID: connectionID) else {
-                return
-            }
-            phase = .paused
-        } catch {
-            guard isCurrentSession(generation: generation, connectionID: connectionID) else {
-                return
-            }
-            await teardownSession(preserving: error.localizedDescription)
+    func setMicrophoneMuted(_ muted: Bool) async {
+        guard phase.hasConversation, realtimeConnectionID != nil else { return }
+        isMicrophoneMuted = muted
+        userIsSpeaking = muted ? false : userIsSpeaking
+        if muted {
+            idleTimer.cancel()
+        } else {
+            errorMessage = nil
+            if phase == .listening { enterListening() }
         }
     }
 
@@ -239,11 +168,12 @@ extension AppModel {
         connectionID: RealtimeConnectionID
     ) async {
         guard
-            isCurrentSession(generation: generation, connectionID: connectionID),
-            phase != .paused,
-            phase != .pausing
+            isCurrentSession(generation: generation, connectionID: connectionID)
         else { return }
-        await teardownSession(preserving: error.localizedDescription)
+        await teardownSession(
+            preserving: error.localizedDescription,
+            retainingConversationForReconnect: true
+        )
     }
 
     func handleDisconnect(
@@ -254,15 +184,9 @@ extension AppModel {
         guard isCurrentSession(generation: generation, connectionID: connectionID) else {
             return
         }
-        await teardownSession(preserving: message)
-    }
-
-    private func isCurrentPause(
-        _ turn: Int,
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) -> Bool {
-        isCurrentTurn(turn, generation: generation, connectionID: connectionID)
-            && phase == .pausing
+        await teardownSession(
+            preserving: message,
+            retainingConversationForReconnect: true
+        )
     }
 }

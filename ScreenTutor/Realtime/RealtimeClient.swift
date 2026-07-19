@@ -37,12 +37,13 @@ actor RealtimeClient {
     func connect(
         connectionID: RealtimeConnectionID,
         apiKey: String,
+        model: RealtimeModel,
         onEvent: @escaping EventHandler,
         onDisconnect: @escaping DisconnectHandler
     ) throws {
         try connectionState.activate(connectionID)
 
-        var request = URLRequest(url: RealtimeConstants.endpoint)
+        var request = URLRequest(url: RealtimeConstants.endpoint(for: model))
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 20
 

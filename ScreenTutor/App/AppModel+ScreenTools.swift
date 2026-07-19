@@ -40,7 +40,10 @@ extension AppModel {
                     connectionID: connectionID
                 )
             {
-                await self.teardownSession(preserving: failure.localizedDescription)
+                await self.teardownSession(
+                    preserving: failure.localizedDescription,
+                    retainingConversationForReconnect: true
+                )
             }
         }
     }
@@ -64,6 +67,8 @@ extension AppModel {
             try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
             return
         }
+
+        beginToolActivity(name: item.name, turn: turn)
 
         if item.name == "highlight_screen_region" {
             try await handleHighlightCall(

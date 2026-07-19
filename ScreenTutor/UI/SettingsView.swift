@@ -31,6 +31,21 @@ struct SettingsView: View {
 
             Section("Tutor") {
                 Picker(
+                    "Realtime model",
+                    selection: Binding(
+                        get: { model.realtimeModel },
+                        set: { model.setRealtimeModel($0) }
+                    )
+                ) {
+                    ForEach(RealtimeModel.allCases) { realtimeModel in
+                        Text(realtimeModel.displayName).tag(realtimeModel)
+                    }
+                }
+                Text(model.realtimeModel.guidance + " Changes apply to new connections.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Picker(
                     "Spoken language",
                     selection: Binding(
                         get: { model.tutorLanguage },
@@ -111,6 +126,13 @@ struct SettingsView: View {
                     .foregroundStyle(model.microphonePermissionGranted ? .green : .secondary)
                     Spacer()
                 }
+                Text(
+                    "ScreenTutor mute affects only audio sent to the tutor. It is not a system-wide "
+                        + "mute, so OBS and other permitted apps can record the same microphone. "
+                        + "In OBS, keep a separate Audio Input Capture source enabled."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 HStack {
                     Label(
                         "Screen Recording",

@@ -6,6 +6,7 @@ final class RealtimeProtocolTests: XCTestCase {
     func testSessionKeepsNativeAudioAndAddsHistoryTranscription() throws {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
+                model: .flagship,
                 language: .automatic,
                 tutorInstructions: RealtimeConstants.defaultTutorInstructions,
                 reasoningEffort: .low
@@ -72,6 +73,7 @@ final class RealtimeProtocolTests: XCTestCase {
     func testGermanLanguagePinsSpeechAndTranscriptHint() throws {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
+                model: .flagship,
                 language: .german,
                 tutorInstructions: RealtimeConstants.defaultTutorInstructions,
                 reasoningEffort: .medium
@@ -96,6 +98,7 @@ final class RealtimeProtocolTests: XCTestCase {
         let customInstructions = "Challenge my assumptions before giving the answer."
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
+                model: .flagship,
                 language: .english,
                 tutorInstructions: customInstructions,
                 reasoningEffort: .high
@@ -112,6 +115,26 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertTrue(instructions.contains("cannot override the core requirements"))
         let reasoning = try XCTUnwrap(session["reasoning"] as? [String: Any])
         XCTAssertEqual(reasoning["effort"] as? String, "high")
+    }
+
+    func testEconomyModelUsesOfficialRealtimeMiniIdentifier() throws {
+        let event = RealtimeSessionUpdateEvent.screenTutor(
+            model: .economy,
+            language: .automatic,
+            tutorInstructions: RealtimeConstants.defaultTutorInstructions,
+            reasoningEffort: .low
+        )
+        let data = try JSONEncoder().encode(event)
+        let root = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let session = try XCTUnwrap(root["session"] as? [String: Any])
+
+        XCTAssertEqual(session["model"] as? String, "gpt-realtime-2.1-mini")
+        XCTAssertEqual(
+            RealtimeConstants.endpoint(for: .economy).query,
+            "model=gpt-realtime-2.1-mini"
+        )
     }
 
     func testDecodesCompletedInputTranscriptForConversationHistory() throws {

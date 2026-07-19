@@ -9,6 +9,9 @@ final class AppModel {
     var assistantTranscript = ""
     var latestUserTranscript = ""
     var showsTranscriptOverlay = true
+    var isMicrophoneMuted = false
+    var liveToolActivities: [LiveToolActivity] = []
+    var recoverableConversation: ConversationProjection?
     var capturedApplicationName: String?
     let settings: AppSettingsModel
     let history: ConversationHistoryModel
@@ -41,6 +44,8 @@ final class AppModel {
     var pendingHistoryReplay: [ConversationMessage] = []
     @ObservationIgnored var showHighlight: ((TeachingHighlight) throws -> Void)?
     @ObservationIgnored var clearHighlight: (() -> Void)?
+    @ObservationIgnored var playScreenInspectionCue: @MainActor () -> Void =
+        ScreenInspectionCue.play
     @ObservationIgnored private var hotKeyErrorMessage: String?
 
     init(history: ConversationHistoryModel? = nil) {
@@ -57,7 +62,9 @@ final class AppModel {
 
     var statusDetail: String {
         if let errorMessage { return errorMessage }
-        if phase == .paused { return "Conversation retained · microphone off" }
+        if isMicrophoneMuted, phase.hasConversation {
+            return "ScreenTutor microphone muted · conversation connected"
+        }
         if let capturedApplicationName, phase.hasConversation {
             return "Seeing \(capturedApplicationName)"
         }
@@ -66,13 +73,38 @@ final class AppModel {
             : "Screen-aware Realtime voice"
     }
 
+    var statusTitle: String {
+        if errorMessage != nil { return "Needs attention" }
+        if isMicrophoneMuted, phase.hasConversation { return "Microphone muted" }
+        return phase.title
+    }
+
+    var statusSymbolName: String {
+        if errorMessage != nil { return "exclamationmark.triangle.fill" }
+        if isMicrophoneMuted, phase.hasConversation { return "mic.slash.fill" }
+        return phase.symbolName
+    }
+
     var ambientTranscriptPresentation: AmbientTranscriptPresentation {
         AmbientTranscriptPresentation(
             isEnabled: showsTranscriptOverlay,
             phase: phase,
             userText: latestUserTranscript,
-            assistantText: assistantTranscript
+            assistantText: assistantTranscript,
+            hasToolActivity: !liveToolActivities.isEmpty
         )
+    }
+
+    var microphoneControlState: MicrophoneControlState {
+        MicrophoneControlState(
+            phase: phase,
+            isMuted: isMicrophoneMuted,
+            canReconnect: recoverableConversation != nil
+        )
+    }
+
+    var shouldUploadMicrophoneAudio: Bool {
+        phase.hasConversation && !isMicrophoneMuted
     }
 
     func toggleTranscriptOverlay() {
@@ -83,11 +115,11 @@ final class AppModel {
         Task {
             switch phase {
             case .idle:
-                await startSession()
-            case .paused:
-                await resumeListening()
+                await startSession(continuing: recoverableConversation)
             case .listening, .thinking, .speaking:
-                await pauseListening()
+                await setMicrophoneMuted(!isMicrophoneMuted)
+            case .paused:
+                await setMicrophoneMuted(false)
             case .requestingPermissions, .connecting, .pausing, .resuming, .stopping:
                 break
             }
@@ -96,6 +128,7 @@ final class AppModel {
 
     func startNewConversation() {
         Task {
+            recoverableConversation = nil
             await teardownSession(preserving: nil)
             await startSession()
         }
@@ -109,6 +142,7 @@ final class AppModel {
     }
 
     func stopSession() async {
+        recoverableConversation = nil
         await teardownSession(preserving: nil)
     }
 

@@ -96,4 +96,32 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
         XCTAssertEqual(model.errorMessage, "The session configuration was rejected.")
         XCTAssertTrue(model.phase.isPrimaryActionEnabled)
     }
+
+    func testDisconnectRetainsConversationForTheNextConnection() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ScreenTutorReconnectTests-\(UUID().uuidString)")
+        let history = ConversationHistoryModel(
+            store: ConversationLogStore(rootDirectoryURL: directory)
+        )
+        let model = AppModel(history: history)
+        model.beginConversationHistoryIfNeeded()
+        let conversationID = try XCTUnwrap(model.historyIdentity.current)
+        let connectionID = RealtimeConnectionID()
+        model.realtimeConnectionID = connectionID
+        model.phase = .listening
+
+        await model.handleDisconnect(
+            "The network connection was interrupted.",
+            generation: model.sessionGeneration,
+            connectionID: connectionID
+        )
+
+        XCTAssertEqual(model.phase, .idle)
+        XCTAssertEqual(model.recoverableConversation?.id, conversationID)
+        XCTAssertEqual(model.microphoneControlState, .reconnect)
+        XCTAssertEqual(
+            model.errorMessage,
+            "The network connection was interrupted."
+        )
+    }
 }

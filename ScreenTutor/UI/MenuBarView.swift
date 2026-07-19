@@ -5,22 +5,15 @@ struct MenuBarView: View {
     let model: AppModel
     @Environment(\.openWindow) private var openWindow
 
-    private var statusTitle: String {
-        model.errorMessage == nil ? model.phase.title : "Needs attention"
-    }
-
-    private var statusSymbolName: String {
-        model.errorMessage == nil ? model.phase.symbolName : "exclamationmark.triangle.fill"
-    }
-
     var body: some View {
+        let microphone = model.microphoneControlState
         VStack(alignment: .leading, spacing: 14) {
             Text("ScreenTutor")
                 .font(.headline)
 
             Label {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(statusTitle)
+                    Text(model.statusTitle)
                         .font(.headline)
                     Text(model.statusDetail)
                         .font(.caption)
@@ -28,7 +21,7 @@ struct MenuBarView: View {
                         .lineLimit(2)
                 }
             } icon: {
-                Image(systemName: statusSymbolName)
+                Image(systemName: model.statusSymbolName)
                     .font(.title2)
                     .foregroundStyle(model.errorMessage == nil ? Color.accentColor : Color.red)
             }
@@ -36,7 +29,7 @@ struct MenuBarView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Status: \(statusTitle). \(model.statusDetail)")
+            .accessibilityLabel("Status: \(model.statusTitle). \(model.statusDetail)")
 
             if !model.assistantTranscript.isEmpty {
                 Text(model.assistantTranscript)
@@ -49,12 +42,14 @@ struct MenuBarView: View {
             }
 
             Button(action: model.toggleSession) {
-                Label(model.phase.primaryActionLabel, systemImage: model.phase.primaryActionSymbolName)
+                Label(microphone.label, systemImage: microphone.symbolName)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .tint(microphone.tone.color)
             .controlSize(.large)
-            .disabled(!model.phase.isPrimaryActionEnabled)
+            .disabled(!microphone.isEnabled)
+            .accessibilityHint(microphone.accessibilityHint)
 
             if model.phase.hasConversation {
                 Button(action: model.startNewConversation) {
