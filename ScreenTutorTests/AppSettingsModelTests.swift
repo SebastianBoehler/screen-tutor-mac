@@ -2,7 +2,6 @@ import Foundation
 import XCTest
 @testable import ScreenTutor
 
-@MainActor
 final class AppSettingsModelTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suiteName: String!
@@ -20,6 +19,7 @@ final class AppSettingsModelTests: XCTestCase {
         super.tearDown()
     }
 
+    @MainActor
     func testTutorInstructionsDefaultPersistAndRestore() {
         let model = makeModel()
         XCTAssertEqual(
@@ -45,6 +45,7 @@ final class AppSettingsModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testBlankTutorInstructionsRemainAValidCustomization() {
         let model = makeModel()
 
@@ -54,6 +55,7 @@ final class AppSettingsModelTests: XCTestCase {
         XCTAssertEqual(makeModel().tutorInstructions, "")
     }
 
+    @MainActor
     func testReasoningEffortDefaultsToLowAndPersists() {
         let model = makeModel()
         XCTAssertEqual(model.reasoningEffort, .low)
@@ -64,6 +66,7 @@ final class AppSettingsModelTests: XCTestCase {
         XCTAssertEqual(makeModel().reasoningEffort, .high)
     }
 
+    @MainActor
     private func makeModel() -> AppSettingsModel {
         AppSettingsModel(
             apiKeyStore: APIKeyStore(),
