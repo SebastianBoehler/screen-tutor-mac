@@ -17,9 +17,9 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 ## What it does
 
 - Streams 24 kHz PCM16 speech-to-speech over the Realtime WebSocket API
-- Uses semantic voice activity detection with natural barge-in and response truncation
+- Uses semantic voice activity detection and response truncation between spoken turns
 - Lets GPT inspect visible app/window titles and capture only the window relevant to the question
-- Uses shareable macOS microphone I/O plus Realtime far-field noise reduction
+- Uses independent macOS microphone and playback engines plus Realtime far-field noise reduction
 - Lives in the menu bar with a draggable, translucent status and transcript HUD
 - Moves an animated tutor cursor to a formula, plot, cell, or control and highlights the target
 - Saves text-only conversations and privacy-safe tool status records as local JSONL
@@ -73,6 +73,8 @@ The window list and capture calls are serial, recoverable tools. A closed window
 
 Press the shortcut again to mute only ScreenTutor's microphone upload. The Realtime connection and any answer already being spoken remain active; OBS and other microphone-enabled apps can continue recording. Press it later to unmute and resume the same conversation, including prior voice turns. Change the combination under Settings > System by clicking the shortcut recorder and typing a modified key combination. If macOS or another app already owns it, ScreenTutor keeps the prior working shortcut and reports the conflict.
 
+While the tutor is speaking, ScreenTutor temporarily withholds microphone frames from the API so its own voice cannot trigger another turn. Input resumes automatically when playback finishes. This protects speaker use from acoustic feedback while keeping the local microphone available to OBS. Speaking over a reply is intentionally disabled until the app has a shareable full-duplex echo canceller.
+
 Realtime sessions last at most 60 minutes. The menu and draggable overlay show the current Listening, Thinking, Speaking, or Microphone muted state. Green means ScreenTutor input is live, orange means it is muted, and the icon and label provide the same state without relying on color. The overlay also shows live window-listing, capture, and highlighting tool chips and plays a short cue before ScreenTutor inspects window information or pixels. Choose New conversation when you want an empty context.
 
 Choose Conversation History… to browse prior text turns and tool activity, copy messages, or reveal the underlying JSONL file in Finder. The detail page has a labeled Continue conversation button instead of an icon-only toolbar action. Settings > Conversation storage shows the canonical folder path and can reveal all JSONL files or one selected conversation. Hotkey mute/unmute keeps writing to the same conversation; New conversation starts a new one. A network disconnect cannot preserve the original server-side Realtime session, but the next microphone action reconnects and replays the completed local conversation context. An app restart still requires selecting Continue conversation. The on-screen transcript can be hidden independently from the menu and dragged to a comfortable position.
@@ -92,7 +94,7 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | Area | Responsibility |
 | --- | --- |
 | `App` | Session lifecycle and application state |
-| `Audio` | Shareable microphone conversion and streamed playback |
+| `Audio` | Independent microphone conversion and streamed playback engines |
 | `Realtime` | Typed OpenAI Realtime events and WebSocket transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
 | `History` | Ordered, private JSONL persistence and conversation projection |
