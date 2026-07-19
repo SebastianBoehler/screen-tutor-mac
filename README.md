@@ -7,7 +7,7 @@
 
 Talk naturally about whatever is open on your Mac.
 
-ScreenTutor is a native, open-source menu-bar tutor that combines the relevant Mac window with a low-latency voice conversation. Microphone audio streams directly to OpenAI's `gpt-realtime-2.1` or `gpt-realtime-2.1-mini`, and the model's PCM audio streams straight back to the Mac speakers.
+ScreenTutor is a native, open-source menu-bar tutor that combines the relevant Mac window with a low-latency voice conversation. Microphone and tutor audio stream directly between WebRTC and OpenAI's `gpt-realtime-2.1` or `gpt-realtime-2.1-mini`.
 
 The answer path has no standalone transcription or text-to-speech step. Assistant captions come from the same Realtime audio response. An asynchronous `gpt-4o-mini-transcribe` input transcript runs alongside it only to make local conversation history readable; it is separate model usage and can differ from what the Realtime model understood.
 
@@ -16,10 +16,10 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 
 ## What it does
 
-- Streams 24 kHz PCM16 speech-to-speech over the Realtime WebSocket API
-- Uses semantic voice activity detection and response truncation between spoken turns
+- Streams full-duplex speech-to-speech over OpenAI's Realtime WebRTC API
+- Uses semantic voice activity detection with natural barge-in and response truncation
 - Lets GPT inspect visible app/window titles and capture only the window relevant to the question
-- Uses independent macOS microphone and playback engines plus Realtime far-field noise reduction
+- Uses WebRTC acoustic echo cancellation plus Realtime far-field noise reduction
 - Lives in the menu bar with a draggable, translucent status and transcript HUD
 - Moves an animated tutor cursor to a formula, plot, cell, or control and highlights the target
 - Saves text-only conversations and privacy-safe tool status records as local JSONL
@@ -41,13 +41,13 @@ ScreenTutor does not currently perform web search or use web grounding. Its answ
 
 ## How one turn works
 
-1. `AVAudioEngine` captures the microphone and converts it to mono PCM16 at 24 kHz.
-2. Audio chunks stream through `input_audio_buffer.append`; GPT consumes the voice natively.
+1. WebRTC captures the microphone with echo cancellation, noise suppression, and automatic gain control.
+2. Its audio track streams directly to GPT while a data channel carries typed Realtime events.
 3. Semantic VAD reports that speech started, which interrupts any current answer.
 4. VAD commits the spoken turn and ScreenTutor asks GPT to respond.
 5. When screen context is needed, GPT calls `list_windows`, chooses from opaque IDs plus app/window titles, and calls `capture_window`.
 6. ScreenTutor validates that selection, appends only that window as a high-detail `input_image`, and asks GPT to continue.
-7. `response.output_audio.delta` chunks play immediately while the matching transcript updates the menu and optional on-screen HUD.
+7. The remote WebRTC audio track plays immediately while matching transcript events update the menu and optional on-screen HUD.
 8. Separately, completed input transcription events are queued into the local history without blocking the audio event stream.
 9. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor animates its tutor cursor to the target and asks GPT to continue speaking.
 
@@ -73,7 +73,7 @@ The window list and capture calls are serial, recoverable tools. A closed window
 
 Press the shortcut again to mute only ScreenTutor's microphone upload. The Realtime connection and any answer already being spoken remain active; OBS and other microphone-enabled apps can continue recording. Press it later to unmute and resume the same conversation, including prior voice turns. Change the combination under Settings > System by clicking the shortcut recorder and typing a modified key combination. If macOS or another app already owns it, ScreenTutor keeps the prior working shortcut and reports the conflict.
 
-While the tutor is speaking, ScreenTutor temporarily withholds microphone frames from the API so its own voice cannot trigger another turn. Input resumes automatically when playback finishes. This protects speaker use from acoustic feedback while keeping the local microphone available to OBS. Speaking over a reply is intentionally disabled until the app has a shareable full-duplex echo canceller.
+ScreenTutor keeps the microphone live while the tutor is speaking, so you can interrupt a reply naturally. WebRTC receives the tutor playback reference needed for acoustic echo cancellation and OpenAI tracks the remote playback buffer for interruption truncation. ScreenTutor no longer reconfigures the Mac input device with a private `AVAudioEngine`, so OBS and other microphone-enabled apps can retain their own capture streams.
 
 Realtime sessions last at most 60 minutes. The menu and draggable overlay show the current Listening, Thinking, Speaking, or Microphone muted state. Green means ScreenTutor input is live, orange means it is muted, and the icon and label provide the same state without relying on color. The overlay also shows live window-listing, capture, and highlighting tool chips and plays a short cue before ScreenTutor inspects window information or pixels. Choose New conversation when you want an empty context.
 
@@ -94,14 +94,14 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | Area | Responsibility |
 | --- | --- |
 | `App` | Session lifecycle and application state |
-| `Audio` | Independent microphone conversion and streamed playback engines |
-| `Realtime` | Typed OpenAI Realtime events and WebSocket transport |
+| `Audio` | Microphone permission and WebRTC media capture |
+| `Realtime` | Typed OpenAI events, WebRTC media, and data-channel transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
 | `History` | Ordered, private JSONL persistence and conversation projection |
 | `UI` | Menu, transcript HUD, history browser, settings, and tutor cursor |
 | `System` | Global hotkey and launch-at-login integration |
 
-The app uses Apple frameworks only: SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon.
+The native app uses SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon. WebRTC media and audio processing come from the community-maintained [`stasel/WebRTC`](https://github.com/stasel/WebRTC) Swift package, pinned to M150 and built unmodified from the upstream WebRTC source. See that project and WebRTC's BSD license for dependency notices.
 
 ## Development
 
@@ -137,15 +137,17 @@ xcodebuild \
 
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
 
+The sandbox grants client and server networking because WebRTC ICE must bind a local peer socket before connecting to OpenAI. ScreenTutor does not run an application-level HTTP server or accept commands over that entitlement.
+
 Completed user and assistant captions are retained as plain-text JSONL in ScreenTutor's sandboxed Application Support directory. The directory and files use owner-only permissions (`0700` and `0600`); ScreenTutor does not add application-level encryption. The logs contain transcript text, provider correlation IDs, and tool names with success/failure status—not audio, screenshots, window titles, tool arguments, coordinates, or result payloads. Use Conversation History… > Reveal JSONL to find them. Hide the on-screen transcript when people nearby should not see it.
 
 The selected model, custom tutor instructions, and reasoning effort are stored locally in `UserDefaults`. They are sent to OpenAI as part of each new Realtime session and are not written to conversation-history JSONL.
 
-Muting suppresses microphone audio sent by ScreenTutor without stopping its shared audio engine, assistant playback, or Realtime WebSocket. It does not mute the Mac globally or block OBS from using the microphone. New conversation and Quit disconnect the session. After a network disconnect, ScreenTutor reconnects on the next microphone action and restores completed turns from local history into a new Realtime session.
+Muting disables only ScreenTutor's local WebRTC microphone track. It does not close the peer connection, stop tutor playback, mute the Mac globally, or block OBS from using the microphone. New conversation and Quit disconnect the session. After a network disconnect, ScreenTutor reconnects on the next microphone action and restores completed turns from local history into a new Realtime session.
 
 `gpt-realtime-2.1`, `gpt-realtime-2.1-mini`, and `gpt-4o-mini-transcribe` are cloud API models and incur their respective OpenAI API usage charges. At current standard rates, flagship audio costs $32 input / $64 output per 1M audio tokens; mini costs $10 input / $20 output. Text and captured images are also billed. The auxiliary input transcript does not sit in the direct speech-to-speech answer path, but it is separately billed. ScreenTutor is not offline or free to run.
 
-The current BYOK design is intended for personal development: the long-lived key is stored in Keychain and never in source or `UserDefaults`. A distributed product should put credentials behind a backend, issue short-lived client tokens, and evaluate WebRTC instead of shipping a standard API key to clients.
+The current BYOK design is intended for personal development: the long-lived key is stored in Keychain and used only by the native HTTPS request that creates the WebRTC call; it is never placed in SDP, source, or `UserDefaults`. A distributed product should put credentials behind a backend and issue short-lived client tokens instead of shipping a standard API key to clients.
 
 ## Contributing
 
@@ -155,7 +157,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Protocol references
 
-- [Realtime WebSocket guide](https://developers.openai.com/api/docs/guides/realtime-websocket)
+- [Realtime WebRTC guide](https://developers.openai.com/api/docs/guides/realtime-webrtc)
 - [Realtime conversations and audio](https://developers.openai.com/api/docs/guides/realtime-conversations)
 - [Realtime prompting: language constraints](https://developers.openai.com/api/docs/guides/realtime-models-prompting#language-constraint)
 - [Realtime prompting: reasoning effort](https://developers.openai.com/api/docs/guides/realtime-models-prompting#set-reasoning-effort)
