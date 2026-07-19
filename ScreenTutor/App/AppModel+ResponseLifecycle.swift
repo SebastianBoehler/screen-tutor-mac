@@ -96,7 +96,7 @@ extension AppModel {
                     generation: generation,
                     connectionID: connectionID
                 )
-            } else if activeAssistantItemID == nil, phase == .thinking {
+            } else if activeAudioResponseID == nil, (phase == .thinking || phase == .speaking) {
                 enterListening()
             }
         case "failed", "incomplete":

@@ -3,7 +3,7 @@ import XCTest
 @testable import ScreenTutor
 
 final class RealtimeProtocolTests: XCTestCase {
-    func testSessionKeepsNativeAudioAndAddsHistoryTranscription() throws {
+    func testSessionConfiguresWebRTCAudioAndAddsHistoryTranscription() throws {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
                 model: .flagship,
@@ -131,10 +131,6 @@ final class RealtimeProtocolTests: XCTestCase {
         let session = try XCTUnwrap(root["session"] as? [String: Any])
 
         XCTAssertEqual(session["model"] as? String, "gpt-realtime-2.1-mini")
-        XCTAssertEqual(
-            RealtimeConstants.endpoint(for: .economy).query,
-            "model=gpt-realtime-2.1-mini"
-        )
     }
 
     func testDecodesCompletedInputTranscriptForConversationHistory() throws {
@@ -263,15 +259,6 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(root["type"] as? String, "response.cancel")
         XCTAssertEqual(root["response_id"] as? String, "resp-active")
         XCTAssertNotNil(root["event_id"] as? String)
-    }
-
-    func testInputAudioClearKeepsPausedConversationButDropsPartialTurn() throws {
-        let data = try JSONEncoder().encode(InputAudioClearEvent())
-        let root = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: data) as? [String: Any]
-        )
-
-        XCTAssertEqual(root["type"] as? String, "input_audio_buffer.clear")
     }
 
     func testResponseCreateCarriesTurnIdentityInMetadata() throws {

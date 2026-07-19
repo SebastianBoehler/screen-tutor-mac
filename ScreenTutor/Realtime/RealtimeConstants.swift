@@ -1,20 +1,14 @@
 import Foundation
 
 enum RealtimeConstants {
-    static let sampleRate = 24_000.0
     static let voice = "marin"
+    static let callsEndpoint = URL(string: "https://api.openai.com/v1/realtime/calls")!
 
     static let defaultTutorInstructions = """
         Help me form an accurate mental model. Explain one conceptual step at a time, connect
         formulas or code to their purpose, catch misconceptions gently, and ask a short checking
         question when useful. Keep spoken answers concise unless I ask for more depth.
         """
-
-    static func endpoint(for model: RealtimeModel) -> URL {
-        var components = URLComponents(string: "wss://api.openai.com/v1/realtime")!
-        components.queryItems = [URLQueryItem(name: "model", value: model.rawValue)]
-        return components.url!
-    }
 
     static func tutorInstructions(
         language: TutorLanguage,

@@ -78,6 +78,43 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
         XCTAssertTrue(model.pendingResponseCancels.isEmpty)
     }
 
+    func testWebRTCPlaybackStaysSpeakingUntilOutputBufferDrains() async throws {
+        let model = AppModel()
+        let connectionID = RealtimeConnectionID()
+        let turn = model.turnTracker.advance()
+        model.realtimeConnectionID = connectionID
+        model.phase = .speaking
+        model.activeResponseID = "resp_spoken"
+        model.activeResponseTurn = turn
+        model.activeAudioResponseID = "resp_spoken"
+
+        try await model.handleResponseDone(
+            RealtimeResponse(
+                id: "resp_spoken",
+                status: "completed",
+                metadata: ["screen_tutor_turn": String(turn)],
+                output: []
+            ),
+            generation: model.sessionGeneration,
+            connectionID: connectionID
+        )
+
+        XCTAssertEqual(model.phase, .speaking)
+
+        let stopped = try JSONDecoder().decode(
+            RealtimeServerEvent.self,
+            from: Data(#"{"type":"output_audio_buffer.stopped","response_id":"resp_spoken"}"#.utf8)
+        )
+        await model.handle(
+            stopped,
+            generation: model.sessionGeneration,
+            connectionID: connectionID
+        )
+
+        XCTAssertEqual(model.phase, .listening)
+        XCTAssertNil(model.activeAudioResponseID)
+    }
+
     func testSessionSetupErrorReturnsAppToRetryableIdleState() async {
         let model = AppModel()
         model.phase = .connecting

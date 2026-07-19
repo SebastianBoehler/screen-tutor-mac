@@ -18,10 +18,8 @@ final class AppModel {
 
     let captureService: ActiveWindowCaptureService
     let screenTools: ScreenToolCoordinator
-    let realtimeClient = RealtimeClient()
-    let audioIO = RealtimeAudioIO()
+    let realtimeClient: RealtimeClient
     let idleTimer = ListeningIdleTimer()
-    var audioUploadTask: Task<Void, Never>?
     var screenToolTask: Task<Void, Never>?
     var screenToolTaskID: UUID?
     var teardownTask: Task<Void, Never>?
@@ -35,7 +33,7 @@ final class AppModel {
     var currentUserItemTurn: Int?
     var pendingResponseCancels: [String: String] = [:]
     var pendingResponseCreates: [String: Int] = [:]
-    var activeAssistantItemID: String?
+    var activeAudioResponseID: String?
     var userIsSpeaking = false
     var lastSnapshotWindowContext: CapturedWindowContext?
     var historyIdentity = ConversationHistoryIdentity()
@@ -48,11 +46,15 @@ final class AppModel {
         ScreenInspectionCue.play
     @ObservationIgnored private var hotKeyErrorMessage: String?
 
-    init(history: ConversationHistoryModel? = nil) {
+    init(
+        history: ConversationHistoryModel? = nil,
+        realtimeClient: RealtimeClient? = nil
+    ) {
         let captureService = ActiveWindowCaptureService()
         self.captureService = captureService
         screenTools = ScreenToolCoordinator(captureService: captureService)
         self.history = history ?? ConversationHistoryModel()
+        self.realtimeClient = realtimeClient ?? RealtimeClient()
         settings = AppSettingsModel(
             apiKeyStore: APIKeyStore(),
             captureService: captureService,
@@ -64,9 +66,6 @@ final class AppModel {
         if let errorMessage { return errorMessage }
         if isMicrophoneMuted, phase.hasConversation {
             return "ScreenTutor microphone muted · conversation connected"
-        }
-        if phase == .speaking {
-            return "Microphone upload paused until this reply finishes"
         }
         if let capturedApplicationName, phase.hasConversation {
             return "Seeing \(capturedApplicationName)"
@@ -104,10 +103,6 @@ final class AppModel {
             isMuted: isMicrophoneMuted,
             canReconnect: recoverableConversation != nil
         )
-    }
-
-    var shouldUploadMicrophoneAudio: Bool {
-        phase.hasConversation && phase != .speaking && !isMicrophoneMuted
     }
 
     func toggleTranscriptOverlay() {

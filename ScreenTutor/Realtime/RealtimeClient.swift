@@ -24,15 +24,22 @@ struct RealtimeConnectionState: Sendable {
     }
 }
 
-actor RealtimeClient {
+@MainActor
+final class RealtimeClient {
     typealias EventHandler = @Sendable (RealtimeServerEvent) async -> Void
     typealias DisconnectHandler = @Sendable (String) async -> Void
 
     private var connectionState = RealtimeConnectionState()
-    private var webSocket: URLSessionWebSocketTask?
-    private var receiveTask: Task<Void, Never>?
+    private var transport: (any RealtimeTransporting)?
+    private let makeTransport: () -> any RealtimeTransporting
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+
+    init(makeTransport: @escaping () -> any RealtimeTransporting = {
+        RealtimeWebRTCTransport()
+    }) {
+        self.makeTransport = makeTransport
+    }
 
     func connect(
         connectionID: RealtimeConnectionID,
@@ -40,24 +47,35 @@ actor RealtimeClient {
         model: RealtimeModel,
         onEvent: @escaping EventHandler,
         onDisconnect: @escaping DisconnectHandler
-    ) throws {
+    ) async throws {
         try connectionState.activate(connectionID)
-
-        var request = URLRequest(url: RealtimeConstants.endpoint(for: model))
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 20
-
-        let socket = URLSession.shared.webSocketTask(with: request)
-        webSocket = socket
-        socket.resume()
-
-        receiveTask = Task { [weak self] in
-            await self?.receiveLoop(
-                socket: socket,
-                connectionID: connectionID,
-                eventHandler: onEvent,
-                disconnectHandler: onDisconnect
+        let transport = makeTransport()
+        self.transport = transport
+        do {
+            try await transport.connect(
+                apiKey: apiKey,
+                model: model,
+                onMessage: { [weak self] text in
+                    await self?.receive(
+                        text,
+                        connectionID: connectionID,
+                        onEvent: onEvent,
+                        onDisconnect: onDisconnect
+                    )
+                },
+                onDisconnect: { [weak self] message in
+                    await self?.transportDisconnected(
+                        message,
+                        connectionID: connectionID,
+                        onDisconnect: onDisconnect
+                    )
+                }
             )
+        } catch {
+            _ = connectionState.clear(ifCurrent: connectionID)
+            if self.transport === transport { self.transport = nil }
+            transport.disconnect()
+            throw error
         }
     }
 
@@ -65,66 +83,63 @@ actor RealtimeClient {
         _ event: Event,
         connectionID: RealtimeConnectionID
     ) async throws {
-        guard connectionState.matches(connectionID), let webSocket else {
+        guard connectionState.matches(connectionID), let transport else {
             throw RealtimeClientError.notConnected
         }
         let data = try encoder.encode(event)
         guard let text = String(data: data, encoding: .utf8) else {
             throw RealtimeClientError.encodingFailed
         }
-        try await webSocket.send(.string(text))
+        try await transport.send(text)
         guard connectionState.matches(connectionID) else {
             throw RealtimeClientError.notConnected
         }
     }
 
+    func setMicrophoneMuted(
+        _ muted: Bool,
+        connectionID: RealtimeConnectionID
+    ) async throws {
+        guard connectionState.matches(connectionID), let transport else {
+            throw RealtimeClientError.notConnected
+        }
+        try await transport.setMicrophoneMuted(muted)
+    }
+
     func disconnect(connectionID: RealtimeConnectionID) {
         guard connectionState.clear(ifCurrent: connectionID) else { return }
-        receiveTask?.cancel()
-        receiveTask = nil
-        webSocket?.cancel(with: .goingAway, reason: nil)
-        webSocket = nil
+        transport?.disconnect()
+        transport = nil
     }
 
-    private func receiveLoop(
-        socket: URLSessionWebSocketTask,
+    private func receive(
+        _ text: String,
         connectionID: RealtimeConnectionID,
-        eventHandler: @escaping EventHandler,
-        disconnectHandler: @escaping DisconnectHandler
+        onEvent: @escaping EventHandler,
+        onDisconnect: @escaping DisconnectHandler
     ) async {
+        guard connectionState.matches(connectionID) else { return }
         do {
-            while !Task.isCancelled {
-                let message = try await socket.receive()
-                guard connectionState.matches(connectionID) else { return }
-                let data: Data
-                switch message {
-                case .string(let text):
-                    data = Data(text.utf8)
-                case .data(let bytes):
-                    data = bytes
-                @unknown default:
-                    continue
-                }
-                let event = try decoder.decode(RealtimeServerEvent.self, from: data)
-                await eventHandler(event)
-            }
-        } catch is CancellationError {
-            return
+            let event = try decoder.decode(RealtimeServerEvent.self, from: Data(text.utf8))
+            await onEvent(event)
         } catch {
-            guard connectionState.clear(ifCurrent: connectionID) else { return }
-            let message = Self.describe(error)
-            socket.cancel(with: .abnormalClosure, reason: nil)
-            if webSocket === socket { webSocket = nil }
-            receiveTask = nil
-            await disconnectHandler(message)
+            await transportDisconnected(
+                error.localizedDescription,
+                connectionID: connectionID,
+                onDisconnect: onDisconnect
+            )
         }
     }
 
-    private static func describe(_ error: Error) -> String {
-        if let urlError = error as? URLError {
-            return urlError.localizedDescription
-        }
-        return error.localizedDescription
+    private func transportDisconnected(
+        _ message: String,
+        connectionID: RealtimeConnectionID,
+        onDisconnect: @escaping DisconnectHandler
+    ) async {
+        guard connectionState.clear(ifCurrent: connectionID) else { return }
+        transport?.disconnect()
+        transport = nil
+        await onDisconnect(message)
     }
 }
 
@@ -132,12 +147,16 @@ enum RealtimeClientError: LocalizedError {
     case alreadyConnected
     case notConnected
     case encodingFailed
+    case invalidCallResponse
+    case callFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .alreadyConnected: "A Realtime session is already connected."
         case .notConnected: "The Realtime session is not connected."
         case .encodingFailed: "A Realtime event could not be encoded."
+        case .invalidCallResponse: "OpenAI returned an invalid WebRTC answer."
+        case .callFailed(let detail): "The Realtime WebRTC call could not start: \(detail)"
         }
     }
 }

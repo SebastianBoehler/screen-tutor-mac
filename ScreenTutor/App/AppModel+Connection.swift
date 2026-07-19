@@ -22,7 +22,7 @@ extension AppModel {
                 throw AppModelError.missingAPIKey
             }
             guard await MicrophonePermissionService.request() else {
-                throw AudioIOError.microphonePermissionDenied
+                throw AppModelError.microphonePermissionDenied
             }
             guard generation == sessionGeneration else { return }
             settings.refresh()
@@ -58,7 +58,7 @@ extension AppModel {
                 }
             )
             guard isCurrentSession(generation: generation, connectionID: connectionID) else {
-                await realtimeClient.disconnect(connectionID: connectionID)
+                realtimeClient.disconnect(connectionID: connectionID)
                 return
             }
         } catch {
@@ -82,55 +82,6 @@ extension AppModel {
         pendingHistoryReplay.removeAll()
     }
 
-    func startAudioStreaming(
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) async throws {
-        let stream = try await audioIO.start(
-            ownerID: connectionID,
-            onPlaybackDrained: { [weak self] itemID in
-                await self?.playbackDrained(
-                    itemID: itemID,
-                    generation: generation,
-                    connectionID: connectionID
-                )
-            }
-        )
-        guard isCurrentSession(generation: generation, connectionID: connectionID) else {
-            await audioIO.stop(ownerID: connectionID)
-            return
-        }
-        audioUploadTask = Task { [weak self] in
-            do {
-                for try await pcmData in stream {
-                    guard
-                        let self,
-                        self.isCurrentSession(
-                            generation: generation,
-                            connectionID: connectionID
-                        )
-                    else { return }
-                    guard self.shouldUploadMicrophoneAudio else { continue }
-                    try await self.realtimeClient.send(
-                        InputAudioAppendEvent(pcmData: pcmData),
-                        connectionID: connectionID
-                    )
-                }
-            } catch is CancellationError {
-                return
-            } catch {
-                let failure = error
-                Task { @MainActor [weak self] in
-                    await self?.handleAudioFailure(
-                        failure,
-                        generation: generation,
-                        connectionID: connectionID
-                    )
-                }
-            }
-        }
-    }
-
     func enterListening() {
         phase = .listening
         guard !isMicrophoneMuted else {
@@ -151,29 +102,23 @@ extension AppModel {
     }
 
     func setMicrophoneMuted(_ muted: Bool) async {
-        guard phase.hasConversation, realtimeConnectionID != nil else { return }
-        isMicrophoneMuted = muted
-        userIsSpeaking = muted ? false : userIsSpeaking
-        if muted {
-            idleTimer.cancel()
-        } else {
-            errorMessage = nil
-            if phase == .listening { enterListening() }
+        guard phase.hasConversation, let connectionID = realtimeConnectionID else { return }
+        do {
+            try await realtimeClient.setMicrophoneMuted(
+                muted,
+                connectionID: connectionID
+            )
+            isMicrophoneMuted = muted
+            userIsSpeaking = muted ? false : userIsSpeaking
+            if muted {
+                idleTimer.cancel()
+            } else {
+                errorMessage = nil
+                if phase == .listening { enterListening() }
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
-    }
-
-    func handleAudioFailure(
-        _ error: Error,
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) async {
-        guard
-            isCurrentSession(generation: generation, connectionID: connectionID)
-        else { return }
-        await teardownSession(
-            preserving: error.localizedDescription,
-            retainingConversationForReconnect: true
-        )
     }
 
     func handleDisconnect(

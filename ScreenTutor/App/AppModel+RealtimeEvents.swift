@@ -28,14 +28,6 @@ extension AppModel {
                     isCurrentSession(generation: generation, connectionID: connectionID),
                     phase == .connecting
                 else { return }
-                try await startAudioStreaming(
-                    generation: generation,
-                    connectionID: connectionID
-                )
-                guard
-                    isCurrentSession(generation: generation, connectionID: connectionID),
-                    phase == .connecting
-                else { return }
                 beginConversationHistoryIfNeeded()
                 recoverableConversation = nil
                 enterListening()
@@ -63,21 +55,19 @@ extension AppModel {
                     generation: generation,
                     connectionID: connectionID
                 )
+            case "output_audio_buffer.started":
+                markAssistantSpeaking(event)
+            case "output_audio_buffer.stopped", "output_audio_buffer.cleared":
+                finishAssistantPlayback(event)
             case "response.output_audio.delta":
-                try await receiveAudioDelta(
-                    event,
-                    generation: generation,
-                    connectionID: connectionID
-                )
+                markAssistantSpeaking(event)
             case "response.output_audio.done":
-                if belongsToActiveResponse(event), let itemID = event.itemID {
-                    try await audioIO.finishAssistantAudio(
-                        itemID: itemID,
-                        ownerID: connectionID
-                    )
-                }
+                break
             case "response.output_audio_transcript.delta":
-                if belongsToActiveResponse(event) { assistantTranscript += event.delta ?? "" }
+                if belongsToActiveResponse(event) {
+                    markAssistantSpeaking(event)
+                    assistantTranscript += event.delta ?? ""
+                }
             case "response.output_audio_transcript.done":
                 if belongsToActiveResponse(event), let transcript = event.transcript {
                     assistantTranscript = transcript
@@ -127,36 +117,14 @@ extension AppModel {
         lastSnapshotWindowContext = nil
         activeResponseID = nil
         activeResponseTurn = nil
-        activeAssistantItemID = nil
+        activeAudioResponseID = nil
         currentUserItemID = nil
         currentUserItemTurn = nil
         clearHighlight?()
 
-        let cutoff = await audioIO.interruptAssistantAudio(ownerID: connectionID)
         await settleScreenToolTask(cancelling: false)
         guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
             return
-        }
-        if let cutoff {
-            guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
-                return
-            }
-            do {
-                try await realtimeClient.send(
-                    ConversationTruncateEvent(
-                        itemID: cutoff.itemID,
-                        audioEndMilliseconds: cutoff.audioEndMilliseconds
-                    ),
-                    connectionID: connectionID
-                )
-            } catch {
-                guard isCurrentTurn(
-                    turn,
-                    generation: generation,
-                    connectionID: connectionID
-                ) else { return }
-                errorMessage = error.localizedDescription
-            }
         }
     }
 
@@ -183,34 +151,21 @@ extension AppModel {
         )
     }
 
-    private func receiveAudioDelta(
-        _ event: RealtimeServerEvent,
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) async throws {
+    private func markAssistantSpeaking(_ event: RealtimeServerEvent) {
         guard
-            isCurrentSession(generation: generation, connectionID: connectionID),
             phase != .paused,
             phase != .pausing,
             belongsToActiveResponse(event)
         else { return }
-        guard
-            let delta = event.delta,
-            let data = Data(base64Encoded: delta),
-            let itemID = event.itemID
-        else { throw AudioIOError.malformedOutputPCM }
-        activeAssistantItemID = itemID
+        activeAudioResponseID = event.responseID ?? activeAudioResponseID
         idleTimer.cancel()
         phase = .speaking
-        try await audioIO.enqueueAssistantPCM16(
-            data,
-            itemID: itemID,
-            ownerID: connectionID
-        )
-        guard
-            isCurrentSession(generation: generation, connectionID: connectionID),
-            belongsToActiveResponse(event)
-        else { return }
+    }
+
+    private func finishAssistantPlayback(_ event: RealtimeServerEvent) {
+        guard event.responseID == activeAudioResponseID else { return }
+        activeAudioResponseID = nil
+        if !userIsSpeaking && phase == .speaking { enterListening() }
     }
 
     private func belongsToActiveResponse(_ event: RealtimeServerEvent) -> Bool {
@@ -220,19 +175,6 @@ extension AppModel {
             turnTracker.isCurrent(activeResponseTurn)
         else { return false }
         return event.responseID == nil || event.responseID == activeResponseID
-    }
-
-    func playbackDrained(
-        itemID: String,
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) {
-        guard
-            isCurrentSession(generation: generation, connectionID: connectionID),
-            activeAssistantItemID == itemID
-        else { return }
-        activeAssistantItemID = nil
-        if !userIsSpeaking && phase == .speaking { enterListening() }
     }
 
 }

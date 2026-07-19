@@ -1,18 +1,5 @@
 import Foundation
 
-struct InputAudioAppendEvent: Encodable, Sendable {
-    let type = "input_audio_buffer.append"
-    let audio: String
-
-    init(pcmData: Data) {
-        audio = pcmData.base64EncodedString()
-    }
-}
-
-struct InputAudioClearEvent: Encodable, Sendable {
-    let type = "input_audio_buffer.clear"
-}
-
 struct ConversationImageEvent: Encodable, Sendable {
     let eventID: String
     let type = "conversation.item.create"
@@ -111,20 +98,6 @@ struct ConversationReplayEvent: Encodable, Sendable {
     struct ContentPart: Encodable, Sendable {
         let type: String
         let text: String
-    }
-}
-
-struct ConversationTruncateEvent: Encodable, Sendable {
-    let type = "conversation.item.truncate"
-    let itemID: String
-    let contentIndex = 0
-    let audioEndMilliseconds: Int
-
-    enum CodingKeys: String, CodingKey {
-        case type
-        case itemID = "item_id"
-        case contentIndex = "content_index"
-        case audioEndMilliseconds = "audio_end_ms"
     }
 }
 

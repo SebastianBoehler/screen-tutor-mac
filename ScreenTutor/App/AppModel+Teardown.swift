@@ -41,16 +41,8 @@ extension AppModel {
         if phase != .idle { phase = .stopping }
 
         await settleScreenToolTask(cancelling: true)
-        let uploadTask = audioUploadTask
-        audioUploadTask = nil
-        uploadTask?.cancel()
-        if let uploadTask { await uploadTask.value }
         if let connectionID {
-            await audioIO.stop(ownerID: connectionID)
-        }
-        guard generation == sessionGeneration else { return }
-        if let connectionID {
-            await realtimeClient.disconnect(connectionID: connectionID)
+            realtimeClient.disconnect(connectionID: connectionID)
         }
         guard generation == sessionGeneration else { return }
 
@@ -68,7 +60,7 @@ extension AppModel {
         currentUserItemTurn = nil
         pendingResponseCancels.removeAll()
         pendingResponseCreates.removeAll()
-        activeAssistantItemID = nil
+        activeAudioResponseID = nil
         userIsSpeaking = false
         isMicrophoneMuted = true
         liveToolActivities.removeAll()

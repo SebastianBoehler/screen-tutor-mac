@@ -3,24 +3,29 @@ import XCTest
 
 @MainActor
 final class MicrophoneMuteTests: XCTestCase {
-    func testAssistantPlaybackSuspendsTutorUploadWithoutMutingTheSession() {
+    func testAssistantPlaybackKeepsTutorMicrophoneLiveForBargeIn() {
         let model = AppModel()
         model.realtimeConnectionID = RealtimeConnectionID()
         model.phase = .speaking
         model.isMicrophoneMuted = false
 
-        XCTAssertFalse(model.shouldUploadMicrophoneAudio)
         XCTAssertFalse(model.isMicrophoneMuted)
         XCTAssertEqual(model.microphoneControlState, .live)
-        XCTAssertEqual(
-            model.statusDetail,
-            "Microphone upload paused until this reply finishes"
-        )
+        XCTAssertEqual(model.statusDetail, "Screen-aware Realtime voice")
     }
 
     func testMuteKeepsConnectionResponseAndSpeakingPhaseAlive() async {
-        let model = AppModel()
+        let transport = MicrophoneRecordingTransport()
+        let client = RealtimeClient(makeTransport: { transport })
+        let model = AppModel(realtimeClient: client)
         let connectionID = RealtimeConnectionID()
+        try? await client.connect(
+            connectionID: connectionID,
+            apiKey: "sk-test",
+            model: .flagship,
+            onEvent: { _ in },
+            onDisconnect: { _ in }
+        )
         model.realtimeConnectionID = connectionID
         model.phase = .speaking
         model.activeResponseID = "response_in_progress"
@@ -29,17 +34,26 @@ final class MicrophoneMuteTests: XCTestCase {
         await model.setMicrophoneMuted(true)
 
         XCTAssertTrue(model.isMicrophoneMuted)
-        XCTAssertFalse(model.shouldUploadMicrophoneAudio)
         XCTAssertEqual(model.phase, .speaking)
         XCTAssertEqual(model.realtimeConnectionID, connectionID)
         XCTAssertEqual(model.activeResponseID, "response_in_progress")
         XCTAssertEqual(model.statusTitle, "Microphone muted")
         XCTAssertEqual(model.statusSymbolName, "mic.slash.fill")
+        XCTAssertEqual(transport.muteChanges, [true])
     }
 
     func testUnmuteRestoresInputWithoutReplacingConversationState() async {
-        let model = AppModel()
+        let transport = MicrophoneRecordingTransport()
+        let client = RealtimeClient(makeTransport: { transport })
+        let model = AppModel(realtimeClient: client)
         let connectionID = RealtimeConnectionID()
+        try? await client.connect(
+            connectionID: connectionID,
+            apiKey: "sk-test",
+            model: .flagship,
+            onEvent: { _ in },
+            onDisconnect: { _ in }
+        )
         model.realtimeConnectionID = connectionID
         model.phase = .thinking
         model.isMicrophoneMuted = true
@@ -47,8 +61,28 @@ final class MicrophoneMuteTests: XCTestCase {
         await model.setMicrophoneMuted(false)
 
         XCTAssertFalse(model.isMicrophoneMuted)
-        XCTAssertTrue(model.shouldUploadMicrophoneAudio)
         XCTAssertEqual(model.phase, .thinking)
         XCTAssertEqual(model.realtimeConnectionID, connectionID)
+        XCTAssertEqual(transport.muteChanges, [false])
     }
+}
+
+@MainActor
+private final class MicrophoneRecordingTransport: RealtimeTransporting {
+    var muteChanges: [Bool] = []
+
+    func connect(
+        apiKey: String,
+        model: RealtimeModel,
+        onMessage: @escaping (String) async -> Void,
+        onDisconnect: @escaping (String) async -> Void
+    ) async throws {}
+
+    func send(_ text: String) async throws {}
+
+    func setMicrophoneMuted(_ muted: Bool) async throws {
+        muteChanges.append(muted)
+    }
+
+    func disconnect() {}
 }
