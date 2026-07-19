@@ -10,13 +10,19 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
         case eventID = "event_id"
     }
 
-    static func screenTutor(language: TutorLanguage) -> RealtimeSessionUpdateEvent {
+    static func screenTutor(
+        language: TutorLanguage,
+        tutorInstructions: String
+    ) -> RealtimeSessionUpdateEvent {
         RealtimeSessionUpdateEvent(
             eventID: "evt_session_\(UUID().uuidString)",
             session: RealtimeSessionConfiguration(
                 type: "realtime",
                 model: RealtimeConstants.model,
-                instructions: RealtimeConstants.tutorInstructions(language: language),
+                instructions: RealtimeConstants.tutorInstructions(
+                    language: language,
+                    customTutorInstructions: tutorInstructions
+                ),
                 outputModalities: ["audio"],
                 tools: [.listWindows, .captureWindow, .highlightScreenRegion],
                 toolChoice: "auto",

@@ -25,6 +25,7 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 - Saves text-only conversations and privacy-safe tool status records as local JSONL
 - Shows prior turns and compact tool activity badges in a native history window
 - Offers Automatic, Deutsch, and English speech-language settings
+- Lets you customize the tutor's teaching instructions without replacing screen/privacy rules
 - Stores the OpenAI API key in macOS Keychain
 - Uses a configurable global shortcut (default: Command-Shift-Space) to start, pause, or resume listening
 - Automatically pauses the microphone after 20 seconds of listening inactivity
@@ -33,6 +34,8 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 - Handles microphone, Screen Recording, network, and protocol errors explicitly
 
 The tutor cursor is a visual, click-through overlay. ScreenTutor never moves the real pointer, clicks, types, or autonomously controls the Mac.
+
+ScreenTutor does not currently perform web search or use web grounding. Its answers use the live conversation and the selected window capture; adding search requires a separate Realtime function or MCP tool integration.
 
 ## How one turn works
 
@@ -61,7 +64,8 @@ The window list and capture calls are serial, recoverable tools. A closed window
 2. Copy `Config/LocalSigning.xcconfig.example` to `Config/LocalSigning.xcconfig` and replace `YOUR_TEAM_ID` with the Team ID shown in Xcode Settings > Accounts. The local file is ignored by Git and gives builds a stable signed identity; ad-hoc builds can lose their macOS privacy grants after every rebuild.
 3. Open `ScreenTutor.xcodeproj` in Xcode and run the `ScreenTutor` scheme on My Mac.
 4. Open the waveform menu-bar item, choose Settings, save your API key, and optionally pin the
-   tutor's spoken language. Automatic follows the language of your latest spoken turn.
+   tutor's spoken language or customize its teaching instructions. Automatic follows the language
+   of your latest spoken turn.
 5. Start a conversation and grant Microphone and Screen Recording access. macOS may require one app restart after Screen Recording is first granted.
 6. Keep a notebook, paper, browser, or editor open and press Command-Shift-Space.
 
@@ -72,6 +76,8 @@ Realtime sessions last at most 60 minutes. The menu and draggable overlay show t
 Choose Conversation History… to browse prior text turns and tool activity, copy messages, or reveal the underlying JSONL file in Finder. Hotkey pause/resume keeps writing to the same conversation; New conversation starts a new one. A network disconnect or app restart cannot preserve the server-side Realtime context, although completed local transcripts remain available. The on-screen transcript can be hidden independently from the menu and dragged to a comfortable position.
 
 The spoken-language choice applies when a new Realtime conversation starts. Deutsch and English pin both the tutor's pronunciation instructions and the optional input-transcription language hint. Automatic leaves transcription language detection open and instructs the tutor to mirror the latest spoken language.
+
+Tutor instructions are also applied when a new conversation starts. You can rewrite or clear the editable teaching preferences and restore the default at any time. ScreenTutor always keeps its app-owned window-selection, prompt-injection, privacy, capture-truthfulness, and teaching-pointer requirements around that editable layer.
 
 The app has `LSUIElement` enabled, so it lives in the menu bar rather than the Dock.
 
@@ -124,6 +130,8 @@ xcodebuild \
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
 
 Completed user and assistant captions are retained as plain-text JSONL in ScreenTutor's sandboxed Application Support directory. The directory and files use owner-only permissions (`0700` and `0600`); ScreenTutor does not add application-level encryption. The logs contain transcript text, provider correlation IDs, and tool names with success/failure status—not audio, screenshots, window titles, tool arguments, coordinates, or result payloads. Use Conversation History… > Reveal JSONL to find them. Hide the on-screen transcript when people nearby should not see it.
+
+Custom tutor instructions are stored locally in `UserDefaults`. They are sent to OpenAI as part of each new Realtime session's instructions and are not written to conversation-history JSONL.
 
 Pausing stops microphone capture but intentionally keeps the Realtime WebSocket and its conversation context alive within the 60-minute session limit. New conversation and Quit disconnect that session. A network or API disconnect also ends the live context.
 

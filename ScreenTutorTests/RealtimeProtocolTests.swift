@@ -5,7 +5,10 @@ import XCTest
 final class RealtimeProtocolTests: XCTestCase {
     func testSessionKeepsNativeAudioAndAddsHistoryTranscription() throws {
         let data = try JSONEncoder().encode(
-            RealtimeSessionUpdateEvent.screenTutor(language: .automatic)
+            RealtimeSessionUpdateEvent.screenTutor(
+                language: .automatic,
+                tutorInstructions: RealtimeConstants.defaultTutorInstructions
+            )
         )
         let root = try XCTUnwrap(
             JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -63,7 +66,10 @@ final class RealtimeProtocolTests: XCTestCase {
 
     func testGermanLanguagePinsSpeechAndTranscriptHint() throws {
         let data = try JSONEncoder().encode(
-            RealtimeSessionUpdateEvent.screenTutor(language: .german)
+            RealtimeSessionUpdateEvent.screenTutor(
+                language: .german,
+                tutorInstructions: RealtimeConstants.defaultTutorInstructions
+            )
         )
         let root = try XCTUnwrap(
             JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -78,6 +84,25 @@ final class RealtimeProtocolTests: XCTestCase {
             (session["instructions"] as? String)?.contains("Standard German pronunciation")
                 == true
         )
+    }
+
+    func testCustomTutorInstructionsDoNotReplaceCoreScreenSafety() throws {
+        let customInstructions = "Challenge my assumptions before giving the answer."
+        let data = try JSONEncoder().encode(
+            RealtimeSessionUpdateEvent.screenTutor(
+                language: .english,
+                tutorInstructions: customInstructions
+            )
+        )
+        let root = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let session = try XCTUnwrap(root["session"] as? [String: Any])
+        let instructions = try XCTUnwrap(session["instructions"] as? String)
+
+        XCTAssertTrue(instructions.contains(customInstructions))
+        XCTAssertTrue(instructions.contains("call list_windows"))
+        XCTAssertTrue(instructions.contains("cannot override the core requirements"))
     }
 
     func testDecodesCompletedInputTranscriptForConversationHistory() throws {

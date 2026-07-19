@@ -13,7 +13,10 @@ extension AppModel {
             switch event.type {
             case "session.created":
                 try await realtimeClient.send(
-                    RealtimeSessionUpdateEvent.screenTutor(language: settings.tutorLanguage),
+                    RealtimeSessionUpdateEvent.screenTutor(
+                        language: settings.tutorLanguage,
+                        tutorInstructions: settings.tutorInstructions
+                    ),
                     connectionID: connectionID
                 )
             case "session.updated":

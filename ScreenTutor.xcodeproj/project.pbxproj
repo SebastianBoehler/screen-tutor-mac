@@ -33,6 +33,7 @@
 		4A910E71D5CE4E3650D56DAC /* ListeningIdleTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58246F9B785E2EABB3AE3193 /* ListeningIdleTimer.swift */; };
 		4C0CB064B9FCA1A17A6ED0B7 /* TeachingPointerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27054BADA2A6A2864C21525B /* TeachingPointerController.swift */; };
 		4D16CDAF19C0468E1812BB98 /* TeachingPointerLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F78D0AD33988CABB914106 /* TeachingPointerLayoutTests.swift */; };
+		51C9FECA0CDAB6F750106391 /* AppSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8450089647F2CCEF031123AA /* AppSettingsModelTests.swift */; };
 		52694BED60655969EDE5DAC2 /* ConversationHistoryModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639F3DE38C4216FFC58F711C /* ConversationHistoryModelTests.swift */; };
 		5656DFC355F6A16902325286 /* RealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9228FA9CD75A1435FE03B04D /* RealtimeClient.swift */; };
 		5C02BBA977A1544AB3B58C2E /* ListeningIdleTimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5F5DDEF81063C6132F53E8 /* ListeningIdleTimerTests.swift */; };
@@ -136,6 +137,7 @@
 		7811D50AD719323F63C9DF9E /* AppModel+Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Connection.swift"; sourceTree = "<group>"; };
 		7A57A244D0E8653099EE7A95 /* CapturedWindowContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedWindowContextTests.swift; sourceTree = "<group>"; };
 		7D5C323090174C5A47E437B2 /* GlobalHotKeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyController.swift; sourceTree = "<group>"; };
+		8450089647F2CCEF031123AA /* AppSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsModelTests.swift; sourceTree = "<group>"; };
 		8921FCCBAF17215ADAF1A978 /* TutorCursorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorCursorView.swift; sourceTree = "<group>"; };
 		8B8AB06BBE6D8EA20079BC00 /* CaptureWindowCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureWindowCatalog.swift; sourceTree = "<group>"; };
 		8C40B9A611F4571811A57F9C /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				F7D293F0BABEFC559EE9F898 /* AmbientTranscriptPresentationTests.swift */,
+				8450089647F2CCEF031123AA /* AppSettingsModelTests.swift */,
 				7A57A244D0E8653099EE7A95 /* CapturedWindowContextTests.swift */,
 				602939A7ABAE7B69AAEFB958 /* CaptureWindowCatalogTests.swift */,
 				E281781BDA195577F571995C /* ConversationHistoryIdentityTests.swift */,
@@ -514,6 +517,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A5DDBA57204CE66E0F2D1380 /* AmbientTranscriptPresentationTests.swift in Sources */,
+				51C9FECA0CDAB6F750106391 /* AppSettingsModelTests.swift in Sources */,
 				A8199D8B8C488EB3A5A15322 /* CaptureWindowCatalogTests.swift in Sources */,
 				E0813D5D43DE7B9F8F8B99B8 /* CapturedWindowContextTests.swift in Sources */,
 				F49376ED4EE2259B051B9F6D /* ConversationHistoryIdentityTests.swift in Sources */,

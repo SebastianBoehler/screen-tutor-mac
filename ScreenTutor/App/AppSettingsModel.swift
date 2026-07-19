@@ -9,6 +9,7 @@ final class AppSettingsModel {
     private(set) var microphonePermissionGranted = false
     private(set) var launchAtLoginState: LaunchAtLoginState = .disabled
     private(set) var tutorLanguage: TutorLanguage
+    private(set) var tutorInstructions: String
     private(set) var hotKeyShortcut: GlobalHotKeyShortcut
     private(set) var errorMessage: String?
 
@@ -20,6 +21,8 @@ final class AppSettingsModel {
     private var hotKeyRegistration: ((GlobalHotKeyShortcut) throws -> Void)?
 
     private static let tutorLanguageKey = "com.sebastianboehler.ScreenTutor.tutorLanguage"
+    private static let tutorInstructionsKey =
+        "com.sebastianboehler.ScreenTutor.tutorInstructions"
     private static let hotKeyShortcutKey = "com.sebastianboehler.ScreenTutor.hotKeyShortcut"
 
     init(
@@ -34,6 +37,8 @@ final class AppSettingsModel {
         self.userDefaults = userDefaults
         tutorLanguage = userDefaults.string(forKey: Self.tutorLanguageKey)
             .flatMap(TutorLanguage.init(rawValue:)) ?? .automatic
+        tutorInstructions = userDefaults.object(forKey: Self.tutorInstructionsKey) as? String
+            ?? RealtimeConstants.defaultTutorInstructions
         hotKeyShortcut = Self.loadHotKeyShortcut(from: userDefaults)
         refresh()
     }
@@ -86,6 +91,16 @@ final class AppSettingsModel {
     func setTutorLanguage(_ language: TutorLanguage) {
         tutorLanguage = language
         userDefaults.set(language.rawValue, forKey: Self.tutorLanguageKey)
+    }
+
+    func saveTutorInstructions(_ instructions: String) {
+        tutorInstructions = instructions
+        userDefaults.set(instructions, forKey: Self.tutorInstructionsKey)
+    }
+
+    func restoreDefaultTutorInstructions() {
+        userDefaults.removeObject(forKey: Self.tutorInstructionsKey)
+        tutorInstructions = RealtimeConstants.defaultTutorInstructions
     }
 
     func configureHotKeyRegistration(

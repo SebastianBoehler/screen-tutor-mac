@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     let model: AppSettingsModel
     @State private var apiKey = ""
+    @State private var tutorInstructionsDraft = ""
 
     var body: some View {
         Form {
@@ -45,6 +46,39 @@ struct SettingsView: View {
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField(
+                        "Tutor instructions",
+                        text: $tutorInstructionsDraft,
+                        axis: .vertical
+                    )
+                    .lineLimit(6...10)
+                    .accessibilityLabel("Custom tutor instructions")
+                    HStack {
+                        Button("Save Instructions") {
+                            model.saveTutorInstructions(tutorInstructionsDraft)
+                        }
+                        .disabled(tutorInstructionsDraft == model.tutorInstructions)
+                        Spacer()
+                        Button("Restore Default") {
+                            model.restoreDefaultTutorInstructions()
+                            tutorInstructionsDraft = model.tutorInstructions
+                        }
+                        .disabled(
+                            model.tutorInstructions == RealtimeConstants.defaultTutorInstructions
+                                && tutorInstructionsDraft
+                                    == RealtimeConstants.defaultTutorInstructions
+                        )
+                    }
+                    Text(
+                        "Customize teaching style and depth. Screen capture, privacy, and tool "
+                            + "rules remain protected. Saved locally; changes apply to new "
+                            + "conversations."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
             }
 
             Section("Permissions") {
@@ -115,7 +149,10 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 560, height: 620)
-        .onAppear { model.refresh() }
+        .onAppear {
+            model.refresh()
+            tutorInstructionsDraft = model.tutorInstructions
+        }
     }
 
 }
