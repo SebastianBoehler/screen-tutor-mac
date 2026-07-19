@@ -65,6 +65,9 @@ final class AppModel {
         if isMicrophoneMuted, phase.hasConversation {
             return "ScreenTutor microphone muted · conversation connected"
         }
+        if phase == .speaking {
+            return "Microphone upload paused until this reply finishes"
+        }
         if let capturedApplicationName, phase.hasConversation {
             return "Seeing \(capturedApplicationName)"
         }
@@ -104,7 +107,7 @@ final class AppModel {
     }
 
     var shouldUploadMicrophoneAudio: Bool {
-        phase.hasConversation && !isMicrophoneMuted
+        phase.hasConversation && phase != .speaking && !isMicrophoneMuted
     }
 
     func toggleTranscriptOverlay() {

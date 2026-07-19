@@ -93,7 +93,9 @@
 		F49376ED4EE2259B051B9F6D /* ConversationHistoryIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E281781BDA195577F571995C /* ConversationHistoryIdentityTests.swift */; };
 		F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC3E2F06531E6856B099445 /* ScreenToolCallOutput.swift */; };
 		F707CE1B971EADA0C7686983 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5B7A7859321D0B8C8EE3FE /* AppDelegate.swift */; };
+		F7D46DF73AD63609E356EFAD /* RealtimeAudioEngineTopologyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3097A675DAB77DD5273CDAE /* RealtimeAudioEngineTopologyTests.swift */; };
 		F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */; };
+		FACD58CF8DC18D3FB903CECE /* RealtimeAudioEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13AFE9103D2FCDACA1416D71 /* RealtimeAudioEngines.swift */; };
 		FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD7BB048BE24C0D76C94BB8 /* ScreenToolCoordinator.swift */; };
 		FC3466DF181DE2B3C7076070 /* ConversationUsageSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF38DF20C43D4E35AB4F2CE /* ConversationUsageSummaryView.swift */; };
 		FCF358EF0E4CE5E241D4FDE8 /* TeachingTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1BABEDE52E252F816F1D /* TeachingTargetView.swift */; };
@@ -118,6 +120,7 @@
 		0AF5EC4ABA584F21ED62234B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		0BCAE36B8B0898BA8403CB6A /* ActiveWindowCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWindowCaptureService.swift; sourceTree = "<group>"; };
 		108333ED2DFB3AB67CCF6104 /* AudioIOError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioIOError.swift; sourceTree = "<group>"; };
+		13AFE9103D2FCDACA1416D71 /* RealtimeAudioEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeAudioEngines.swift; sourceTree = "<group>"; };
 		201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingHighlight.swift; sourceTree = "<group>"; };
 		227326732489E491784BDD84 /* ScreenTutorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenTutorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		231BF1CA5E05D3D215E012A8 /* AppModel+ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+ScreenTools.swift"; sourceTree = "<group>"; };
@@ -198,6 +201,7 @@
 		E4F73EFB56CA764096F961B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EBF38DF20C43D4E35AB4F2CE /* ConversationUsageSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationUsageSummaryView.swift; sourceTree = "<group>"; };
 		EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCM16Accumulator.swift; sourceTree = "<group>"; };
+		F3097A675DAB77DD5273CDAE /* RealtimeAudioEngineTopologyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeAudioEngineTopologyTests.swift; sourceTree = "<group>"; };
 		F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientTranscriptPresentation.swift; sourceTree = "<group>"; };
 		F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeFunctionTool.swift; sourceTree = "<group>"; };
 		F7D293F0BABEFC559EE9F898 /* AmbientTranscriptPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientTranscriptPresentationTests.swift; sourceTree = "<group>"; };
@@ -263,6 +267,7 @@
 				E0684D0AD3ECBC343F475D90 /* MicrophoneControlStateTests.swift */,
 				54AE2FB985836854C2E94AEB /* MicrophoneMuteTests.swift */,
 				4F06DD943BCFC9D69263DD2D /* PCM16AccumulatorTests.swift */,
+				F3097A675DAB77DD5273CDAE /* RealtimeAudioEngineTopologyTests.swift */,
 				8D195DD6B3F3F9F13A2BE8F9 /* RealtimeErrorRecoveryTests.swift */,
 				4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */,
 				07A70B8D9F5BAABC6F64A0C7 /* ScreenToolCoordinatorTests.swift */,
@@ -397,6 +402,7 @@
 				EC1B0615A33244083765DEF8 /* PCM16Accumulator.swift */,
 				C7367A46A1226178667D40EC /* PCMInputConverter.swift */,
 				245F033723A1BFF4BF9FD984 /* PlaybackCutoff.swift */,
+				13AFE9103D2FCDACA1416D71 /* RealtimeAudioEngines.swift */,
 				38A7EEF22F08EB5CB1D79F43 /* RealtimeAudioIO.swift */,
 			);
 			path = Audio;
@@ -534,6 +540,7 @@
 				F152C27D2F581DDDCF203D0D /* PCM16Accumulator.swift in Sources */,
 				BA9E0E6C8D557D350DF22054 /* PCMInputConverter.swift in Sources */,
 				6AF705A7CCFF53E3260BF820 /* PlaybackCutoff.swift in Sources */,
+				FACD58CF8DC18D3FB903CECE /* RealtimeAudioEngines.swift in Sources */,
 				E2A800C3BF9ED1713BD12E7D /* RealtimeAudioIO.swift in Sources */,
 				5656DFC355F6A16902325286 /* RealtimeClient.swift in Sources */,
 				8E7085BAE802D2A553CA1684 /* RealtimeClientEvents.swift in Sources */,
@@ -580,6 +587,7 @@
 				CB657527F6BD0CF673C1C66C /* MicrophoneControlStateTests.swift in Sources */,
 				55CBF014F29513E54053CAA6 /* MicrophoneMuteTests.swift in Sources */,
 				CA3DE3E9A4B5B487E9F3071E /* PCM16AccumulatorTests.swift in Sources */,
+				F7D46DF73AD63609E356EFAD /* RealtimeAudioEngineTopologyTests.swift in Sources */,
 				7F6407BCA5A36EA4C7682A74 /* RealtimeErrorRecoveryTests.swift in Sources */,
 				F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */,
 				A7DC4C7250D03CCEF22E2325 /* ScreenToolCoordinatorTests.swift in Sources */,

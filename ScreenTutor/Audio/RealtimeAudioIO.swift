@@ -4,12 +4,12 @@ import Foundation
 actor RealtimeAudioIO {
     typealias PlaybackHandler = @Sendable (String) async -> Void
 
-    private var engine: AVAudioEngine?
+    private var engines: RealtimeAudioEngines?
     private var ownerID: RealtimeConnectionID?
     private var player: AVAudioPlayerNode?
     private var networkFormat: AVAudioFormat?
     private var inputContinuation: AsyncThrowingStream<Data, any Error>.Continuation?
-    private var configurationObserver: NSObjectProtocol?
+    private var configurationObservers: [NSObjectProtocol] = []
     private var playbackHandler: PlaybackHandler?
     private var accumulator = PCM16Accumulator()
     private var currentItemID: String?
@@ -23,7 +23,7 @@ actor RealtimeAudioIO {
         onPlaybackDrained: @escaping PlaybackHandler
     ) throws
         -> AsyncThrowingStream<Data, any Error> {
-        guard engine == nil else { throw AudioIOError.alreadyRunning }
+        guard engines == nil else { throw AudioIOError.alreadyRunning }
         guard let networkFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
             sampleRate: RealtimeConstants.sampleRate,
@@ -33,11 +33,11 @@ actor RealtimeAudioIO {
             throw AudioIOError.invalidInputFormat
         }
 
-        let engine = AVAudioEngine()
+        let engines = RealtimeAudioEngines()
         let player = AVAudioPlayerNode()
-        let inputNode = engine.inputNode
+        let inputNode = engines.input.inputNode
         let inputDeviceFormat = inputNode.outputFormat(forBus: 0)
-        let outputDeviceFormat = engine.outputNode.inputFormat(forBus: 0)
+        let outputDeviceFormat = engines.output.outputNode.inputFormat(forBus: 0)
         guard inputDeviceFormat.sampleRate > 0, inputDeviceFormat.channelCount > 0 else {
             throw AudioIOError.noInputDevice
         }
@@ -76,29 +76,39 @@ actor RealtimeAudioIO {
             }
         }
 
-        engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: networkFormat)
-        engine.connect(
-            engine.mainMixerNode,
-            to: engine.outputNode,
+        engines.output.attach(player)
+        engines.output.connect(
+            player,
+            to: engines.output.mainMixerNode,
+            format: networkFormat
+        )
+        engines.output.connect(
+            engines.output.mainMixerNode,
+            to: engines.output.outputNode,
             format: outputDeviceFormat
         )
-        engine.prepare()
+        engines.output.prepare()
+        engines.input.prepare()
         do {
-            try engine.start()
+            try engines.output.start()
+            try engines.input.start()
         } catch {
             inputNode.removeTap(onBus: 0)
+            engines.output.stop()
+            engines.input.stop()
             throw AudioIOError.engineStartFailed(error.localizedDescription)
         }
 
-        configurationObserver = NotificationCenter.default.addObserver(
-            forName: .AVAudioEngineConfigurationChange,
-            object: engine,
-            queue: nil
-        ) { _ in
-            continuation.finish(throwing: AudioIOError.deviceConfigurationChanged)
+        configurationObservers = [engines.input, engines.output].map { engine in
+            NotificationCenter.default.addObserver(
+                forName: .AVAudioEngineConfigurationChange,
+                object: engine,
+                queue: nil
+            ) { _ in
+                continuation.finish(throwing: AudioIOError.deviceConfigurationChanged)
+            }
         }
-        self.engine = engine
+        self.engines = engines
         self.ownerID = ownerID
         self.player = player
         self.networkFormat = networkFormat
@@ -175,7 +185,8 @@ actor RealtimeAudioIO {
         let renderedFrame = currentPlayerFrame() ?? playbackOriginFrame ?? 0
         let origin = playbackOriginFrame ?? 0
         let latencyFrames = AVAudioFramePosition(
-            (engine?.outputNode.presentationLatency ?? 0) * RealtimeConstants.sampleRate
+            (engines?.output.outputNode.presentationLatency ?? 0)
+                * RealtimeConstants.sampleRate
         )
         let heardAbsolute = max(0, renderedFrame - origin - latencyFrames)
         let heardForItem = max(0, heardAbsolute - currentItemStartFrame)
@@ -196,21 +207,22 @@ actor RealtimeAudioIO {
 
     func stop(ownerID: RealtimeConnectionID) {
         guard self.ownerID == ownerID else { return }
-        if let engine {
-            engine.inputNode.removeTap(onBus: 0)
+        if let engines {
+            engines.input.inputNode.removeTap(onBus: 0)
             player?.stop()
-            engine.stop()
+            engines.input.stop()
+            engines.output.stop()
         }
-        if let configurationObserver {
-            NotificationCenter.default.removeObserver(configurationObserver)
+        for observer in configurationObservers {
+            NotificationCenter.default.removeObserver(observer)
         }
         inputContinuation?.finish()
         inputContinuation = nil
-        configurationObserver = nil
+        configurationObservers.removeAll()
         playbackHandler = nil
         networkFormat = nil
         player = nil
-        engine = nil
+        engines = nil
         self.ownerID = nil
         resetPlaybackState()
     }

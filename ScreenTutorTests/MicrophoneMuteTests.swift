@@ -3,6 +3,21 @@ import XCTest
 
 @MainActor
 final class MicrophoneMuteTests: XCTestCase {
+    func testAssistantPlaybackSuspendsTutorUploadWithoutMutingTheSession() {
+        let model = AppModel()
+        model.realtimeConnectionID = RealtimeConnectionID()
+        model.phase = .speaking
+        model.isMicrophoneMuted = false
+
+        XCTAssertFalse(model.shouldUploadMicrophoneAudio)
+        XCTAssertFalse(model.isMicrophoneMuted)
+        XCTAssertEqual(model.microphoneControlState, .live)
+        XCTAssertEqual(
+            model.statusDetail,
+            "Microphone upload paused until this reply finishes"
+        )
+    }
+
     func testMuteKeepsConnectionResponseAndSpeakingPhaseAlive() async {
         let model = AppModel()
         let connectionID = RealtimeConnectionID()

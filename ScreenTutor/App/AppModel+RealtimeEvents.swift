@@ -200,6 +200,8 @@ extension AppModel {
             let itemID = event.itemID
         else { throw AudioIOError.malformedOutputPCM }
         activeAssistantItemID = itemID
+        idleTimer.cancel()
+        phase = .speaking
         try await audioIO.enqueueAssistantPCM16(
             data,
             itemID: itemID,
@@ -209,8 +211,6 @@ extension AppModel {
             isCurrentSession(generation: generation, connectionID: connectionID),
             belongsToActiveResponse(event)
         else { return }
-        idleTimer.cancel()
-        phase = .speaking
     }
 
     private func belongsToActiveResponse(_ event: RealtimeServerEvent) -> Bool {
