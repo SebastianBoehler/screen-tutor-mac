@@ -10,6 +10,7 @@ final class AppSettingsModel {
     private(set) var launchAtLoginState: LaunchAtLoginState = .disabled
     private(set) var tutorLanguage: TutorLanguage
     private(set) var tutorInstructions: String
+    private(set) var reasoningEffort: ReasoningEffort
     private(set) var hotKeyShortcut: GlobalHotKeyShortcut
     private(set) var errorMessage: String?
 
@@ -23,6 +24,7 @@ final class AppSettingsModel {
     private static let tutorLanguageKey = "com.sebastianboehler.ScreenTutor.tutorLanguage"
     private static let tutorInstructionsKey =
         "com.sebastianboehler.ScreenTutor.tutorInstructions"
+    private static let reasoningEffortKey = "com.sebastianboehler.ScreenTutor.reasoningEffort"
     private static let hotKeyShortcutKey = "com.sebastianboehler.ScreenTutor.hotKeyShortcut"
 
     init(
@@ -39,6 +41,8 @@ final class AppSettingsModel {
             .flatMap(TutorLanguage.init(rawValue:)) ?? .automatic
         tutorInstructions = userDefaults.object(forKey: Self.tutorInstructionsKey) as? String
             ?? RealtimeConstants.defaultTutorInstructions
+        reasoningEffort = userDefaults.string(forKey: Self.reasoningEffortKey)
+            .flatMap(ReasoningEffort.init(rawValue:)) ?? .low
         hotKeyShortcut = Self.loadHotKeyShortcut(from: userDefaults)
         refresh()
     }
@@ -101,6 +105,11 @@ final class AppSettingsModel {
     func restoreDefaultTutorInstructions() {
         userDefaults.removeObject(forKey: Self.tutorInstructionsKey)
         tutorInstructions = RealtimeConstants.defaultTutorInstructions
+    }
+
+    func setReasoningEffort(_ effort: ReasoningEffort) {
+        reasoningEffort = effort
+        userDefaults.set(effort.rawValue, forKey: Self.reasoningEffortKey)
     }
 
     func configureHotKeyRegistration(

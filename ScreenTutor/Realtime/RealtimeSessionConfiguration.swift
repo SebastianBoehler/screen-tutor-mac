@@ -12,7 +12,8 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
 
     static func screenTutor(
         language: TutorLanguage,
-        tutorInstructions: String
+        tutorInstructions: String,
+        reasoningEffort: ReasoningEffort
     ) -> RealtimeSessionUpdateEvent {
         RealtimeSessionUpdateEvent(
             eventID: "evt_session_\(UUID().uuidString)",
@@ -27,9 +28,13 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
                 tools: [.listWindows, .captureWindow, .highlightScreenRegion],
                 toolChoice: "auto",
                 parallelToolCalls: false,
+                reasoning: RealtimeReasoningConfiguration(effort: reasoningEffort),
                 audio: RealtimeAudioConfiguration(
                     input: RealtimeInputAudioConfiguration(
                         format: RealtimeAudioFormat(type: "audio/pcm", rate: 24_000),
+                        noiseReduction: RealtimeNoiseReductionConfiguration(
+                            type: "far_field"
+                        ),
                         transcription: RealtimeAudioTranscriptionConfiguration(
                             model: "gpt-4o-mini-transcribe",
                             language: language.transcriptionLanguageCode
@@ -59,10 +64,11 @@ struct RealtimeSessionConfiguration: Encodable, Sendable {
     let tools: [RealtimeFunctionTool]
     let toolChoice: String
     let parallelToolCalls: Bool
+    let reasoning: RealtimeReasoningConfiguration
     let audio: RealtimeAudioConfiguration
 
     enum CodingKeys: String, CodingKey {
-        case type, model, instructions, tools, audio
+        case type, model, instructions, tools, reasoning, audio
         case outputModalities = "output_modalities"
         case toolChoice = "tool_choice"
         case parallelToolCalls = "parallel_tool_calls"
@@ -76,13 +82,23 @@ struct RealtimeAudioConfiguration: Encodable, Sendable {
 
 struct RealtimeInputAudioConfiguration: Encodable, Sendable {
     let format: RealtimeAudioFormat
+    let noiseReduction: RealtimeNoiseReductionConfiguration
     let transcription: RealtimeAudioTranscriptionConfiguration
     let turnDetection: RealtimeTurnDetection
 
     enum CodingKeys: String, CodingKey {
         case format, transcription
+        case noiseReduction = "noise_reduction"
         case turnDetection = "turn_detection"
     }
+}
+
+struct RealtimeNoiseReductionConfiguration: Encodable, Sendable {
+    let type: String
+}
+
+struct RealtimeReasoningConfiguration: Encodable, Sendable {
+    let effort: ReasoningEffort
 }
 
 struct RealtimeAudioTranscriptionConfiguration: Encodable, Sendable {

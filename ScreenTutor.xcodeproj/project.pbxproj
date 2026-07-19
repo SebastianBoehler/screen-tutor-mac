@@ -32,6 +32,7 @@
 		43AD30009CB3877B4141C8DF /* TeachingHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */; };
 		4A910E71D5CE4E3650D56DAC /* ListeningIdleTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58246F9B785E2EABB3AE3193 /* ListeningIdleTimer.swift */; };
 		4C0CB064B9FCA1A17A6ED0B7 /* TeachingPointerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27054BADA2A6A2864C21525B /* TeachingPointerController.swift */; };
+		4CFECB0CF59B54C061A5D7F4 /* ReasoningEffort.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE44D1DF8323D2A4C69ACCB /* ReasoningEffort.swift */; };
 		4D16CDAF19C0468E1812BB98 /* TeachingPointerLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F78D0AD33988CABB914106 /* TeachingPointerLayoutTests.swift */; };
 		51C9FECA0CDAB6F750106391 /* AppSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8450089647F2CCEF031123AA /* AppSettingsModelTests.swift */; };
 		52694BED60655969EDE5DAC2 /* ConversationHistoryModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639F3DE38C4216FFC58F711C /* ConversationHistoryModelTests.swift */; };
@@ -125,6 +126,7 @@
 		54F78D0AD33988CABB914106 /* TeachingPointerLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingPointerLayoutTests.swift; sourceTree = "<group>"; };
 		58246F9B785E2EABB3AE3193 /* ListeningIdleTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningIdleTimer.swift; sourceTree = "<group>"; };
 		5D5F5DDEF81063C6132F53E8 /* ListeningIdleTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningIdleTimerTests.swift; sourceTree = "<group>"; };
+		5DE44D1DF8323D2A4C69ACCB /* ReasoningEffort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningEffort.swift; sourceTree = "<group>"; };
 		5E6FF901E90FFA6A3BAAD5E6 /* ScreenTutor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScreenTutor.entitlements; sourceTree = "<group>"; };
 		5F582A32F2EEF5D8A7CE86DF /* ConversationHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryView.swift; sourceTree = "<group>"; };
 		5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTutorApp.swift; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 			isa = PBXGroup;
 			children = (
 				F4D8D470CCCBB6DDC4D10023 /* AmbientTranscriptPresentation.swift */,
+				5DE44D1DF8323D2A4C69ACCB /* ReasoningEffort.swift */,
 				38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */,
 				201DB49B22E288BB1E3DA5A1 /* TeachingHighlight.swift */,
 				9A56421872CD694035CA56D1 /* TutorLanguage.swift */,
@@ -496,6 +499,7 @@
 				2FF67246972E25DFD24802AF /* RealtimeFunctionTool.swift in Sources */,
 				076D994EC09E61E789B3559E /* RealtimeServerEvent.swift in Sources */,
 				8472A417AF8C2B0212201C6A /* RealtimeSessionConfiguration.swift in Sources */,
+				4CFECB0CF59B54C061A5D7F4 /* ReasoningEffort.swift in Sources */,
 				F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */,
 				FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */,
 				175B3F9FAA93CE91E7F0872C /* ScreenTutorApp.swift in Sources */,

@@ -54,6 +54,16 @@ final class AppSettingsModelTests: XCTestCase {
         XCTAssertEqual(makeModel().tutorInstructions, "")
     }
 
+    func testReasoningEffortDefaultsToLowAndPersists() {
+        let model = makeModel()
+        XCTAssertEqual(model.reasoningEffort, .low)
+
+        model.setReasoningEffort(.high)
+
+        XCTAssertEqual(model.reasoningEffort, .high)
+        XCTAssertEqual(makeModel().reasoningEffort, .high)
+    }
+
     private func makeModel() -> AppSettingsModel {
         AppSettingsModel(
             apiKeyStore: APIKeyStore(),

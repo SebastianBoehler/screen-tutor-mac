@@ -47,6 +47,24 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+                Picker(
+                    "Reasoning effort",
+                    selection: Binding(
+                        get: { model.reasoningEffort },
+                        set: { model.setReasoningEffort($0) }
+                    )
+                ) {
+                    ForEach(ReasoningEffort.allCases) { effort in
+                        Text(effort.displayName).tag(effort)
+                    }
+                }
+                Text(
+                    model.reasoningEffort.guidance
+                        + " Changes apply to new conversations."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
                 VStack(alignment: .leading, spacing: 8) {
                     TextField(
                         "Tutor instructions",

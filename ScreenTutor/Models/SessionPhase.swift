@@ -21,7 +21,7 @@ enum SessionPhase: Equatable, Sendable {
         case .thinking: "Thinking"
         case .speaking: "Speaking"
         case .pausing: "Pausing"
-        case .paused: "Paused"
+        case .paused: "Microphone muted"
         case .resuming: "Resuming"
         case .stopping: "Stopping"
         }
@@ -45,8 +45,8 @@ enum SessionPhase: Equatable, Sendable {
     var primaryActionLabel: String {
         switch self {
         case .idle: "Start conversation"
-        case .paused: "Resume listening"
-        case .listening, .thinking, .speaking: "Pause listening"
+        case .paused: "Unmute microphone"
+        case .listening, .thinking, .speaking: "Mute microphone"
         case .requestingPermissions: "Requesting access"
         case .connecting: "Connecting"
         case .pausing: "Pausing"
@@ -58,8 +58,8 @@ enum SessionPhase: Equatable, Sendable {
     var primaryActionSymbolName: String {
         switch self {
         case .idle: "mic.fill"
-        case .paused: "play.fill"
-        case .listening, .thinking, .speaking: "pause.fill"
+        case .paused: "mic.fill"
+        case .listening, .thinking, .speaking: "mic.slash.fill"
         case .requestingPermissions, .connecting, .pausing, .resuming, .stopping: symbolName
         }
     }

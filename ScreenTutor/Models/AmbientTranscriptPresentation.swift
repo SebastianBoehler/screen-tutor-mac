@@ -13,6 +13,6 @@ struct AmbientTranscriptPresentation: Equatable, Sendable {
     }
 
     var panelHeight: CGFloat {
-        isExpanded ? 204 : 76
+        isExpanded ? 248 : 120
     }
 }

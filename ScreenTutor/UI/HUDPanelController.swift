@@ -13,7 +13,7 @@ final class HUDPanelController: NSObject, NSWindowDelegate {
     init(model: AppModel) {
         self.model = model
         panel = HUDPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 76),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 120),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false

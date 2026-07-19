@@ -15,7 +15,8 @@ extension AppModel {
                 try await realtimeClient.send(
                     RealtimeSessionUpdateEvent.screenTutor(
                         language: settings.tutorLanguage,
-                        tutorInstructions: settings.tutorInstructions
+                        tutorInstructions: settings.tutorInstructions,
+                        reasoningEffort: settings.reasoningEffort
                     ),
                     connectionID: connectionID
                 )

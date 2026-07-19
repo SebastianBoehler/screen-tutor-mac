@@ -7,7 +7,8 @@ final class RealtimeProtocolTests: XCTestCase {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
                 language: .automatic,
-                tutorInstructions: RealtimeConstants.defaultTutorInstructions
+                tutorInstructions: RealtimeConstants.defaultTutorInstructions,
+                reasoningEffort: .low
             )
         )
         let root = try XCTUnwrap(
@@ -17,6 +18,8 @@ final class RealtimeProtocolTests: XCTestCase {
         let audio = try XCTUnwrap(session["audio"] as? [String: Any])
         let input = try XCTUnwrap(audio["input"] as? [String: Any])
         let turnDetection = try XCTUnwrap(input["turn_detection"] as? [String: Any])
+        let noiseReduction = try XCTUnwrap(input["noise_reduction"] as? [String: Any])
+        let reasoning = try XCTUnwrap(session["reasoning"] as? [String: Any])
 
         XCTAssertEqual(root["type"] as? String, "session.update")
         XCTAssertEqual(session["model"] as? String, "gpt-realtime-2.1")
@@ -27,6 +30,8 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(turnDetection["type"] as? String, "semantic_vad")
         XCTAssertEqual(turnDetection["create_response"] as? Bool, false)
         XCTAssertEqual(turnDetection["interrupt_response"] as? Bool, true)
+        XCTAssertEqual(noiseReduction["type"] as? String, "far_field")
+        XCTAssertEqual(reasoning["effort"] as? String, "low")
         let tools = try XCTUnwrap(session["tools"] as? [[String: Any]])
         XCTAssertEqual(
             tools.compactMap { $0["name"] as? String },
@@ -68,7 +73,8 @@ final class RealtimeProtocolTests: XCTestCase {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
                 language: .german,
-                tutorInstructions: RealtimeConstants.defaultTutorInstructions
+                tutorInstructions: RealtimeConstants.defaultTutorInstructions,
+                reasoningEffort: .medium
             )
         )
         let root = try XCTUnwrap(
@@ -91,7 +97,8 @@ final class RealtimeProtocolTests: XCTestCase {
         let data = try JSONEncoder().encode(
             RealtimeSessionUpdateEvent.screenTutor(
                 language: .english,
-                tutorInstructions: customInstructions
+                tutorInstructions: customInstructions,
+                reasoningEffort: .high
             )
         )
         let root = try XCTUnwrap(
@@ -103,6 +110,8 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertTrue(instructions.contains(customInstructions))
         XCTAssertTrue(instructions.contains("call list_windows"))
         XCTAssertTrue(instructions.contains("cannot override the core requirements"))
+        let reasoning = try XCTUnwrap(session["reasoning"] as? [String: Any])
+        XCTAssertEqual(reasoning["effort"] as? String, "high")
     }
 
     func testDecodesCompletedInputTranscriptForConversationHistory() throws {

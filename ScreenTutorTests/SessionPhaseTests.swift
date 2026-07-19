@@ -4,10 +4,10 @@ import XCTest
 final class SessionPhaseTests: XCTestCase {
     func testPrimaryActionsMatchConversationState() {
         assertPrimaryAction(.idle, label: "Start conversation", symbol: "mic.fill")
-        assertPrimaryAction(.paused, label: "Resume listening", symbol: "play.fill")
+        assertPrimaryAction(.paused, label: "Unmute microphone", symbol: "mic.fill")
 
         for phase in [SessionPhase.listening, .thinking, .speaking] {
-            assertPrimaryAction(phase, label: "Pause listening", symbol: "pause.fill")
+            assertPrimaryAction(phase, label: "Mute microphone", symbol: "mic.slash.fill")
         }
     }
 
@@ -15,7 +15,7 @@ final class SessionPhaseTests: XCTestCase {
         XCTAssertEqual(SessionPhase.listening.title, "Listening")
         XCTAssertEqual(SessionPhase.thinking.title, "Thinking")
         XCTAssertEqual(SessionPhase.speaking.title, "Speaking")
-        XCTAssertEqual(SessionPhase.paused.title, "Paused")
+        XCTAssertEqual(SessionPhase.paused.title, "Microphone muted")
     }
 
     func testTransitionPhasesDisablePrimaryAction() {

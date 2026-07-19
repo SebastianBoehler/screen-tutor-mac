@@ -4,13 +4,14 @@ struct HUDControlsView: View {
     let model: AppModel
 
     var body: some View {
-        ControlGroup {
+        HStack(spacing: 8) {
             Button(action: model.toggleSession) {
                 Label(
                     model.phase.primaryActionLabel,
                     systemImage: model.phase.primaryActionSymbolName
                 )
             }
+            .buttonStyle(.borderedProminent)
             .disabled(!model.phase.isPrimaryActionEnabled)
             .help(model.phase.primaryActionLabel)
 
@@ -19,16 +20,18 @@ struct HUDControlsView: View {
             } label: {
                 Label("End conversation", systemImage: "stop.fill")
             }
+            .buttonStyle(.bordered)
+            .tint(.red)
             .disabled(!model.phase.isStopActionEnabled)
             .help("End conversation and clear its live context")
 
             SettingsLink {
-                Label("Open Settings", systemImage: "gearshape")
+                Label("Settings", systemImage: "gearshape")
             }
+            .buttonStyle(.bordered)
             .help("Open ScreenTutor Settings")
         }
-        .labelStyle(.iconOnly)
         .controlSize(.small)
-        .fixedSize()
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }

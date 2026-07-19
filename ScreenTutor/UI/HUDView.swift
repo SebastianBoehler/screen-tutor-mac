@@ -38,7 +38,6 @@ struct HUDView: View {
                 .accessibilityLabel("ScreenTutor \(statusTitle). \(model.statusDetail)")
                 .accessibilityHint("Drag the background to move the overlay.")
                 Spacer(minLength: 0)
-                HUDControlsView(model: model)
                 Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -53,6 +52,9 @@ struct HUDView: View {
                     assistantText: transcript.assistantText
                 )
             }
+
+            Divider()
+            HUDControlsView(model: model)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
