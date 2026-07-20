@@ -17,9 +17,11 @@ final class MicrophoneControlStateTests: XCTestCase {
         XCTAssertEqual(live, .live)
         XCTAssertEqual(live.tone, .live)
         XCTAssertEqual(live.label, "Mute ScreenTutor microphone")
+        XCTAssertEqual(live.compactLabel, "Mute")
         XCTAssertEqual(muted, .muted)
         XCTAssertEqual(muted.tone, .muted)
         XCTAssertEqual(muted.label, "Unmute ScreenTutor microphone")
+        XCTAssertEqual(muted.compactLabel, "Unmute")
     }
 
     func testInterruptedConversationOffersReconnectInsteadOfNewSession() {
@@ -30,7 +32,9 @@ final class MicrophoneControlStateTests: XCTestCase {
         )
 
         XCTAssertEqual(state, .reconnect)
+        XCTAssertEqual(state.tone, .reconnecting)
         XCTAssertEqual(state.label, "Reconnect microphone")
+        XCTAssertEqual(state.compactLabel, "Reconnect")
         XCTAssertTrue(state.isEnabled)
     }
 }

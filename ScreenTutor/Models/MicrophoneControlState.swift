@@ -3,6 +3,7 @@ import Foundation
 enum MicrophoneControlState: Equatable, Sendable {
     enum Tone: Equatable, Sendable {
         case accent
+        case reconnecting
         case live
         case muted
         case unavailable
@@ -50,9 +51,21 @@ enum MicrophoneControlState: Equatable, Sendable {
         }
     }
 
+    var compactLabel: String {
+        switch self {
+        case .ready: "Start"
+        case .reconnect: "Reconnect"
+        case .live: "Mute"
+        case .muted: "Unmute"
+        case .busy: "Connecting"
+        case .unavailable: "Unavailable"
+        }
+    }
+
     var tone: Tone {
         switch self {
-        case .ready, .reconnect: .accent
+        case .ready: .accent
+        case .reconnect: .reconnecting
         case .live: .live
         case .muted: .muted
         case .busy, .unavailable: .unavailable
