@@ -227,14 +227,19 @@
                 *isSilence = YES;
                 return noErr;
             }
+            *isSilence = NO;
             AudioUnitRenderActionFlags flags = 0;
-            return rtcDelegate.getPlayoutData(
+            OSStatus status = rtcDelegate.getPlayoutData(
                 &flags,
                 timestamp,
                 0,
                 frameCount,
                 outputData
             );
+            if (status != noErr) {
+                *isSilence = YES;
+            }
+            return status;
         }];
     [engine attachNode:source];
     [engine connect:source to:engine.mainMixerNode format:format];
