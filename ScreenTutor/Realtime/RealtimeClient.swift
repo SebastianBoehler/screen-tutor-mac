@@ -156,7 +156,7 @@ enum RealtimeClientError: LocalizedError {
         case .notConnected: "The Realtime session is not connected."
         case .encodingFailed: "A Realtime event could not be encoded."
         case .invalidCallResponse: "OpenAI returned an invalid WebRTC answer."
-        case .callFailed(let detail): "The Realtime WebRTC call could not start: \(detail)"
+        case .callFailed(let detail): "The Realtime WebRTC connection failed: \(detail)"
         }
     }
 }

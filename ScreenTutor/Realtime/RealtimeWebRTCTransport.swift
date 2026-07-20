@@ -103,10 +103,25 @@ final class RealtimeWebRTCTransport: NSObject, RealtimeTransporting {
         guard let channel = dataChannel, channel.readyState == .open else {
             throw RealtimeClientError.notConnected
         }
-        let buffer = RTCDataBuffer(data: Data(text.utf8), isBinary: false)
-        guard channel.sendData(buffer) else {
-            throw RealtimeClientError.callFailed("The Realtime event channel rejected a message.")
+        let data = Data(text.utf8)
+        guard data.count <= RealtimeEventSizePolicy.maximumTextBytes else {
+            throw RealtimeClientError.callFailed(
+                "The \(eventType(in: data)) event is too large for the Realtime data channel "
+                    + "(\(data.count) bytes)."
+            )
         }
+        let buffer = RTCDataBuffer(data: data, isBinary: false)
+        guard channel.sendData(buffer) else {
+            throw RealtimeClientError.callFailed(
+                "The Realtime event channel rejected the \(eventType(in: data)) event "
+                    + "(\(data.count) bytes; \(channel.bufferedAmount) bytes queued)."
+            )
+        }
+    }
+
+    private func eventType(in data: Data) -> String {
+        let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        return object?["type"] as? String ?? "unknown"
     }
 
     func setMicrophoneMuted(_ muted: Bool) async throws {

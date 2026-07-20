@@ -1,5 +1,9 @@
 import Foundation
 
+enum RealtimeEventSizePolicy {
+    static let maximumTextBytes = 250_000
+}
+
 enum RealtimeWebRTCAudioConstraints {
     static let optional = [
         "googEchoCancellation": "true",

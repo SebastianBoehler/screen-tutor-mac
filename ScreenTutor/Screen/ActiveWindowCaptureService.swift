@@ -5,6 +5,7 @@ import CoreGraphics
 @MainActor
 final class ActiveWindowCaptureService: WindowCaptureServing {
     private let maximumPixelDimension = 1_920
+    private let imageEncoder = ScreenImageEncoder()
     private var catalogState = CaptureWindowCatalogState()
 
     var hasPermission: Bool {
@@ -129,7 +130,7 @@ final class ActiveWindowCaptureService: WindowCaptureServing {
         guard catalogState.isCurrent(revision) else {
             throw ScreenCaptureError.windowUnavailable
         }
-        guard let jpegData = jpegData(from: image) else {
+        guard let jpegData = imageEncoder.jpegData(from: image) else {
             throw ScreenCaptureError.imageEncodingFailed
         }
         guard let processID = window.owningApplication?.processID else {
@@ -213,12 +214,6 @@ final class ActiveWindowCaptureService: WindowCaptureServing {
         )
     }
 
-    private func jpegData(from image: CGImage) -> Data? {
-        NSBitmapImageRep(cgImage: image).representation(
-            using: .jpeg,
-            properties: [.compressionFactor: 0.82]
-        )
-    }
 }
 
 struct CaptureWindowCatalogState {

@@ -25,6 +25,7 @@
 		2A71D07F66683AA2983C4597 /* AppSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DFF47E9985FB626EA356724 /* AppSettingsModel.swift */; };
 		2A9AA970884B5E86B66742DC /* AppModel+ConversationHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19CE03929BD02827A02A62E /* AppModel+ConversationHistory.swift */; };
 		2FF67246972E25DFD24802AF /* RealtimeFunctionTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7166294E29753603F42DDBD /* RealtimeFunctionTool.swift */; };
+		3445AC854DC0432AF1B82761 /* ScreenImageEncoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604C9E72E57D35D3D77993C0 /* ScreenImageEncoderTests.swift */; };
 		36D07B478A2C4D43C7602F9B /* TutorCursorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8921FCCBAF17215ADAF1A978 /* TutorCursorView.swift */; };
 		37CC2F3BE7F50ED6DBEC0AAE /* GlobalHotKeyShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F984FFEC7DAC95B611D90F /* GlobalHotKeyShortcut.swift */; };
 		3858558AEE28439113328A24 /* AppModelError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC81371287DBDFDB5A213E10 /* AppModelError.swift */; };
@@ -90,6 +91,7 @@
 		E0813D5D43DE7B9F8F8B99B8 /* CapturedWindowContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A57A244D0E8653099EE7A95 /* CapturedWindowContextTests.swift */; };
 		EC5FFA5DCDAF501C369C2003 /* AmbientTranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09581DE546D97C59394F6F55 /* AmbientTranscriptView.swift */; };
 		F1A2959C7766AF793D94EF6E /* ConversationLogStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFEA17211E7B8461B191B9E /* ConversationLogStoreTests.swift */; };
+		F2D81C48FF971CDD7234C5F4 /* ScreenImageEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2820AE612522C4BD78AB6623 /* ScreenImageEncoder.swift */; };
 		F43EC9695EB49595D1AC3204 /* ConversationProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBBAD514C2DA4D55221623C /* ConversationProjection.swift */; };
 		F49376ED4EE2259B051B9F6D /* ConversationHistoryIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E281781BDA195577F571995C /* ConversationHistoryIdentityTests.swift */; };
 		F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC3E2F06531E6856B099445 /* ScreenToolCallOutput.swift */; };
@@ -123,6 +125,7 @@
 		231BF1CA5E05D3D215E012A8 /* AppModel+ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+ScreenTools.swift"; sourceTree = "<group>"; };
 		23FDE8544FDB56C14DAAC22C /* RealtimeCallRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeCallRequest.swift; sourceTree = "<group>"; };
 		27054BADA2A6A2864C21525B /* TeachingPointerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingPointerController.swift; sourceTree = "<group>"; };
+		2820AE612522C4BD78AB6623 /* ScreenImageEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenImageEncoder.swift; sourceTree = "<group>"; };
 		326AD58538843DF17A9E09CB /* RealtimeSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeSessionConfiguration.swift; sourceTree = "<group>"; };
 		3434DE6FC23D1BA1BD478DF8 /* ConversationRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationRecord.swift; sourceTree = "<group>"; };
 		38E96EFD8B4EBFB7532BEF18 /* SessionPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPhase.swift; sourceTree = "<group>"; };
@@ -147,6 +150,7 @@
 		5F610298D98CFD02F7B64B76 /* SharedWebRTCAudioDevice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedWebRTCAudioDevice.m; sourceTree = "<group>"; };
 		5F74351B4D407A64083D27C7 /* ScreenTutorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTutorApp.swift; sourceTree = "<group>"; };
 		602939A7ABAE7B69AAEFB958 /* CaptureWindowCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureWindowCatalogTests.swift; sourceTree = "<group>"; };
+		604C9E72E57D35D3D77993C0 /* ScreenImageEncoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenImageEncoderTests.swift; sourceTree = "<group>"; };
 		626AE4C5CBAD34F8DF2DA0E1 /* LiveToolActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveToolActivity.swift; sourceTree = "<group>"; };
 		639F3DE38C4216FFC58F711C /* ConversationHistoryModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryModelTests.swift; sourceTree = "<group>"; };
 		6A84DD135CD0C05E6675DD5B /* RealtimeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeModel.swift; sourceTree = "<group>"; };
@@ -280,6 +284,7 @@
 				8D195DD6B3F3F9F13A2BE8F9 /* RealtimeErrorRecoveryTests.swift */,
 				4A502657C318399D4B0A3AEF /* RealtimeProtocolTests.swift */,
 				EEC6B0378F50E40D6C24586B /* RealtimeWebRTCTests.swift */,
+				604C9E72E57D35D3D77993C0 /* ScreenImageEncoderTests.swift */,
 				07A70B8D9F5BAABC6F64A0C7 /* ScreenToolCoordinatorTests.swift */,
 				CCD833F3BCA98980894B6060 /* SessionIdentityTests.swift */,
 				6AF2CAD1C74DC9D80A257A74 /* SessionPhaseTests.swift */,
@@ -353,6 +358,7 @@
 				93FCBED1663FC1AD5A1DABB1 /* ActiveWindowSnapshot.swift */,
 				934C80C840705D3C0459107E /* CapturedWindowContext.swift */,
 				8B8AB06BBE6D8EA20079BC00 /* CaptureWindowCatalog.swift */,
+				2820AE612522C4BD78AB6623 /* ScreenImageEncoder.swift */,
 			);
 			path = Screen;
 			sourceTree = "<group>";
@@ -565,6 +571,7 @@
 				79F0C03CFF6B574D25EFFD6D /* RealtimeWebRTCTransport+PeerDelegate.swift in Sources */,
 				978F6408C99A26DE40287089 /* RealtimeWebRTCTransport.swift in Sources */,
 				4CFECB0CF59B54C061A5D7F4 /* ReasoningEffort.swift in Sources */,
+				F2D81C48FF971CDD7234C5F4 /* ScreenImageEncoder.swift in Sources */,
 				151D51A767A84737E44A7EFE /* ScreenInspectionCue.swift in Sources */,
 				F53CE458EC50471ACD632A97 /* ScreenToolCallOutput.swift in Sources */,
 				FB9DCA6679EE15C929A63D1F /* ScreenToolCoordinator.swift in Sources */,
@@ -605,6 +612,7 @@
 				7F6407BCA5A36EA4C7682A74 /* RealtimeErrorRecoveryTests.swift in Sources */,
 				F912A8D4BA6A96F9038E26E0 /* RealtimeProtocolTests.swift in Sources */,
 				40EEB850545C7C495610C398 /* RealtimeWebRTCTests.swift in Sources */,
+				3445AC854DC0432AF1B82761 /* ScreenImageEncoderTests.swift in Sources */,
 				A7DC4C7250D03CCEF22E2325 /* ScreenToolCoordinatorTests.swift in Sources */,
 				9C5F68BF0A446DD1D4C6AAE9 /* SessionIdentityTests.swift in Sources */,
 				0F117E9FF158ED8C73BF4327 /* SessionPhaseTests.swift in Sources */,
