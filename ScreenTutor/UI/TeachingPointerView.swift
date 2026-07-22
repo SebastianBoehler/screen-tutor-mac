@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TeachingHighlightView: View {
+struct TeachingPointerView: View {
     let layout: TeachingPointerLayout
     let label: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -20,19 +20,26 @@ struct TeachingHighlightView: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .topLeading) {
-                TeachingTargetView(
-                    frame: layout.localHighlightFrame,
-                    label: label,
-                    containerSize: proxy.size,
-                    reduceTransparency: reduceTransparency,
-                    hasArrived: hasArrived
-                )
-
                 TutorCursorView(
                     hasArrived: hasArrived,
                     differentiateWithoutColor: differentiateWithoutColor
                 )
                 .position(pointerPosition)
+
+                Text(label)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(
+                        reduceTransparency ? AnyShapeStyle(.background) : AnyShapeStyle(.regularMaterial),
+                        in: Capsule()
+                    )
+                    .overlay {
+                        Capsule().stroke(Color(nsColor: .separatorColor).opacity(0.55))
+                    }
+                    .position(labelPosition(in: proxy.size))
+                    .opacity(hasArrived ? 1 : 0)
             }
         }
         .opacity(isVisible ? 1 : 0)
@@ -41,21 +48,32 @@ struct TeachingHighlightView: View {
         .accessibilityLabel("Tutor pointing to \(label)")
     }
 
+    private func labelPosition(in size: CGSize) -> CGPoint {
+        let halfWidth: CGFloat = 78
+        let x = layout.targetPoint.x + halfWidth + 28 <= size.width
+            ? layout.targetPoint.x + halfWidth + 24
+            : layout.targetPoint.x - halfWidth - 24
+        let y = layout.targetPoint.y >= 38
+            ? layout.targetPoint.y - 25
+            : layout.targetPoint.y + 38
+        return CGPoint(
+            x: min(max(x, halfWidth + 8), size.width - halfWidth - 8),
+            y: min(max(y, 18), size.height - 18)
+        )
+    }
+
     private func present() {
         if reduceMotion {
             pointerPosition = layout.targetPoint
             hasArrived = true
-            withAnimation(.easeOut(duration: 0.18)) {
-                isVisible = true
-            }
+            isVisible = true
             return
         }
-
         isVisible = true
-        withAnimation(.easeInOut(duration: 0.58)) {
+        withAnimation(.easeInOut(duration: 0.46)) {
             pointerPosition = layout.targetPoint
         } completion: {
-            withAnimation(.spring(response: 0.28, dampingFraction: 0.62)) {
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.68)) {
                 hasArrived = true
             }
         }

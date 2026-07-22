@@ -1,6 +1,6 @@
 import Foundation
 
-struct HighlightSuccessOutput: Encodable {
+struct TeachingPointerSuccessOutput: Encodable {
     let ok: Bool
     let status: String
 }

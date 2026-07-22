@@ -149,6 +149,29 @@ struct SettingsView: View {
                 Button("Open Screen Recording Settings") {
                     model.openScreenRecordingSettings()
                 }
+                HStack {
+                    Label(
+                        "Camera",
+                        systemImage: model.cameraPermissionGranted
+                            ? "checkmark.circle.fill"
+                            : "circle.dashed"
+                    )
+                    .foregroundStyle(model.cameraPermissionGranted ? .green : .secondary)
+                    Spacer()
+                    if !model.cameraPermissionGranted {
+                        Button("Grant Access") { model.requestCameraPermission() }
+                    }
+                }
+                Text(
+                    "Camera access is used only for a single still photo when you explicitly "
+                        + "ask the tutor to look through the camera. The photo is sent to OpenAI "
+                        + "as conversation context; there is no background camera stream."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                Button("Open Camera Settings") {
+                    model.openCameraSettings()
+                }
             }
 
             Section("System") {

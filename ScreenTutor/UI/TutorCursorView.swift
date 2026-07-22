@@ -7,38 +7,34 @@ struct TutorCursorView: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(.black.opacity(0.82), lineWidth: 7)
-                .frame(width: 46, height: 46)
+                .fill(.blue)
+                .frame(width: 18, height: 18)
+                .overlay { Circle().stroke(.white, lineWidth: 3) }
+                .shadow(color: .black.opacity(0.35), radius: 3)
 
             Circle()
-                .stroke(.yellow, lineWidth: 4)
-                .frame(width: 46, height: 46)
-
-            Circle()
-                .fill(.white)
-                .frame(width: 10, height: 10)
-                .overlay {
-                    Circle().stroke(.black, lineWidth: 2)
-                }
+                .stroke(.blue.opacity(0.75), lineWidth: 3)
+                .frame(width: 36, height: 36)
+                .scaleEffect(hasArrived ? 1 : 0.55)
 
             Image(systemName: "cursorarrow")
-                .font(.system(size: 44, weight: .bold))
+                .font(.system(size: 30, weight: .bold))
                 .foregroundStyle(.white)
-                .shadow(color: .black, radius: 0, x: 3, y: 3)
-                .shadow(color: .black.opacity(0.8), radius: 4)
-                .offset(x: 18, y: 20)
+                .shadow(color: .black, radius: 0, x: 2, y: 2)
+                .shadow(color: .black.opacity(0.65), radius: 3)
+                .offset(x: 14, y: 15)
                 .accessibilityHidden(true)
         }
         .overlay {
             Circle()
                 .stroke(
-                    differentiateWithoutColor ? Color.white : Color.yellow,
-                    style: StrokeStyle(lineWidth: 3, dash: [7, 5])
+                    differentiateWithoutColor ? Color.primary : Color.blue,
+                    style: StrokeStyle(lineWidth: 2, dash: [5, 4])
                 )
-                .frame(width: 72, height: 72)
-                .scaleEffect(hasArrived ? 1 : 0.62)
-                .opacity(hasArrived ? 0.3 : 0)
+                .frame(width: 48, height: 48)
+                .scaleEffect(hasArrived ? 1 : 0.7)
+                .opacity(hasArrived ? 0.28 : 0)
         }
-        .shadow(color: .black.opacity(0.4), radius: 5)
+        .frame(width: 52, height: 52)
     }
 }

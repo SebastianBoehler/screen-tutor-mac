@@ -24,7 +24,8 @@ struct LiveToolActivity: Identifiable, Equatable, Sendable {
         switch name {
         case "list_windows": "Reading windows"
         case "capture_window": "Capturing window"
-        case "highlight_screen_region": "Highlighting"
+        case "point_at_screen_position": "Pointing on screen"
+        case "capture_camera": "Taking camera photo"
         default: name.replacing("_", with: " ").capitalized
         }
     }
@@ -33,7 +34,8 @@ struct LiveToolActivity: Identifiable, Equatable, Sendable {
         switch name {
         case "list_windows": "macwindow.on.rectangle"
         case "capture_window": "camera.viewfinder"
-        case "highlight_screen_region": "scope"
+        case "point_at_screen_position": "cursorarrow.motionlines"
+        case "capture_camera": "camera.fill"
         default: "wrench.and.screwdriver"
         }
     }

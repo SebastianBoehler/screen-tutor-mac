@@ -25,15 +25,17 @@ final class LiveToolActivityTests: XCTestCase {
         XCTAssertEqual(model.liveToolActivities.first?.displayName, "Capturing window")
     }
 
-    func testWindowListingAlsoPlaysCueButHighlightDoesNot() {
+    func testVisualCaptureToolsPlayCueButPointerDoesNot() {
         let model = AppModel()
         var cueCount = 0
         model.playScreenInspectionCue = { cueCount += 1 }
 
         model.beginToolActivity(name: "list_windows", turn: 1)
-        model.beginToolActivity(name: "highlight_screen_region", turn: 1)
+        model.beginToolActivity(name: "capture_camera", turn: 1)
+        model.beginToolActivity(name: "point_at_screen_position", turn: 1)
 
-        XCTAssertEqual(cueCount, 1)
-        XCTAssertEqual(model.liveToolActivities.count, 2)
+        XCTAssertEqual(cueCount, 2)
+        XCTAssertEqual(model.liveToolActivities.count, 3)
+        XCTAssertEqual(model.liveToolActivities[1].displayName, "Taking camera photo")
     }
 }

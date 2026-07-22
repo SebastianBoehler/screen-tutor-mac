@@ -12,22 +12,35 @@ struct ConversationImageEvent: Encodable, Sendable {
         windowTitle: String?,
         previousItemID: String
     ) {
-        let identifier = UUID().uuidString
-        eventID = "evt_screen_\(identifier)"
-        self.previousItemID = previousItemID
         let windowDescription = if let windowTitle, !windowTitle.isEmpty {
             "\(applicationName) — \(windowTitle)"
         } else {
             applicationName
         }
+        self.init(
+            jpegData: jpegData,
+            contextDescription: "Selected window: \(windowDescription). "
+                + "Use this image for the current spoken turn.",
+            eventIDPrefix: "screen",
+            previousItemID: previousItemID
+        )
+    }
+
+    init(
+        jpegData: Data,
+        contextDescription: String,
+        eventIDPrefix: String,
+        previousItemID: String
+    ) {
+        eventID = "evt_\(eventIDPrefix)_\(UUID().uuidString)"
+        self.previousItemID = previousItemID
         item = MessageItem(
             type: "message",
             role: "user",
             content: [
                 ContentPart(
                     type: "input_text",
-                    text: "Selected window: \(windowDescription). "
-                        + "Use this image for the current spoken turn.",
+                    text: contextDescription,
                     imageURL: nil,
                     detail: nil
                 ),

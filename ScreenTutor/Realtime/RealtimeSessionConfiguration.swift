@@ -26,7 +26,7 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
                     customTutorInstructions: tutorInstructions
                 ),
                 outputModalities: ["audio"],
-                tools: [.listWindows, .captureWindow, .highlightScreenRegion],
+                tools: [.listWindows, .captureWindow, .pointAtScreenPosition, .captureCamera],
                 toolChoice: "auto",
                 parallelToolCalls: false,
                 reasoning: RealtimeReasoningConfiguration(effort: reasoningEffort),

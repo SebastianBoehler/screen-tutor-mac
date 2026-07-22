@@ -130,7 +130,7 @@ extension AppModel {
             let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
             !name.isEmpty
         else { return }
-        if name == "list_windows" || name == "capture_window" {
+        if name == "list_windows" || name == "capture_window" || name == "capture_camera" {
             playScreenInspectionCue()
         }
         updateLiveToolActivity(name: name, status: .started, turn: turn)

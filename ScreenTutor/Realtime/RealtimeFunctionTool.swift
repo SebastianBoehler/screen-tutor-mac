@@ -37,35 +37,23 @@ struct RealtimeFunctionTool: Encodable, Sendable {
         )
     )
 
-    static let highlightScreenRegion = RealtimeFunctionTool(
+    static let pointAtScreenPosition = RealtimeFunctionTool(
         type: "function",
-        name: "highlight_screen_region",
-        description: "Move ScreenTutor's visible teaching cursor to one region and highlight it. Always use this after capture_window when the user explicitly asks to point, show where, direct them, or highlight something.",
+        name: "point_at_screen_position",
+        description: "Move ScreenTutor's compact teaching cursor to one precise point. Always use this after capture_window when the user explicitly asks to point, show where, direct them, or highlight something.",
         parameters: Parameters(
             type: "object",
             properties: [
                 "x": Property(
                     type: "number",
-                    description: "Left edge, normalized from 0 to 1 in the screenshot.",
+                    description: "Horizontal target, normalized from 0 to 1 in the screenshot.",
                     minimum: 0,
                     maximum: 1
                 ),
                 "y": Property(
                     type: "number",
-                    description: "Top edge, normalized from 0 to 1 in the screenshot.",
+                    description: "Vertical target from the top, normalized from 0 to 1 in the screenshot.",
                     minimum: 0,
-                    maximum: 1
-                ),
-                "width": Property(
-                    type: "number",
-                    description: "Region width, normalized from 0 to 1.",
-                    minimum: 0.01,
-                    maximum: 1
-                ),
-                "height": Property(
-                    type: "number",
-                    description: "Region height, normalized from 0 to 1.",
-                    minimum: 0.01,
                     maximum: 1
                 ),
                 "label": Property(
@@ -75,7 +63,19 @@ struct RealtimeFunctionTool: Encodable, Sendable {
                     maximum: nil
                 )
             ],
-            required: ["x", "y", "width", "height", "label"],
+            required: ["x", "y", "label"],
+            additionalProperties: false
+        )
+    )
+
+    static let captureCamera = RealtimeFunctionTool(
+        type: "function",
+        name: "capture_camera",
+        description: "Take one photo from the Mac camera and add it to the current turn. Use only when the user explicitly asks you to look through or inspect the camera.",
+        parameters: Parameters(
+            type: "object",
+            properties: [:],
+            required: [],
             additionalProperties: false
         )
     )

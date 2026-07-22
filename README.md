@@ -19,9 +19,10 @@ The answer path has no standalone transcription or text-to-speech step. Assistan
 - Streams full-duplex speech-to-speech over OpenAI's Realtime WebRTC API
 - Uses semantic voice activity detection with natural barge-in and response truncation
 - Lets GPT inspect visible app/window titles and capture only the window relevant to the question
+- Can take one camera photo when you explicitly ask the tutor to look through the camera
 - Uses WebRTC acoustic echo cancellation plus Realtime far-field noise reduction
 - Lives in the menu bar with a draggable, translucent status and transcript HUD
-- Moves an animated tutor cursor to a formula, plot, cell, or control and highlights the target
+- Moves a compact animated tutor cursor to a precise formula, plot, cell, or control
 - Saves text-only conversations and privacy-safe tool status records as local JSONL
 - Shows prior turns and compact tool activity badges in a native history window
 - Offers Automatic, Deutsch, and English speech-language settings
@@ -49,7 +50,8 @@ ScreenTutor does not currently perform web search or use web grounding. Its answ
 6. ScreenTutor validates that selection, appends only that window as a high-detail `input_image`, and asks GPT to continue.
 7. The remote WebRTC audio track plays immediately while matching transcript events update the menu and optional on-screen HUD.
 8. Separately, completed input transcription events are queued into the local history without blocking the audio event stream.
-9. If pointing helps, GPT calls `highlight_screen_region`; ScreenTutor animates its tutor cursor to the target and asks GPT to continue speaking.
+9. If pointing helps, GPT calls `point_at_screen_position`; ScreenTutor animates only its compact tutor cursor to that precise point and asks GPT to continue speaking.
+10. If you explicitly ask it to look through the camera, GPT calls `capture_camera`; ScreenTutor takes one still, stops the camera session, adds the photo to the turn, and asks GPT to continue.
 
 The window list and capture calls are serial, recoverable tools. A closed window produces a tool error so GPT can list again instead of ending the voice session.
 
@@ -68,14 +70,14 @@ The window list and capture calls are serial, recoverable tools. A closed window
 4. Open the waveform menu-bar item, choose Settings, save your API key, and optionally pin the
    tutor's Realtime model, spoken language, reasoning effort, or teaching instructions. Automatic
    follows the language of your latest spoken turn.
-5. Start a conversation and grant Microphone and Screen Recording access. macOS may require one app restart after Screen Recording is first granted.
+5. Start a conversation and grant Microphone and Screen Recording access. Camera access is requested only if you ask the tutor to use it. macOS may require one app restart after Screen Recording is first granted.
 6. Keep a notebook, paper, browser, or editor open and press Command-Shift-Space.
 
 Press the shortcut again to mute only ScreenTutor's microphone upload. The Realtime connection and any answer already being spoken remain active; OBS and other microphone-enabled apps can continue recording. Press it later to unmute and resume the same conversation, including prior voice turns. Change the combination under Settings > System by clicking the shortcut recorder and typing a modified key combination. If macOS or another app already owns it, ScreenTutor keeps the prior working shortcut and reports the conflict.
 
 ScreenTutor keeps the microphone live while the tutor is speaking, so you can interrupt a reply naturally. WebRTC receives the tutor playback reference needed for acoustic echo cancellation and OpenAI tracks the remote playback buffer for interruption truncation. ScreenTutor no longer reconfigures the Mac input device with a private `AVAudioEngine`, so OBS and other microphone-enabled apps can retain their own capture streams.
 
-Realtime sessions last at most 60 minutes. The menu and draggable overlay show the current Listening, Thinking, Speaking, or Microphone muted state. Green means ScreenTutor input is live, orange means it is muted, and the icon and label provide the same state without relying on color. The overlay also shows live window-listing, capture, and highlighting tool chips and plays a short cue before ScreenTutor inspects window information or pixels. Choose New conversation when you want an empty context.
+Realtime sessions last at most 60 minutes. The menu and draggable overlay show the current Listening, Thinking, Speaking, or Microphone muted state. Green means ScreenTutor input is live, orange means it is muted, and the icon and label provide the same state without relying on color. The overlay also shows live window-listing, window capture, camera capture, and pointing tool chips and plays a short cue before ScreenTutor inspects window information or pixels. Choose New conversation when you want an empty context.
 
 Choose Conversation History… to browse prior text turns and tool activity, copy messages, or reveal the underlying JSONL file in Finder. The detail page has a labeled Continue conversation button instead of an icon-only toolbar action. Settings > Conversation storage shows the canonical folder path and can reveal all JSONL files or one selected conversation. Hotkey mute/unmute keeps writing to the same conversation; New conversation starts a new one. A network disconnect cannot preserve the original server-side Realtime session, but the next microphone action reconnects and replays the completed local conversation context. An app restart still requires selecting Continue conversation. The on-screen transcript can be hidden independently from the menu and dragged to a comfortable position.
 
@@ -95,13 +97,14 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | --- | --- |
 | `App` | Session lifecycle and application state |
 | `Audio` | Microphone permission and WebRTC media capture |
+| `Camera` | Permission-aware, model-requested one-shot photo capture |
 | `Realtime` | Typed OpenAI events, WebRTC media, and data-channel transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
 | `History` | Ordered, private JSONL persistence and conversation projection |
 | `UI` | Menu, transcript HUD, history browser, settings, and tutor cursor |
 | `System` | Global hotkey and launch-at-login integration |
 
-The native app uses SwiftUI, AppKit, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon. WebRTC media and audio processing come from the community-maintained [`stasel/WebRTC`](https://github.com/stasel/WebRTC) Swift package, pinned to M150 and built unmodified from the upstream WebRTC source. See that project and WebRTC's BSD license for dependency notices.
+The native app uses SwiftUI, AppKit, AVFoundation, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon. WebRTC media and audio processing come from the community-maintained [`stasel/WebRTC`](https://github.com/stasel/WebRTC) Swift package, pinned to M150 and built unmodified from the upstream WebRTC source. See that project and WebRTC's BSD license for dependency notices.
 
 ## Development
 
@@ -136,6 +139,8 @@ xcodebuild \
 ## Privacy, credentials, and billing
 
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
+
+Camera access is separate and explicit. The camera tool is available only so GPT can respond when you ask it to look through the camera. Each call opens the selected Mac camera long enough to take one still, compresses it to the same bounded image budget as a window capture, sends it to OpenAI as current-turn context, and stops the capture session. ScreenTutor does not provide a background camera feed and does not store camera photos in conversation JSONL.
 
 The sandbox grants client and server networking because WebRTC ICE must bind a local peer socket before connecting to OpenAI. ScreenTutor does not run an application-level HTTP server or accept commands over that entitlement.
 

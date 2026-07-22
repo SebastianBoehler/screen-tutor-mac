@@ -7,6 +7,7 @@ final class AppSettingsModel {
     private(set) var hasAPIKey = false
     private(set) var screenPermissionGranted = false
     private(set) var microphonePermissionGranted = false
+    private(set) var cameraPermissionGranted = false
     private(set) var launchAtLoginState: LaunchAtLoginState = .disabled
     private(set) var tutorLanguage: TutorLanguage
     private(set) var tutorInstructions: String
@@ -83,6 +84,15 @@ final class AppSettingsModel {
             : AppModelError.screenPermissionRequiresRestart.localizedDescription
     }
 
+    func requestCameraPermission() {
+        Task {
+            cameraPermissionGranted = await CameraPermissionService.request()
+            errorMessage = cameraPermissionGranted
+                ? nil
+                : "Camera access is disabled. Enable ScreenTutor in Privacy & Security > Camera."
+        }
+    }
+
     func setLaunchAtLogin(_ enabled: Bool) {
         do {
             try launchAtLoginService.setEnabled(enabled)
@@ -154,12 +164,20 @@ final class AppSettingsModel {
         hasAPIKey = apiKeyStore.hasAPIKey
         screenPermissionGranted = captureService.hasPermission
         microphonePermissionGranted = MicrophonePermissionService.isGranted
+        cameraPermissionGranted = CameraPermissionService.isGranted
         launchAtLoginState = launchAtLoginService.state
     }
 
     func openScreenRecordingSettings() {
         guard let url = URL(
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+        ) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func openCameraSettings() {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera"
         ) else { return }
         NSWorkspace.shared.open(url)
     }

@@ -120,7 +120,7 @@ extension AppModel {
         activeAudioResponseID = nil
         currentUserItemID = nil
         currentUserItemTurn = nil
-        clearHighlight?()
+        clearTeachingPointer?()
 
         await settleScreenToolTask(cancelling: false)
         guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {

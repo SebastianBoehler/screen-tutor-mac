@@ -6,20 +6,19 @@ import XCTest
 final class TeachingPointerLayoutTests: XCTestCase {
     func testConvertsGlobalAppKitCoordinatesForTheSwiftUIOverlay() {
         let layout = TeachingPointerLayout(
-            globalHighlightFrame: CGRect(x: 100, y: 200, width: 200, height: 100),
+            globalTarget: CGPoint(x: 200, y: 250),
             screenFrame: CGRect(x: -100, y: 0, width: 1_000, height: 800),
             mouseLocation: CGPoint(x: 0, y: 700),
             previousTarget: nil
         )
 
-        XCTAssertEqual(layout.localHighlightFrame, CGRect(x: 200, y: 500, width: 200, height: 100))
         XCTAssertEqual(layout.targetPoint, CGPoint(x: 300, y: 550))
         XCTAssertEqual(layout.startPoint, CGPoint(x: 100, y: 100))
     }
 
     func testPreviousTutorTargetWinsWhenItIsOnTheSameScreen() {
         let layout = TeachingPointerLayout(
-            globalHighlightFrame: CGRect(x: 500, y: 300, width: 100, height: 100),
+            globalTarget: CGPoint(x: 550, y: 350),
             screenFrame: CGRect(x: 0, y: 0, width: 1_000, height: 800),
             mouseLocation: CGPoint(x: 50, y: 50),
             previousTarget: CGPoint(x: 250, y: 600)
@@ -37,12 +36,12 @@ final class TeachingPointerLayoutTests: XCTestCase {
         )
         let controller = TeachingPointerController(panel: panel)
         let screen = try XCTUnwrap(NSScreen.main)
-        let highlight = try TeachingHighlight(
-            argumentsJSON: #"{"x":0.4,"y":0.4,"width":0.2,"height":0.2,"label":"test target"}"#,
+        let pointer = try TeachingPointer(
+            argumentsJSON: #"{"x":0.5,"y":0.5,"label":"test target"}"#,
             windowFrame: screen.visibleFrame
         )
 
-        try controller.show(highlight)
+        try controller.show(pointer)
 
         XCTAssertTrue(panel.isVisible)
         XCTAssertEqual(panel.frame, screen.frame)
@@ -58,17 +57,17 @@ final class TeachingPointerLayoutTests: XCTestCase {
         )
         let controller = TeachingPointerController(panel: panel)
         let screen = try XCTUnwrap(NSScreen.main)
-        let visibleHighlight = try TeachingHighlight(
-            argumentsJSON: #"{"x":0.4,"y":0.4,"width":0.2,"height":0.2,"label":"visible"}"#,
+        let visiblePointer = try TeachingPointer(
+            argumentsJSON: #"{"x":0.5,"y":0.5,"label":"visible"}"#,
             windowFrame: screen.visibleFrame
         )
-        let disconnectedHighlight = try TeachingHighlight(
-            argumentsJSON: #"{"x":0.4,"y":0.4,"width":0.2,"height":0.2,"label":"invalid"}"#,
+        let disconnectedPointer = try TeachingPointer(
+            argumentsJSON: #"{"x":0.5,"y":0.5,"label":"invalid"}"#,
             windowFrame: CGRect(x: 1_000_000, y: 1_000_000, width: 800, height: 600)
         )
 
-        try controller.show(visibleHighlight)
-        XCTAssertThrowsError(try controller.show(disconnectedHighlight))
+        try controller.show(visiblePointer)
+        XCTAssertThrowsError(try controller.show(disconnectedPointer))
 
         XCTAssertFalse(panel.isVisible)
     }
@@ -117,10 +116,10 @@ final class TeachingPointerLayoutTests: XCTestCase {
         )
     }
 
-    private func highlightOnMainScreen() throws -> TeachingHighlight {
+    private func highlightOnMainScreen() throws -> TeachingPointer {
         let screen = try XCTUnwrap(NSScreen.main)
-        return try TeachingHighlight(
-            argumentsJSON: #"{"x":0.4,"y":0.4,"width":0.2,"height":0.2,"label":"target"}"#,
+        return try TeachingPointer(
+            argumentsJSON: #"{"x":0.5,"y":0.5,"label":"target"}"#,
             windowFrame: screen.visibleFrame
         )
     }

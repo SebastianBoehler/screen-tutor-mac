@@ -18,6 +18,7 @@ final class AppModel {
 
     let captureService: ActiveWindowCaptureService
     let screenTools: ScreenToolCoordinator
+    let cameraTools: CameraToolCoordinator
     let realtimeClient: RealtimeClient
     let idleTimer = ListeningIdleTimer()
     var screenToolTask: Task<Void, Never>?
@@ -40,8 +41,8 @@ final class AppModel {
     var pendingUserHistoryTurns: [String: PendingUserHistoryTurn] = [:]
     var pendingAssistantHistory: [String: PendingAssistantHistoryMessage] = [:]
     var pendingHistoryReplay: [ConversationMessage] = []
-    @ObservationIgnored var showHighlight: ((TeachingHighlight) throws -> Void)?
-    @ObservationIgnored var clearHighlight: (() -> Void)?
+    @ObservationIgnored var showTeachingPointer: ((TeachingPointer) throws -> Void)?
+    @ObservationIgnored var clearTeachingPointer: (() -> Void)?
     @ObservationIgnored var playScreenInspectionCue: @MainActor () -> Void =
         ScreenInspectionCue.play
     @ObservationIgnored private var hotKeyErrorMessage: String?
@@ -53,6 +54,7 @@ final class AppModel {
         let captureService = ActiveWindowCaptureService()
         self.captureService = captureService
         screenTools = ScreenToolCoordinator(captureService: captureService)
+        cameraTools = CameraToolCoordinator(captureService: CameraCaptureService())
         self.history = history ?? ConversationHistoryModel()
         self.realtimeClient = realtimeClient ?? RealtimeClient()
         settings = AppSettingsModel(
@@ -156,11 +158,11 @@ final class AppModel {
     }
 
     func configureTeachingPointer(
-        show: @escaping (TeachingHighlight) throws -> Void,
+        show: @escaping (TeachingPointer) throws -> Void,
         clear: @escaping () -> Void
     ) {
-        showHighlight = show
-        clearHighlight = clear
+        showTeachingPointer = show
+        clearTeachingPointer = clear
     }
 
     func isCurrentSession(

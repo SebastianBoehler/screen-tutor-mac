@@ -36,7 +36,7 @@ final class RealtimeProtocolTests: XCTestCase {
         let tools = try XCTUnwrap(session["tools"] as? [[String: Any]])
         XCTAssertEqual(
             tools.compactMap { $0["name"] as? String },
-            ["list_windows", "capture_window", "highlight_screen_region"]
+            ["list_windows", "capture_window", "point_at_screen_position", "capture_camera"]
         )
         XCTAssertEqual(session["parallel_tool_calls"] as? Bool, false)
 
@@ -57,17 +57,22 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(captureProperties["window_id"]?["type"] as? String, "string")
         XCTAssertEqual(captureParameters["required"] as? [String], ["window_id"])
 
-        let highlightTool = try XCTUnwrap(
-            tools.first { $0["name"] as? String == "highlight_screen_region" }
+        let pointerTool = try XCTUnwrap(
+            tools.first { $0["name"] as? String == "point_at_screen_position" }
         )
         XCTAssertTrue(
-            (highlightTool["description"] as? String)?.contains("Always use this") == true
+            (pointerTool["description"] as? String)?.contains("Always use this") == true
         )
-        let highlightParameters = try XCTUnwrap(highlightTool["parameters"] as? [String: Any])
+        let pointerParameters = try XCTUnwrap(pointerTool["parameters"] as? [String: Any])
         XCTAssertEqual(
-            highlightParameters["required"] as? [String],
-            ["x", "y", "width", "height", "label"]
+            pointerParameters["required"] as? [String],
+            ["x", "y", "label"]
         )
+        let cameraTool = try XCTUnwrap(
+            tools.first { $0["name"] as? String == "capture_camera" }
+        )
+        let cameraParameters = try XCTUnwrap(cameraTool["parameters"] as? [String: Any])
+        XCTAssertEqual(cameraParameters["required"] as? [String], [])
     }
 
     func testGermanLanguagePinsSpeechAndTranscriptHint() throws {
@@ -176,6 +181,26 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertEqual(image["type"] as? String, "input_image")
         XCTAssertEqual(image["detail"] as? String, "high")
         XCTAssertEqual(image["image_url"] as? String, "data:image/jpeg;base64,AQID")
+    }
+
+    func testCameraPhotoUsesExplicitCurrentTurnContext() throws {
+        let event = ConversationImageEvent(
+            jpegData: Data([0x04, 0x05]),
+            contextDescription: "Current camera photo from FaceTime HD Camera.",
+            eventIDPrefix: "camera",
+            previousItemID: "item_camera_request"
+        )
+        let root = try encodedJSONObject(event)
+        let item = try XCTUnwrap(root["item"] as? [String: Any])
+        let content = try XCTUnwrap(item["content"] as? [[String: Any]])
+
+        XCTAssertTrue((root["event_id"] as? String)?.hasPrefix("evt_camera_") == true)
+        XCTAssertEqual(root["previous_item_id"] as? String, "item_camera_request")
+        XCTAssertEqual(
+            content.first?["text"] as? String,
+            "Current camera photo from FaceTime HD Camera."
+        )
+        XCTAssertEqual(content.last?["image_url"] as? String, "data:image/jpeg;base64,BAU=")
     }
 
     func testReplayUserMessageUsesInputTextConversationItem() throws {

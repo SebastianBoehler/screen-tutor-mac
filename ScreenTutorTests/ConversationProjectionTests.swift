@@ -32,16 +32,16 @@ final class ConversationProjectionTests: XCTestCase {
             status: .succeeded,
             at: start.addingTimeInterval(1.25)
         )
-        let highlightTool = ConversationRecord.toolCall(
+        let pointerTool = ConversationRecord.toolCall(
             conversationID: conversationID,
             turn: 1,
-            name: "highlight_screen_region",
+            name: "point_at_screen_position",
             status: .failed,
             at: start.addingTimeInterval(1.5)
         )
         let log = ConversationLog(
             conversationID: conversationID,
-            records: [started, assistant, captureTool, user, highlightTool, assistant],
+            records: [started, assistant, captureTool, user, pointerTool, assistant],
             skippedLineCount: 1,
             fileURL: URL(fileURLWithPath: "/tmp/conversation.jsonl")
         )
@@ -56,7 +56,7 @@ final class ConversationProjectionTests: XCTestCase {
         ])
         XCTAssertEqual(
             projection.messages.last?.toolCalls.map(\.name),
-            ["capture_window", "highlight_screen_region"]
+            ["capture_window", "point_at_screen_position"]
         )
         XCTAssertEqual(
             projection.messages.last?.toolCalls.map(\.status),

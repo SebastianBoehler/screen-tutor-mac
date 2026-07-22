@@ -70,9 +70,20 @@ extension AppModel {
 
         beginToolActivity(name: item.name, turn: turn)
 
-        if item.name == "highlight_screen_region" {
-            try await handleHighlightCall(
+        if item.name == "point_at_screen_position" {
+            try await handleTeachingPointerCall(
                 item,
+                turn: turn,
+                generation: generation,
+                connectionID: connectionID
+            )
+            return
+        }
+
+        if item.name == "capture_camera" {
+            try await handleCameraCall(
+                item,
+                userItemID: userItemID,
                 turn: turn,
                 generation: generation,
                 connectionID: connectionID
@@ -131,81 +142,6 @@ extension AppModel {
             guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
                 return
             }
-        }
-        try await requestResponse(
-            for: turn,
-            generation: generation,
-            connectionID: connectionID
-        )
-    }
-
-    private func handleHighlightCall(
-        _ item: RealtimeItem,
-        turn: Int,
-        generation: Int,
-        connectionID: RealtimeConnectionID
-    ) async throws {
-        guard let callID = item.callID else { throw TeachingHighlightError.invalidArguments }
-        let output: String
-        let status: ConversationToolStatus
-        do {
-            guard let arguments = item.arguments else {
-                throw TeachingHighlightError.invalidArguments
-            }
-            guard let lastSnapshotWindowContext else { throw TeachingHighlightError.noWindowContext }
-            let windowFrame = try await screenTools.resolveWindowFrame(
-                for: lastSnapshotWindowContext
-            )
-            guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
-                try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
-                return
-            }
-            let highlight = try TeachingHighlight(
-                argumentsJSON: arguments,
-                windowFrame: windowFrame
-            )
-            guard let showHighlight else {
-                throw TeachingPointerPresentationError.panelPresentationFailed
-            }
-            try showHighlight(highlight)
-            output = try encodeToolOutput(HighlightSuccessOutput(ok: true, status: "highlighted"))
-            status = .succeeded
-        } catch {
-            let code = if error is TeachingPointerPresentationError {
-                "highlight_presentation_failed"
-            } else if error is ScreenCaptureError {
-                "highlight_context_stale"
-            } else {
-                "invalid_highlight"
-            }
-            output = try encodeToolOutput(
-                ToolFailureOutput(
-                    ok: false,
-                    error: ToolFailure(
-                        code: code,
-                        message: error.localizedDescription
-                    )
-                )
-            )
-            status = .failed
-        }
-
-        guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
-            try await sendTurnCancelledOutput(for: item, connectionID: connectionID)
-            return
-        }
-        recordToolActivity(name: item.name, status: status, turn: turn)
-        phase = .thinking
-        try await realtimeClient.send(
-            FunctionCallOutputEvent(
-                callID: callID,
-                output: output,
-                previousItemID: item.id
-            ),
-            connectionID: connectionID
-        )
-        guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
-            return
         }
         try await requestResponse(
             for: turn,
@@ -277,7 +213,7 @@ extension AppModel {
         )
     }
 
-    private func encodeToolOutput<T: Encodable>(_ output: T) throws -> String {
+    func encodeToolOutput<T: Encodable>(_ output: T) throws -> String {
         let data = try JSONEncoder().encode(output)
         guard let json = String(data: data, encoding: .utf8) else {
             throw ScreenToolCallError.outputEncodingFailed

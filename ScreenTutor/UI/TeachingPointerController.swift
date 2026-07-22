@@ -50,25 +50,23 @@ final class TeachingPointerController: NSObject {
         workspaceNotificationCenter.removeObserver(self)
     }
 
-    func show(_ highlight: TeachingHighlight) throws {
+    func show(_ pointer: TeachingPointer) throws {
         hide()
         guard let screen = NSScreen.screens.first(where: {
-            $0.frame.contains(
-                CGPoint(x: highlight.globalFrame.midX, y: highlight.globalFrame.midY)
-            )
+            $0.frame.contains(pointer.globalPoint)
         }) else {
             throw TeachingPointerPresentationError.targetOutsideConnectedDisplays
         }
 
         hideTask?.cancel()
         let layout = TeachingPointerLayout(
-            globalHighlightFrame: highlight.globalFrame,
+            globalTarget: pointer.globalPoint,
             screenFrame: screen.frame,
             mouseLocation: NSEvent.mouseLocation,
             previousTarget: previousTarget
         )
         panel.contentViewController = NSHostingController(
-            rootView: TeachingHighlightView(layout: layout, label: highlight.label)
+            rootView: TeachingPointerView(layout: layout, label: pointer.label)
         )
         panel.setFrame(screen.frame, display: true)
         panel.orderFrontRegardless()
@@ -76,10 +74,7 @@ final class TeachingPointerController: NSObject {
             panel.orderOut(nil)
             throw TeachingPointerPresentationError.panelPresentationFailed
         }
-        previousTarget = CGPoint(
-            x: highlight.globalFrame.midX,
-            y: highlight.globalFrame.midY
-        )
+        previousTarget = pointer.globalPoint
         hideTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(10))
             guard !Task.isCancelled else { return }

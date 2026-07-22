@@ -1,24 +1,16 @@
 import CoreGraphics
 
 struct TeachingPointerLayout: Equatable, Sendable {
-    let localHighlightFrame: CGRect
     let startPoint: CGPoint
     let targetPoint: CGPoint
 
     init(
-        globalHighlightFrame: CGRect,
+        globalTarget: CGPoint,
         screenFrame: CGRect,
         mouseLocation: CGPoint,
         previousTarget: CGPoint?
     ) {
-        localHighlightFrame = Self.localFrame(
-            for: globalHighlightFrame,
-            in: screenFrame
-        )
-        targetPoint = CGPoint(
-            x: localHighlightFrame.midX,
-            y: localHighlightFrame.midY
-        )
+        targetPoint = Self.localPoint(for: globalTarget, in: screenFrame)
 
         let globalStart: CGPoint
         if let previousTarget, screenFrame.contains(previousTarget) {
@@ -29,15 +21,6 @@ struct TeachingPointerLayout: Equatable, Sendable {
             globalStart = Self.clamped(mouseLocation, to: screenFrame)
         }
         startPoint = Self.localPoint(for: globalStart, in: screenFrame)
-    }
-
-    private static func localFrame(for frame: CGRect, in screenFrame: CGRect) -> CGRect {
-        CGRect(
-            x: frame.minX - screenFrame.minX,
-            y: screenFrame.maxY - frame.maxY,
-            width: frame.width,
-            height: frame.height
-        )
     }
 
     private static func localPoint(for point: CGPoint, in screenFrame: CGRect) -> CGPoint {

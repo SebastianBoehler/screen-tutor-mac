@@ -70,7 +70,7 @@ extension AppModel {
         recoverableConversation = retainingConversationForReconnect
             ? recoveredConversation ?? existingRecovery
             : nil
-        clearHighlight?()
+        clearTeachingPointer?()
         phase = .idle
         errorMessage = message
         settings.refresh()
