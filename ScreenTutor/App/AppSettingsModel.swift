@@ -22,9 +22,11 @@ final class AppSettingsModel {
     private(set) var computerControlEnabled: Bool
     private(set) var computerModel: String
     private(set) var inputControlPermissionGranted = false
+    private(set) var studyRoomURL: String
 
     static let defaultObserverModel = "google/gemini-3.5-flash-lite"
     static let defaultComputerModel = "google/gemini-3.5-flash"
+    static let defaultStudyRoomURL = "http://localhost:3000"
 
     private let apiKeyStore: APIKeyStore
     private let openRouterKeyStore: APIKeyStore
@@ -45,6 +47,7 @@ final class AppSettingsModel {
     private static let deskProactivityKey = "com.sebastianboehler.ScreenTutor.deskProactivity"
     private static let computerControlKey = "com.sebastianboehler.ScreenTutor.computerControl"
     private static let computerModelKey = "com.sebastianboehler.ScreenTutor.computerModel"
+    private static let studyRoomURLKey = "com.sebastianboehler.ScreenTutor.studyRoomURL"
 
     init(
         apiKeyStore: APIKeyStore,
@@ -75,6 +78,7 @@ final class AppSettingsModel {
         computerControlEnabled = userDefaults.bool(forKey: Self.computerControlKey)
         computerModel = userDefaults.string(forKey: Self.computerModelKey)
             ?? Self.defaultComputerModel
+        studyRoomURL = userDefaults.string(forKey: Self.studyRoomURLKey) ?? Self.defaultStudyRoomURL
         refresh()
     }
 
@@ -162,6 +166,25 @@ final class AppSettingsModel {
         let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
         computerModel = trimmed.isEmpty ? Self.defaultComputerModel : trimmed
         userDefaults.set(computerModel, forKey: Self.computerModelKey)
+    }
+
+    func setStudyRoomURL(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        studyRoomURL = trimmed.isEmpty ? Self.defaultStudyRoomURL : trimmed
+        userDefaults.set(studyRoomURL, forKey: Self.studyRoomURLKey)
+    }
+
+    /// Opens the shared study room (room/web) in the default browser.
+    func openStudyRoom() {
+        guard
+            let url = URL(string: studyRoomURL),
+            let scheme = url.scheme?.lowercased(),
+            ["http", "https"].contains(scheme)
+        else {
+            errorMessage = "Set a valid http(s) study room URL in Settings."
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     func requestInputControlPermission() {

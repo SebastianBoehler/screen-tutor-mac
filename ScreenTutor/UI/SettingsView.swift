@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var openRouterKey = ""
     @State private var observerModelDraft = ""
     @State private var computerModelDraft = ""
+    @State private var studyRoomURLDraft = ""
 
     var body: some View {
         Form {
@@ -109,6 +110,22 @@ struct SettingsView: View {
                         + "agent that reads screenshots through OpenRouter. It acts only when you ask "
                         + "or agree, never handles passwords, payments, messages or deletions, and "
                         + "stops the moment you move the mouse."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Section("Study room") {
+                HStack {
+                    TextField("Room URL", text: $studyRoomURLDraft)
+                        .font(.body.monospaced())
+                    Button("Save") { model.setStudyRoomURL(studyRoomURLDraft) }
+                        .disabled(studyRoomURLDraft == model.studyRoomURL)
+                }
+                Text(
+                    "Group mode runs in a LiveKit video room (room/ in this repository): learners join "
+                        + "from a browser with their mic and desk camera, and a tutor agent listens, "
+                        + "watches each desk, and writes on a shared board. Start it with room/dev.sh."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -305,6 +322,7 @@ struct SettingsView: View {
             tutorInstructionsDraft = model.tutorInstructions
             observerModelDraft = model.observerModel
             computerModelDraft = model.computerModel
+            studyRoomURLDraft = model.studyRoomURL
         }
     }
 

@@ -86,6 +86,14 @@ struct MenuBarView: View {
                     .controlSize(.small)
             }
 
+            Button {
+                model.settings.openStudyRoom()
+            } label: {
+                Label("Study room with others…", systemImage: "person.3.fill")
+            }
+            .buttonStyle(.plain)
+            .help("Opens the shared video study room in your browser. Pick your desk camera there.")
+
             if model.computerAgent.isRunning {
                 VStack(alignment: .leading, spacing: 6) {
                     Label("Controlling your Mac · step \(model.computerAgent.stepCount)", systemImage: "desktopcomputer")

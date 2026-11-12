@@ -33,6 +33,10 @@ ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount 
 
 Computer control is off by default. It acts only when you ask or agree, never types passwords or payment details, signs in, buys, sends messages, accepts terms, changes system settings or deletes files, and it stops immediately when you move the mouse, say "stop", or press **Stop computer task** in the menu.
 
+## Study room (group mode)
+
+`room/` adds a shared video study room on LiveKit: learners join from a browser with their mic and desk camera, a tutor agent (OpenAI Realtime) joins as a participant, follows whoever is speaking, watches every desk with the same change-gated Gemini observer, and keeps a shared board (Markdown, math, Mermaid), tasks, and desk status in sync for everyone. Open it from the menu bar with **Study room with others…**. See [room/README.md](room/README.md).
+
 ## How the desk loop works
 
 1. The Desk window keeps one `AVCaptureSession` running on the selected camera; frames stay on the Mac and only the newest rotated frame is kept.
