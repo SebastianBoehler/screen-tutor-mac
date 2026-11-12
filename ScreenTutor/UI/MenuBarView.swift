@@ -86,6 +86,30 @@ struct MenuBarView: View {
                     .controlSize(.small)
             }
 
+            if model.computerAgent.isRunning {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Controlling your Mac · step \(model.computerAgent.stepCount)", systemImage: "desktopcomputer")
+                        .font(.caption.weight(.semibold))
+                    if let goal = model.computerAgent.goal {
+                        Text(goal).font(.caption).lineLimit(2)
+                    }
+                    if let status = model.computerAgent.statusMessage {
+                        Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    }
+                    Button(role: .destructive) {
+                        model.computerAgent.stop()
+                    } label: {
+                        Label("Stop computer task", systemImage: "stop.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    Text("Moving the mouse also stops it.").font(.caption2).foregroundStyle(.secondary)
+                }
+                .padding(10)
+                .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+            }
+
             Button {
                 openWindow(id: "conversation-history")
                 NSApplication.shared.activate(ignoringOtherApps: true)

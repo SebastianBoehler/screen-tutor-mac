@@ -29,7 +29,9 @@ ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount 
 - The microphone stays open while the desk observer is watching (silence usually means you are writing); otherwise it auto-pauses after 20 seconds
 - Local, text-only conversation history (JSONL), custom teaching instructions, Automatic/Deutsch/English speech, model and reasoning-effort choice, Keychain-stored keys, global shortcut (default Command-Shift-Space), launch at login
 
-ScreenTutor never moves the real pointer, clicks, or types into other apps. Mac actions are limited to opening things and writing new documents.
+- **Computer control (opt-in)** — with Settings > Computer control on and Accessibility granted, the tutor can click, type, press shortcuts and scroll in a window it just captured, or hand a multi-step goal ("open the lecture PDF in Downloads and go to the eigenvalue chapter") to a background agent that loops screenshot → `google/gemini-3.5-flash` → action while you keep talking, then reports back by voice
+
+Computer control is off by default. It acts only when you ask or agree, never types passwords or payment details, signs in, buys, sends messages, accepts terms, changes system settings or deletes files, and it stops immediately when you move the mouse, say "stop", or press **Stop computer task** in the menu.
 
 ## How the desk loop works
 
@@ -39,11 +41,17 @@ ScreenTutor never moves the real pointer, clicks, or types into other apps. Mac 
 4. If the interjection kind is allowed by the chosen proactivity and the cooldown has passed, ScreenTutor waits until the conversation is idle, adds a `<desk_observer>` note plus the frame to the Realtime conversation, and asks the voice tutor to respond — typically one short cue like "check the sign in your second line".
 5. When you speak, the newest observer note is attached after your turn so the tutor knows what is on the paper without an extra round trip.
 
+## How computer control works
+
+- **Direct tools** (`click_in_window`, `type_text`, `press_keys`, `scroll_window`) act on the window from the latest `capture_window`, mapping normalized coordinates through the window's live frame, showing the tutor cursor at the target first, then posting `CGEvent`s. Shortcuts are mapped through the current keyboard layout, so `cmd+z` is correct on QWERTZ too.
+- **Background agent** (`do_on_computer`): captures the display under the pointer with ScreenTutor's own windows hidden, asks the agent model for one JSON action (0–1000 coordinates, `type`, `keys`, `scroll`, `open_url`, `open_app`, `wait`, `done`, `needs_user`), executes it, waits for the UI to settle, and repeats up to 25 steps. Its report reaches the voice tutor as a `<computer_agent>` note once the conversation is idle.
+- **Takeover:** before every event, ScreenTutor checks whether the real pointer moved more than 60 pt from where it last put it; if so, it stops and tells the tutor that you took over.
+
 ## How one voice turn works
 
 1. WebRTC streams the microphone to GPT; semantic VAD detects turns and interrupts any current answer.
 2. ScreenTutor commits the turn, attaches the latest desk note, and requests a response.
-3. The tutor may call tools: `look_at_desk`, `get_desk_notes`, `assign_task`, `finish_task`, `show_visual`, `list_windows`, `capture_window`, `point_at_screen_position`, `open_url`, `search_youtube`, `open_application`, `create_document`. Tools run serially; failures come back as recoverable tool errors.
+3. The tutor may call tools: `look_at_desk`, `get_desk_notes`, `assign_task`, `finish_task`, `show_visual`, `list_windows`, `capture_window`, `point_at_screen_position`, `open_url`, `search_youtube`, `open_application`, `create_document`, and (when enabled) `click_in_window`, `type_text`, `press_keys`, `scroll_window`, `do_on_computer`, `stop_computer_task`. Tools run serially; failures come back as recoverable tool errors.
 4. Images (desk frames, window captures) are appended as high-detail `input_image` items for the current turn only.
 5. Remote audio plays immediately; transcripts update the menu and the on-screen HUD.
 
@@ -54,6 +62,7 @@ ScreenTutor never moves the real pointer, clicks, or types into other apps. Mac 
 - An OpenAI API key with access to `gpt-realtime-2.1` or `gpt-realtime-2.1-mini`
 - An OpenRouter API key for the desk observer (optional; saved in Keychain, or read from `OPENROUTER_API_KEY` when launched from Xcode or a shell)
 - For the desk: an iPhone on a desk/arm mount (Continuity Camera), Desk View, or any USB camera
+- For computer control: Accessibility permission (Privacy & Security > Accessibility), requested when you enable it
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.45 or newer only when regenerating the checked-in Xcode project
 
 ## Run locally
@@ -94,7 +103,8 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | `App` | Session lifecycle and application state |
 | `Audio` | Microphone permission and WebRTC media capture |
 | `Desk` | Continuous desk camera, on-device change gate, OpenRouter observer and its prompt/JSON contract |
-| `Actions` | Validated Mac actions: URLs, YouTube search, app launch, document writing |
+| `Actions` | Validated Mac actions (URLs, YouTube, apps, documents) and layout-aware mouse/keyboard input |
+| `Computer` | Display capture and the screenshot → model → action computer agent |
 | `Camera` | Camera permission |
 | `Realtime` | Typed OpenAI events, WebRTC media, and data-channel transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
@@ -139,6 +149,8 @@ xcodebuild \
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
 
 The desk camera runs only after you press Start camera in the Desk window, and stops with Stop camera or Quit. Frames stay in memory on the Mac (only the newest one is kept). While Watch desk is on, a compressed frame (at most 180 KB) is sent to OpenRouter only when the page materially changes, when an active task shows no visible progress, or when you press Look now; requests ask OpenRouter for zero-data-retention providers that do not collect prompts. The voice tutor receives a desk frame only when it calls `look_at_desk` or when a proactive interjection is delivered, plus short text notes from the observer after your spoken turns. Desk images are not written to conversation JSONL. Anything on your desk—including other documents—can end up in a frame, so keep sensitive papers out of view.
+
+When computer control is used, the background agent sends a screenshot of the display under the pointer (ScreenTutor's own windows excluded) to OpenRouter for every step, with the same zero-retention routing. Anything visible on that display can be included, so close sensitive windows first. Direct click/type tools send nothing extra beyond the window capture the tutor already made.
 
 Documents written by `create_document` go to `~/Downloads/ScreenTutor` (the sandbox grants Downloads read/write for this) and are opened in their default app. URLs are limited to http and https.
 

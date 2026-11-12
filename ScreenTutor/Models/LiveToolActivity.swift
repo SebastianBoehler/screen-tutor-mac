@@ -35,6 +35,12 @@ struct LiveToolActivity: Identifiable, Equatable, Sendable {
         case "search_youtube": "Searching YouTube"
         case "open_application": "Opening app"
         case "create_document": "Writing document"
+        case "click_in_window": "Clicking"
+        case "type_text": "Typing"
+        case "press_keys": "Pressing keys"
+        case "scroll_window": "Scrolling"
+        case "do_on_computer": "Starting computer task"
+        case "stop_computer_task": "Stopping computer task"
         default: name.replacing("_", with: " ").capitalized
         }
     }
@@ -52,6 +58,10 @@ struct LiveToolActivity: Identifiable, Equatable, Sendable {
         case "search_youtube": "play.rectangle"
         case "open_application": "app.badge"
         case "create_document": "doc.richtext"
+        case "click_in_window": "cursorarrow.click"
+        case "type_text", "press_keys": "keyboard"
+        case "scroll_window": "scroll"
+        case "do_on_computer", "stop_computer_task": "desktopcomputer"
         default: "wrench.and.screwdriver"
         }
     }

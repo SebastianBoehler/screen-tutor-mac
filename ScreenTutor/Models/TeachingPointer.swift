@@ -4,6 +4,11 @@ struct TeachingPointer: Sendable {
     let globalPoint: CGPoint
     let label: String
 
+    init(globalPoint: CGPoint, label: String) {
+        self.globalPoint = globalPoint
+        self.label = label
+    }
+
     init(argumentsJSON: String, windowFrame: CGRect) throws {
         guard let data = argumentsJSON.data(using: .utf8) else {
             throw TeachingPointerError.invalidArguments

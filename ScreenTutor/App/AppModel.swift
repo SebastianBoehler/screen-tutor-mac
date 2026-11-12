@@ -21,6 +21,8 @@ final class AppModel {
     let deskCamera: DeskCameraService
     let deskObserver: DeskObserver
     let desktopActions = DesktopActions()
+    let inputController = InputController()
+    let computerAgent: ComputerAgent
     @ObservationIgnored var visualBoard: VisualBoardController?
     @ObservationIgnored var lastInjectedDeskObservationID: UUID?
     let realtimeClient: RealtimeClient
@@ -69,6 +71,19 @@ final class AppModel {
         let deskCamera = DeskCameraService()
         self.deskCamera = deskCamera
         deskObserver = DeskObserver(camera: deskCamera, settings: settings)
+        computerAgent = ComputerAgent(
+            input: inputController,
+            actions: desktopActions,
+            settings: settings
+        )
+        computerAgent.onFinish = { [weak self] report in
+            await self?.deliverComputerAgentReport(report)
+        }
+        computerAgent.showClickTarget = { [weak self] point in
+            try? self?.showTeachingPointer?(
+                TeachingPointer(globalPoint: InputController.appKitPoint(fromCoreGraphics: point), label: "agent")
+            )
+        }
         deskObserver.deliverInterjection = { [weak self] observation, jpeg in
             await self?.deliverDeskInterjection(observation, jpeg: jpeg) ?? false
         }

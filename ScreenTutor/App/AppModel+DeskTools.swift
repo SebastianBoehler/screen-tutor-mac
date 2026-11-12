@@ -96,7 +96,7 @@ extension AppModel {
         return true
     }
 
-    private func completeDeskToolCall(
+    func completeDeskToolCall(
         _ item: RealtimeItem,
         result: ToolResult,
         image: (data: Data, description: String)?,
@@ -135,23 +135,7 @@ extension AppModel {
     /// interrupting for. Only fires while the conversation is idle and listening,
     /// so it never talks over the learner or an ongoing answer.
     func deliverDeskInterjection(_ observation: DeskObservation, jpeg: Data) async -> Bool {
-        guard
-            let connectionID = realtimeConnectionID,
-            phase == .listening,
-            !userIsSpeaking,
-            activeResponseID == nil,
-            activeAudioResponseID == nil,
-            screenToolTask == nil,
-            let interjection = observation.payload.interjection
-        else { return false }
-
-        let generation = sessionGeneration
-        let turn = turnTracker.advance()
-        liveToolActivities.removeAll()
-        latestUserTranscript = ""
-        assistantTranscript = ""
-        clearTeachingPointer?()
-        let itemID = DeskContextItemEvent.makeItemID()
+        guard let interjection = observation.payload.interjection else { return false }
         let text = """
             <desk_observer> Automated note, not spoken by the learner. \
             Reason to consider speaking: \(interjection.kind.rawValue) — \(interjection.reason). \
@@ -161,6 +145,31 @@ extension AppModel {
             following the teaching policy (cue or question, not the answer), or stay brief if \
             interrupting would not help.
             """
+        let delivered = await deliverAutomatedNote(text: text, jpeg: jpeg)
+        if delivered { lastInjectedDeskObservationID = observation.id }
+        return delivered
+    }
+
+    /// Starts a tutor-initiated turn from an automated note (desk observer or
+    /// computer agent). Only fires while the conversation is idle and listening,
+    /// so it never talks over the learner or an ongoing answer.
+    func deliverAutomatedNote(text: String, jpeg: Data?) async -> Bool {
+        guard
+            let connectionID = realtimeConnectionID,
+            phase == .listening,
+            !userIsSpeaking,
+            activeResponseID == nil,
+            activeAudioResponseID == nil,
+            screenToolTask == nil
+        else { return false }
+
+        let generation = sessionGeneration
+        let turn = turnTracker.advance()
+        liveToolActivities.removeAll()
+        latestUserTranscript = ""
+        assistantTranscript = ""
+        clearTeachingPointer?()
+        let itemID = DeskContextItemEvent.makeItemID()
         do {
             try await realtimeClient.send(
                 DeskContextItemEvent(itemID: itemID, text: text, jpegData: jpeg),
@@ -171,7 +180,6 @@ extension AppModel {
             }
             currentUserItemID = itemID
             currentUserItemTurn = turn
-            lastInjectedDeskObservationID = observation.id
             phase = .thinking
             idleTimer.cancel()
             try await requestResponse(for: turn, generation: generation, connectionID: connectionID)
@@ -213,7 +221,7 @@ extension AppModel {
     }
 }
 
-private enum ToolResult {
+enum ToolResult {
     case ok([String: String])
     case failure(code: String, message: String)
 
@@ -239,7 +247,7 @@ private enum ToolResult {
     }
 }
 
-private struct ToolArguments {
+struct ToolArguments {
     let values: [String: Any]
 
     init(json: String?) {
@@ -253,6 +261,13 @@ private struct ToolArguments {
             throw DeskToolError.missingArgument(key)
         }
         return value
+    }
+
+    func number(_ key: String) -> Double? {
+        if let value = values[key] as? Double { return value }
+        if let value = values[key] as? Int { return Double(value) }
+        if let value = values[key] as? String { return Double(value) }
+        return nil
     }
 
     func optionalString(_ key: String) -> String? {

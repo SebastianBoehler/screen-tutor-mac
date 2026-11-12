@@ -39,7 +39,9 @@ final class RealtimeProtocolTests: XCTestCase {
             [
                 "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
                 "list_windows", "capture_window", "point_at_screen_position",
-                "open_url", "search_youtube", "open_application", "create_document"
+                "open_url", "search_youtube", "open_application", "create_document",
+                "click_in_window", "type_text", "press_keys", "scroll_window",
+                "do_on_computer", "stop_computer_task"
             ]
         )
         XCTAssertEqual(session["parallel_tool_calls"] as? Bool, false)

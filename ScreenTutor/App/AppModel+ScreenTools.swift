@@ -80,6 +80,16 @@ extension AppModel {
             return
         }
 
+        if try await handleComputerToolCall(
+            item,
+            userItemID: userItemID,
+            turn: turn,
+            generation: generation,
+            connectionID: connectionID
+        ) {
+            return
+        }
+
         if try await handleDeskToolCall(
             item,
             userItemID: userItemID,

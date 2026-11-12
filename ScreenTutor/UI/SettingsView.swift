@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var tutorInstructionsDraft = ""
     @State private var openRouterKey = ""
     @State private var observerModelDraft = ""
+    @State private var computerModelDraft = ""
 
     var body: some View {
         Form {
@@ -65,6 +66,49 @@ struct SettingsView: View {
                     "A fast vision model (default Gemini Flash Lite, routed for throughput with "
                         + "zero data retention) reads the paper under the desk camera and tells the "
                         + "voice tutor what you wrote, where an error is, or when you seem stuck."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Section("Computer control") {
+                Toggle(
+                    "Let the tutor control the mouse and keyboard",
+                    isOn: Binding(
+                        get: { model.computerControlEnabled },
+                        set: { model.setComputerControlEnabled($0) }
+                    )
+                )
+                HStack {
+                    Label(
+                        "Accessibility (post input events)",
+                        systemImage: model.inputControlPermissionGranted
+                            ? "checkmark.circle.fill"
+                            : "circle.dashed"
+                    )
+                    .foregroundStyle(model.inputControlPermissionGranted ? .green : .secondary)
+                    Spacer()
+                    if !model.inputControlPermissionGranted {
+                        Button("Grant Access") { model.requestInputControlPermission() }
+                        Button("Open Settings") { model.openAccessibilitySettings() }
+                    }
+                }
+                HStack {
+                    TextField("Agent model", text: $computerModelDraft)
+                        .font(.body.monospaced())
+                    Button("Save") { model.setComputerModel(computerModelDraft) }
+                        .disabled(computerModelDraft == model.computerModel)
+                    Button("Default") {
+                        model.setComputerModel(AppSettingsModel.defaultComputerModel)
+                        computerModelDraft = model.computerModel
+                    }
+                }
+                Text(
+                    "Off by default. When on, the voice tutor can click, type, press shortcuts and "
+                        + "scroll in a window it captured, and hand multi-step goals to a background "
+                        + "agent that reads screenshots through OpenRouter. It acts only when you ask "
+                        + "or agree, never handles passwords, payments, messages or deletions, and "
+                        + "stops the moment you move the mouse."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -260,6 +304,7 @@ struct SettingsView: View {
             model.refresh()
             tutorInstructionsDraft = model.tutorInstructions
             observerModelDraft = model.observerModel
+            computerModelDraft = model.computerModel
         }
     }
 

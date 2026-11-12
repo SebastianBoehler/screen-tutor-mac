@@ -19,8 +19,12 @@ final class AppSettingsModel {
     private(set) var observerModel: String
     private(set) var observerEnabled: Bool
     private(set) var deskProactivity: DeskProactivity
+    private(set) var computerControlEnabled: Bool
+    private(set) var computerModel: String
+    private(set) var inputControlPermissionGranted = false
 
     static let defaultObserverModel = "google/gemini-3.5-flash-lite"
+    static let defaultComputerModel = "google/gemini-3.5-flash"
 
     private let apiKeyStore: APIKeyStore
     private let openRouterKeyStore: APIKeyStore
@@ -39,6 +43,8 @@ final class AppSettingsModel {
     private static let observerModelKey = "com.sebastianboehler.ScreenTutor.observerModel"
     private static let observerEnabledKey = "com.sebastianboehler.ScreenTutor.observerEnabled"
     private static let deskProactivityKey = "com.sebastianboehler.ScreenTutor.deskProactivity"
+    private static let computerControlKey = "com.sebastianboehler.ScreenTutor.computerControl"
+    private static let computerModelKey = "com.sebastianboehler.ScreenTutor.computerModel"
 
     init(
         apiKeyStore: APIKeyStore,
@@ -66,6 +72,9 @@ final class AppSettingsModel {
         observerEnabled = userDefaults.object(forKey: Self.observerEnabledKey) as? Bool ?? true
         deskProactivity = userDefaults.string(forKey: Self.deskProactivityKey)
             .flatMap(DeskProactivity.init(rawValue:)) ?? .gentle
+        computerControlEnabled = userDefaults.bool(forKey: Self.computerControlKey)
+        computerModel = userDefaults.string(forKey: Self.computerModelKey)
+            ?? Self.defaultComputerModel
         refresh()
     }
 
@@ -120,6 +129,7 @@ final class AppSettingsModel {
         do {
             try openRouterKeyStore.delete()
             hasOpenRouterKey = loadOpenRouterKey() != nil
+        inputControlPermissionGranted = CGPreflightPostEventAccess()
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -140,6 +150,32 @@ final class AppSettingsModel {
     func setDeskProactivity(_ proactivity: DeskProactivity) {
         deskProactivity = proactivity
         userDefaults.set(proactivity.rawValue, forKey: Self.deskProactivityKey)
+    }
+
+    func setComputerControlEnabled(_ enabled: Bool) {
+        computerControlEnabled = enabled
+        userDefaults.set(enabled, forKey: Self.computerControlKey)
+        if enabled, !CGPreflightPostEventAccess() { requestInputControlPermission() }
+    }
+
+    func setComputerModel(_ model: String) {
+        let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        computerModel = trimmed.isEmpty ? Self.defaultComputerModel : trimmed
+        userDefaults.set(computerModel, forKey: Self.computerModelKey)
+    }
+
+    func requestInputControlPermission() {
+        inputControlPermissionGranted = CGRequestPostEventAccess()
+        if !inputControlPermissionGranted {
+            errorMessage = "Allow ScreenTutor in Privacy & Security > Accessibility, then return here."
+        }
+    }
+
+    func openAccessibilitySettings() {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+        ) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     func requestScreenPermission() {
@@ -229,6 +265,7 @@ final class AppSettingsModel {
     func refresh() {
         hasAPIKey = apiKeyStore.hasAPIKey
         hasOpenRouterKey = loadOpenRouterKey() != nil
+        inputControlPermissionGranted = CGPreflightPostEventAccess()
         screenPermissionGranted = captureService.hasPermission
         microphonePermissionGranted = MicrophonePermissionService.isGranted
         cameraPermissionGranted = CameraPermissionService.isGranted
