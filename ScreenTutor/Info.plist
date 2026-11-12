@@ -31,7 +31,9 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ScreenTutor needs microphone access so you can talk naturally with your tutor.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>ScreenTutor takes a single camera photo only when you ask the tutor to look through the camera.</string>
+	<string>ScreenTutor watches your desk through the camera you choose (for example an iPhone mounted above your desk) so the tutor can follow your handwritten work.</string>
+	<key>NSCameraUseContinuityCameraDeviceType</key>
+	<true/>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>ScreenTutor lists visible app and window names and captures the window selected for screen-aware help.</string>
 </dict>

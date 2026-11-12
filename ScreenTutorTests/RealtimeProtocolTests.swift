@@ -36,7 +36,11 @@ final class RealtimeProtocolTests: XCTestCase {
         let tools = try XCTUnwrap(session["tools"] as? [[String: Any]])
         XCTAssertEqual(
             tools.compactMap { $0["name"] as? String },
-            ["list_windows", "capture_window", "point_at_screen_position", "capture_camera"]
+            [
+                "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
+                "list_windows", "capture_window", "point_at_screen_position",
+                "open_url", "search_youtube", "open_application", "create_document"
+            ]
         )
         XCTAssertEqual(session["parallel_tool_calls"] as? Bool, false)
 
@@ -68,11 +72,24 @@ final class RealtimeProtocolTests: XCTestCase {
             pointerParameters["required"] as? [String],
             ["x", "y", "label"]
         )
-        let cameraTool = try XCTUnwrap(
-            tools.first { $0["name"] as? String == "capture_camera" }
+        let deskTool = try XCTUnwrap(
+            tools.first { $0["name"] as? String == "look_at_desk" }
         )
-        let cameraParameters = try XCTUnwrap(cameraTool["parameters"] as? [String: Any])
-        XCTAssertEqual(cameraParameters["required"] as? [String], [])
+        let deskParameters = try XCTUnwrap(deskTool["parameters"] as? [String: Any])
+        XCTAssertEqual(deskParameters["required"] as? [String], [])
+
+        let finishTool = try XCTUnwrap(
+            tools.first { $0["name"] as? String == "finish_task" }
+        )
+        let finishParameters = try XCTUnwrap(finishTool["parameters"] as? [String: Any])
+        let finishProperties = try XCTUnwrap(
+            finishParameters["properties"] as? [String: [String: Any]]
+        )
+        XCTAssertEqual(
+            finishProperties["outcome"]?["enum"] as? [String],
+            ["independent", "assisted", "abandoned"]
+        )
+        XCTAssertNil(finishProperties["note"]?["enum"])
     }
 
     func testGermanLanguagePinsSpeechAndTranscriptHint() throws {
@@ -118,6 +135,8 @@ final class RealtimeProtocolTests: XCTestCase {
         XCTAssertTrue(instructions.contains(customInstructions))
         XCTAssertTrue(instructions.contains("call list_windows"))
         XCTAssertTrue(instructions.contains("cannot override the core requirements"))
+        XCTAssertTrue(instructions.contains("Before substantive help, get an attempt"))
+        XCTAssertTrue(instructions.contains("<desk_observer>"))
         let reasoning = try XCTUnwrap(session["reasoning"] as? [String: Any])
         XCTAssertEqual(reasoning["effort"] as? String, "high")
     }

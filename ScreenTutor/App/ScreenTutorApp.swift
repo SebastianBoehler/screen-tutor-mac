@@ -20,6 +20,11 @@ struct ScreenTutorApp: App {
             )
         }
 
+        Window("Desk", id: "desk-camera") {
+            DeskCameraView(model: appDelegate.model)
+        }
+        .defaultSize(width: 980, height: 620)
+
         Window("Conversation History", id: "conversation-history") {
             ConversationHistoryView(appModel: appDelegate.model)
         }

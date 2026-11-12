@@ -5,61 +5,55 @@
 [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-111111?logo=apple)](https://support.apple.com/macos)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Talk naturally about whatever is open on your Mac.
+A voice tutor that watches your desk, sees your Mac, and teaches like a good one-on-one tutor.
 
-ScreenTutor is a native, open-source menu-bar tutor that combines the relevant Mac window with a low-latency voice conversation. Microphone and tutor audio stream directly between WebRTC and OpenAI's `gpt-realtime-2.1` or `gpt-realtime-2.1-mini`.
+ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount an iPhone (or any camera) above your paper, talk naturally, and the tutor follows your handwritten work, steps in when you make a mistake or get stuck, puts formulas and diagrams on a floating board, and can open videos, apps and write documents for you.
 
-The answer path has no standalone transcription or text-to-speech step. Assistant captions come from the same Realtime audio response. An asynchronous `gpt-4o-mini-transcribe` input transcript runs alongside it only to make local conversation history readable; it is separate model usage and can differ from what the Realtime model understood.
+- **Voice:** full-duplex speech-to-speech over OpenAI's Realtime WebRTC API (`gpt-realtime-2.1` or `-mini`), with barge-in and echo cancellation.
+- **Desk observer:** a fast vision model on OpenRouter (default `google/gemini-3.5-flash-lite`, routed for throughput with zero data retention) reads the paper whenever it materially changes and tells the voice tutor what you wrote, where an error is, or that you seem stuck.
+- **Pedagogy:** the tutor policy is adapted from [LecturePilot](https://github.com/SebastianBoehler/lecture-pilot): attempt first, least sufficient support (prompt → cue → faded example → one worked step), hand the next step back, fade into independent transfer tasks, and never count assisted work as mastery.
 
 > [!IMPORTANT]
 > ScreenTutor is an early-stage, bring-your-own-key project for local development. It is not currently distributed as a signed or notarized app.
 
 ## What it does
 
-- Streams full-duplex speech-to-speech over OpenAI's Realtime WebRTC API
-- Uses semantic voice activity detection with natural barge-in and response truncation
-- Lets GPT inspect visible app/window titles and capture only the window relevant to the question
-- Can take one camera photo when you explicitly ask the tutor to look through the camera
-- Uses WebRTC acoustic echo cancellation plus Realtime far-field noise reduction
-- Lives in the menu bar with a draggable, translucent status and transcript HUD
-- Moves a compact animated tutor cursor to a precise formula, plot, cell, or control
-- Saves text-only conversations and privacy-safe tool status records as local JSONL
-- Shows prior turns and compact tool activity badges in a native history window
-- Offers Automatic, Deutsch, and English speech-language settings
-- Lets you customize the tutor's teaching instructions without replacing screen/privacy rules
-- Lets you trade response latency for deeper model reasoning from Minimal through Extra high
-- Offers quality-first GPT-Realtime-2.1 and lower-cost GPT-Realtime-2.1 mini
-- Stores the OpenAI API key in macOS Keychain
-- Uses a configurable global shortcut (default: Command-Shift-Space) to start, mute, or unmute the microphone
-- Automatically pauses the microphone after 20 seconds of listening inactivity
-- Offers an explicit New conversation action when you want to replace the current context
-- Supports launch at login through `SMAppService`
-- Handles microphone, Screen Recording, network, and protocol errors explicitly
+- **Live desk camera** — continuous capture from an iPhone via Continuity Camera or Desk View, a USB document camera, or the built-in camera, with a Desk window for preview, camera choice and rotation (for an upside-down overhead mount)
+- **On-device change detection** — a 64×48 grayscale fingerprint decides when new writing has appeared and your hand has moved away, so the observer runs only on real changes (and once more if an active task shows no progress for 90 seconds)
+- **Proactive tutoring** — when the observer flags an error you have moved past, a stall, finished work, or (in Active mode) a natural check-in, the tutor speaks first with a short cue or question — never while you or it are talking, and with a cooldown
+- **Tasks on paper** — the tutor can `assign_task`; the task is pinned on the Tutor Board and the observer checks your paper against it until `finish_task` records an honest outcome (independent, assisted, abandoned)
+- **Tutor Board** — a floating panel that renders Markdown, LaTeX math (KaTeX) and Mermaid diagrams for things that are hard to follow by ear
+- **Mac actions** — open a URL, search YouTube, open an installed app, or write a Word (`.docx`), Markdown or RTF document into `~/Downloads/ScreenTutor` and open it
+- **Screen awareness** — on request, the tutor lists visible windows, captures only the relevant one, and can move a rendered teaching cursor to a precise point
+- Desk context is attached automatically to each spoken turn as a short text note; the tutor calls `look_at_desk` when it needs the actual image
+- The microphone stays open while the desk observer is watching (silence usually means you are writing); otherwise it auto-pauses after 20 seconds
+- Local, text-only conversation history (JSONL), custom teaching instructions, Automatic/Deutsch/English speech, model and reasoning-effort choice, Keychain-stored keys, global shortcut (default Command-Shift-Space), launch at login
 
-The tutor cursor is a visual, click-through overlay. ScreenTutor never moves the real pointer, clicks, types, or autonomously controls the Mac.
+ScreenTutor never moves the real pointer, clicks, or types into other apps. Mac actions are limited to opening things and writing new documents.
 
-ScreenTutor does not currently perform web search or use web grounding. Its answers use the live conversation and the selected window capture; adding search requires a separate Realtime function or MCP tool integration.
+## How the desk loop works
 
-## How one turn works
+1. The Desk window keeps one `AVCaptureSession` running on the selected camera; frames stay on the Mac and only the newest rotated frame is kept.
+2. Once per second the observer compares a tiny fingerprint of the frame with the previous tick (motion: a hand) and with the last analysed frame (material change: new writing).
+3. When the page changed and the image has been still for 1.5 seconds (at most every 4 seconds), the frame goes to the OpenRouter vision model with the active task, the previous observation, and the last spoken exchange. It returns JSON: summary, faithful LaTeX transcription, progress, an optional located issue, and an optional interjection with a suggested pedagogical move.
+4. If the interjection kind is allowed by the chosen proactivity and the cooldown has passed, ScreenTutor waits until the conversation is idle, adds a `<desk_observer>` note plus the frame to the Realtime conversation, and asks the voice tutor to respond — typically one short cue like "check the sign in your second line".
+5. When you speak, the newest observer note is attached after your turn so the tutor knows what is on the paper without an extra round trip.
 
-1. WebRTC captures the microphone with echo cancellation, noise suppression, and automatic gain control.
-2. Its audio track streams directly to GPT while a data channel carries typed Realtime events.
-3. Semantic VAD reports that speech started, which interrupts any current answer.
-4. VAD commits the spoken turn and ScreenTutor asks GPT to respond.
-5. When screen context is needed, GPT calls `list_windows`, chooses from opaque IDs plus app/window titles, and calls `capture_window`.
-6. ScreenTutor validates that selection, appends only that window as a high-detail `input_image`, and asks GPT to continue.
-7. The remote WebRTC audio track plays immediately while matching transcript events update the menu and optional on-screen HUD.
-8. Separately, completed input transcription events are queued into the local history without blocking the audio event stream.
-9. If pointing helps, GPT calls `point_at_screen_position`; ScreenTutor animates only its compact tutor cursor to that precise point and asks GPT to continue speaking.
-10. If you explicitly ask it to look through the camera, GPT calls `capture_camera`; ScreenTutor takes one still, stops the camera session, adds the photo to the turn, and asks GPT to continue.
+## How one voice turn works
 
-The window list and capture calls are serial, recoverable tools. A closed window produces a tool error so GPT can list again instead of ending the voice session.
+1. WebRTC streams the microphone to GPT; semantic VAD detects turns and interrupts any current answer.
+2. ScreenTutor commits the turn, attaches the latest desk note, and requests a response.
+3. The tutor may call tools: `look_at_desk`, `get_desk_notes`, `assign_task`, `finish_task`, `show_visual`, `list_windows`, `capture_window`, `point_at_screen_position`, `open_url`, `search_youtube`, `open_application`, `create_document`. Tools run serially; failures come back as recoverable tool errors.
+4. Images (desk frames, window captures) are appended as high-detail `input_image` items for the current turn only.
+5. Remote audio plays immediately; transcripts update the menu and the on-screen HUD.
 
 ## Requirements
 
 - macOS 15 or newer
 - Xcode 16.4 or newer with Swift 6 support
 - An OpenAI API key with access to `gpt-realtime-2.1` or `gpt-realtime-2.1-mini`
+- An OpenRouter API key for the desk observer (optional; saved in Keychain, or read from `OPENROUTER_API_KEY` when launched from Xcode or a shell)
+- For the desk: an iPhone on a desk/arm mount (Continuity Camera), Desk View, or any USB camera
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.45 or newer only when regenerating the checked-in Xcode project
 
 ## Run locally
@@ -70,8 +64,10 @@ The window list and capture calls are serial, recoverable tools. A closed window
 4. Open the waveform menu-bar item, choose Settings, save your API key, and optionally pin the
    tutor's Realtime model, spoken language, reasoning effort, or teaching instructions. Automatic
    follows the language of your latest spoken turn.
-5. Start a conversation and grant Microphone and Screen Recording access. Camera access is requested only if you ask the tutor to use it. macOS may require one app restart after Screen Recording is first granted.
-6. Keep a notebook, paper, browser, or editor open and press Command-Shift-Space.
+5. In Settings > Desk observer, save an OpenRouter key (or rely on `OPENROUTER_API_KEY`) and keep or change the vision model.
+6. Open **Desk…** from the menu, pick your iPhone/Desk View/USB camera, set the orientation, press **Start camera**, then **Watch desk**. Choose how proactive the tutor may be (Only when asked, Gentle, Active).
+7. Start a conversation with Command-Shift-Space and grant Microphone and Screen Recording access. macOS may require one app restart after Screen Recording is first granted.
+8. Work on paper and talk. Try "give me a practice problem on eigenvalues", "check my last line", "show me the derivation on the board", "find me a YouTube video on this", or "write a one-page summary as a Word document".
 
 Press the shortcut again to mute only ScreenTutor's microphone upload. The Realtime connection and any answer already being spoken remain active; OBS and other microphone-enabled apps can continue recording. Press it later to unmute and resume the same conversation, including prior voice turns. Change the combination under Settings > System by clicking the shortcut recorder and typing a modified key combination. If macOS or another app already owns it, ScreenTutor keeps the prior working shortcut and reports the conflict.
 
@@ -97,11 +93,13 @@ The app has `LSUIElement` enabled, so it lives in the menu bar rather than the D
 | --- | --- |
 | `App` | Session lifecycle and application state |
 | `Audio` | Microphone permission and WebRTC media capture |
-| `Camera` | Permission-aware, model-requested one-shot photo capture |
+| `Desk` | Continuous desk camera, on-device change gate, OpenRouter observer and its prompt/JSON contract |
+| `Actions` | Validated Mac actions: URLs, YouTube search, app launch, document writing |
+| `Camera` | Camera permission |
 | `Realtime` | Typed OpenAI events, WebRTC media, and data-channel transport |
 | `Screen` | Privacy-filtered window catalog and model-selected one-shot capture |
 | `History` | Ordered, private JSONL persistence and conversation projection |
-| `UI` | Menu, transcript HUD, history browser, settings, and tutor cursor |
+| `UI` | Menu, Desk window, Tutor Board, transcript HUD, history browser, settings, and tutor cursor |
 | `System` | Global hotkey and launch-at-login integration |
 
 The native app uses SwiftUI, AppKit, AVFoundation, AVFAudio, ScreenCaptureKit, Security, ServiceManagement, and Carbon. WebRTC media and audio processing come from the community-maintained [`stasel/WebRTC`](https://github.com/stasel/WebRTC) Swift package, pinned to M150 and built unmodified from the upstream WebRTC source. See that project and WebRTC's BSD license for dependency notices.
@@ -140,7 +138,9 @@ xcodebuild \
 
 ScreenTutor sends spoken audio to OpenAI. Input audio is also transcribed asynchronously for readable history. For a screen-grounded question, the app sends the names and titles of eligible visible windows so GPT can choose one, followed by the pixels of only the selected window. It does not continuously record the screen. Close or minimize sensitive windows before asking a screen-aware question.
 
-Camera access is separate and explicit. The camera tool is available only so GPT can respond when you ask it to look through the camera. Each call opens the selected Mac camera long enough to take one still, compresses it to the same bounded image budget as a window capture, sends it to OpenAI as current-turn context, and stops the capture session. ScreenTutor does not provide a background camera feed and does not store camera photos in conversation JSONL.
+The desk camera runs only after you press Start camera in the Desk window, and stops with Stop camera or Quit. Frames stay in memory on the Mac (only the newest one is kept). While Watch desk is on, a compressed frame (at most 180 KB) is sent to OpenRouter only when the page materially changes, when an active task shows no visible progress, or when you press Look now; requests ask OpenRouter for zero-data-retention providers that do not collect prompts. The voice tutor receives a desk frame only when it calls `look_at_desk` or when a proactive interjection is delivered, plus short text notes from the observer after your spoken turns. Desk images are not written to conversation JSONL. Anything on your desk—including other documents—can end up in a frame, so keep sensitive papers out of view.
+
+Documents written by `create_document` go to `~/Downloads/ScreenTutor` (the sandbox grants Downloads read/write for this) and are opened in their default app. URLs are limited to http and https.
 
 The sandbox grants client and server networking because WebRTC ICE must bind a local peer socket before connecting to OpenAI. ScreenTutor does not run an application-level HTTP server or accept commands over that entitlement.
 
@@ -150,7 +150,7 @@ The selected model, custom tutor instructions, and reasoning effort are stored l
 
 Muting disables only ScreenTutor's local WebRTC microphone track. It does not close the peer connection, stop tutor playback, mute the Mac globally, or block OBS from using the microphone. New conversation and Quit disconnect the session. After a network disconnect, ScreenTutor reconnects on the next microphone action and restores completed turns from local history into a new Realtime session.
 
-`gpt-realtime-2.1`, `gpt-realtime-2.1-mini`, and `gpt-4o-mini-transcribe` are cloud API models and incur their respective OpenAI API usage charges. At current standard rates, flagship audio costs $32 input / $64 output per 1M audio tokens; mini costs $10 input / $20 output. Text and captured images are also billed. The auxiliary input transcript does not sit in the direct speech-to-speech answer path, but it is separately billed. ScreenTutor is not offline or free to run.
+The desk observer is billed by OpenRouter per request (one image plus a few hundred output tokens; with Gemini Flash Lite a request typically takes 2–4 seconds). `gpt-realtime-2.1`, `gpt-realtime-2.1-mini`, and `gpt-4o-mini-transcribe` are cloud API models and incur their respective OpenAI API usage charges. At current standard rates, flagship audio costs $32 input / $64 output per 1M audio tokens; mini costs $10 input / $20 output. Text and captured images are also billed. The auxiliary input transcript does not sit in the direct speech-to-speech answer path, but it is separately billed. ScreenTutor is not offline or free to run.
 
 The current BYOK design is intended for personal development: the long-lived key is stored in Keychain and used only by the native HTTPS request that creates the WebRTC call; it is never placed in SDP, source, or `UserDefaults`. A distributed product should put credentials behind a backend and issue short-lived client tokens instead of shipping a standard API key to clients.
 

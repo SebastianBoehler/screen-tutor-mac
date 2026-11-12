@@ -15,8 +15,15 @@ final class AppSettingsModel {
     private(set) var reasoningEffort: ReasoningEffort
     private(set) var hotKeyShortcut: GlobalHotKeyShortcut
     private(set) var errorMessage: String?
+    private(set) var hasOpenRouterKey = false
+    private(set) var observerModel: String
+    private(set) var observerEnabled: Bool
+    private(set) var deskProactivity: DeskProactivity
+
+    static let defaultObserverModel = "google/gemini-3.5-flash-lite"
 
     private let apiKeyStore: APIKeyStore
+    private let openRouterKeyStore: APIKeyStore
     private let captureService: ActiveWindowCaptureService
     private let launchAtLoginService: LaunchAtLoginService
     private let userDefaults: UserDefaults
@@ -29,14 +36,19 @@ final class AppSettingsModel {
     private static let realtimeModelKey = "com.sebastianboehler.ScreenTutor.realtimeModel"
     private static let reasoningEffortKey = "com.sebastianboehler.ScreenTutor.reasoningEffort"
     private static let hotKeyShortcutKey = "com.sebastianboehler.ScreenTutor.hotKeyShortcut"
+    private static let observerModelKey = "com.sebastianboehler.ScreenTutor.observerModel"
+    private static let observerEnabledKey = "com.sebastianboehler.ScreenTutor.observerEnabled"
+    private static let deskProactivityKey = "com.sebastianboehler.ScreenTutor.deskProactivity"
 
     init(
         apiKeyStore: APIKeyStore,
         captureService: ActiveWindowCaptureService,
         launchAtLoginService: LaunchAtLoginService,
+        openRouterKeyStore: APIKeyStore = .openRouter(),
         userDefaults: UserDefaults = .standard
     ) {
         self.apiKeyStore = apiKeyStore
+        self.openRouterKeyStore = openRouterKeyStore
         self.captureService = captureService
         self.launchAtLoginService = launchAtLoginService
         self.userDefaults = userDefaults
@@ -49,6 +61,11 @@ final class AppSettingsModel {
         reasoningEffort = userDefaults.string(forKey: Self.reasoningEffortKey)
             .flatMap(ReasoningEffort.init(rawValue:)) ?? .low
         hotKeyShortcut = Self.loadHotKeyShortcut(from: userDefaults)
+        observerModel = userDefaults.string(forKey: Self.observerModelKey)
+            ?? Self.defaultObserverModel
+        observerEnabled = userDefaults.object(forKey: Self.observerEnabledKey) as? Bool ?? true
+        deskProactivity = userDefaults.string(forKey: Self.deskProactivityKey)
+            .flatMap(DeskProactivity.init(rawValue:)) ?? .gentle
         refresh()
     }
 
@@ -74,6 +91,55 @@ final class AppSettingsModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Keychain first; falls back to OPENROUTER_API_KEY when launched from a shell or Xcode.
+    func loadOpenRouterKey() -> String? {
+        if let key = try? openRouterKeyStore.load() { return key }
+        let environmentKey = ProcessInfo.processInfo.environment["OPENROUTER_API_KEY"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return environmentKey?.isEmpty == false ? environmentKey : nil
+    }
+
+    var openRouterKeySource: String? {
+        if openRouterKeyStore.hasAPIKey { return "Keychain" }
+        return loadOpenRouterKey() == nil ? nil : "OPENROUTER_API_KEY environment"
+    }
+
+    func saveOpenRouterKey(_ apiKey: String) {
+        do {
+            try openRouterKeyStore.save(apiKey)
+            hasOpenRouterKey = true
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteOpenRouterKey() {
+        do {
+            try openRouterKeyStore.delete()
+            hasOpenRouterKey = loadOpenRouterKey() != nil
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func setObserverModel(_ model: String) {
+        let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        observerModel = trimmed.isEmpty ? Self.defaultObserverModel : trimmed
+        userDefaults.set(observerModel, forKey: Self.observerModelKey)
+    }
+
+    func setObserverEnabled(_ enabled: Bool) {
+        observerEnabled = enabled
+        userDefaults.set(enabled, forKey: Self.observerEnabledKey)
+    }
+
+    func setDeskProactivity(_ proactivity: DeskProactivity) {
+        deskProactivity = proactivity
+        userDefaults.set(proactivity.rawValue, forKey: Self.deskProactivityKey)
     }
 
     func requestScreenPermission() {
@@ -162,6 +228,7 @@ final class AppSettingsModel {
 
     func refresh() {
         hasAPIKey = apiKeyStore.hasAPIKey
+        hasOpenRouterKey = loadOpenRouterKey() != nil
         screenPermissionGranted = captureService.hasPermission
         microphonePermissionGranted = MicrophonePermissionService.isGranted
         cameraPermissionGranted = CameraPermissionService.isGranted

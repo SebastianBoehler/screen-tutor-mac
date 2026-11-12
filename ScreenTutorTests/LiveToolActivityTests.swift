@@ -31,11 +31,11 @@ final class LiveToolActivityTests: XCTestCase {
         model.playScreenInspectionCue = { cueCount += 1 }
 
         model.beginToolActivity(name: "list_windows", turn: 1)
-        model.beginToolActivity(name: "capture_camera", turn: 1)
+        model.beginToolActivity(name: "look_at_desk", turn: 1)
         model.beginToolActivity(name: "point_at_screen_position", turn: 1)
 
         XCTAssertEqual(cueCount, 2)
         XCTAssertEqual(model.liveToolActivities.count, 3)
-        XCTAssertEqual(model.liveToolActivities[1].displayName, "Taking camera photo")
+        XCTAssertEqual(model.liveToolActivities[1].displayName, "Looking at desk")
     }
 }

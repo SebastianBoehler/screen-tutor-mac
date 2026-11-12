@@ -144,6 +144,10 @@ extension AppModel {
         currentUserItemTurn = turn
         trackUserHistoryTurn(itemID: itemID, turn: turn)
         phase = .thinking
+        try await attachDeskContext(after: itemID, connectionID: connectionID)
+        guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
+            return
+        }
         try await requestResponse(
             for: turn,
             generation: generation,

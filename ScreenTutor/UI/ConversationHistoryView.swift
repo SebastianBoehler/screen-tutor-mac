@@ -245,7 +245,10 @@ private struct ConversationToolTag: View {
         case "list_windows": "Checked windows"
         case "capture_window": "Viewed window"
         case "point_at_screen_position", "highlight_screen_region": "Pointed on screen"
-        case "capture_camera": "Viewed camera"
+        case "capture_camera", "look_at_desk": "Viewed desk"
+        case "show_visual": "Drew on board"
+        case "assign_task": "Set a task"
+        case "create_document": "Wrote document"
         default: toolCall.name.replacing("_", with: " ").capitalized
         }
     }
@@ -256,7 +259,10 @@ private struct ConversationToolTag: View {
         case "list_windows": "macwindow.on.rectangle"
         case "capture_window": "eye.fill"
         case "point_at_screen_position", "highlight_screen_region": "cursorarrow.motionlines"
-        case "capture_camera": "camera.fill"
+        case "capture_camera", "look_at_desk": "camera.fill"
+        case "show_visual": "rectangle.and.pencil.and.ellipsis"
+        case "assign_task", "finish_task": "checklist"
+        case "create_document": "doc.richtext"
         default: "wrench.and.screwdriver.fill"
         }
     }

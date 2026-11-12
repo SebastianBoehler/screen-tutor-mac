@@ -80,14 +80,13 @@ extension AppModel {
             return
         }
 
-        if item.name == "capture_camera" {
-            try await handleCameraCall(
-                item,
-                userItemID: userItemID,
-                turn: turn,
-                generation: generation,
-                connectionID: connectionID
-            )
+        if try await handleDeskToolCall(
+            item,
+            userItemID: userItemID,
+            turn: turn,
+            generation: generation,
+            connectionID: connectionID
+        ) {
             return
         }
 

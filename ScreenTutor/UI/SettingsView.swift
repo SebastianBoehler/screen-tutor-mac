@@ -5,6 +5,8 @@ struct SettingsView: View {
     let historyModel: ConversationHistoryModel
     @State private var apiKey = ""
     @State private var tutorInstructionsDraft = ""
+    @State private var openRouterKey = ""
+    @State private var observerModelDraft = ""
 
     var body: some View {
         Form {
@@ -27,6 +29,45 @@ struct SettingsView: View {
                 Text("This personal BYOK build keeps the key in macOS Keychain. It is never stored in project files.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Desk observer (OpenRouter)") {
+                SecureField("OpenRouter API key", text: $openRouterKey)
+                    .textContentType(.password)
+                HStack {
+                    Button("Save in Keychain") {
+                        model.saveOpenRouterKey(openRouterKey)
+                        if model.hasOpenRouterKey { openRouterKey = "" }
+                    }
+                    .disabled(openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    if let source = model.openRouterKeySource {
+                        Label(source, systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Spacer()
+                        Button("Delete", role: .destructive) { model.deleteOpenRouterKey() }
+                    }
+                }
+                HStack {
+                    TextField("Vision model", text: $observerModelDraft)
+                        .font(.body.monospaced())
+                    Button("Save") { model.setObserverModel(observerModelDraft) }
+                        .disabled(observerModelDraft == model.observerModel)
+                    Button("Default") {
+                        model.setObserverModel(AppSettingsModel.defaultObserverModel)
+                        observerModelDraft = model.observerModel
+                    }
+                }
+                Toggle(
+                    "Observe the desk automatically when the page changes",
+                    isOn: Binding(get: { model.observerEnabled }, set: { model.setObserverEnabled($0) })
+                )
+                Text(
+                    "A fast vision model (default Gemini Flash Lite, routed for throughput with "
+                        + "zero data retention) reads the paper under the desk camera and tells the "
+                        + "voice tutor what you wrote, where an error is, or when you seem stuck."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Section("Tutor") {
@@ -163,9 +204,9 @@ struct SettingsView: View {
                     }
                 }
                 Text(
-                    "Camera access is used only for a single still photo when you explicitly "
-                        + "ask the tutor to look through the camera. The photo is sent to OpenAI "
-                        + "as conversation context; there is no background camera stream."
+                    "The desk camera runs only while you start it in the Desk window. Frames stay "
+                        + "on this Mac until the observer (OpenRouter) or the voice tutor (OpenAI) "
+                        + "needs a look at the paper."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -214,10 +255,11 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 560, height: 620)
+        .frame(width: 580, height: 680)
         .onAppear {
             model.refresh()
             tutorInstructionsDraft = model.tutorInstructions
+            observerModelDraft = model.observerModel
         }
     }
 

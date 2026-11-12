@@ -69,6 +69,23 @@ struct MenuBarView: View {
                 .buttonStyle(.bordered)
             }
 
+            HStack(spacing: 8) {
+                Image(systemName: model.deskObserver.isWatching ? "eye.circle.fill" : "camera.circle")
+                    .foregroundStyle(model.deskObserver.isWatching ? Color.accentColor : Color.secondary)
+                Text(model.deskStatus)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer()
+                Button("Desk…") {
+                    openWindow(id: "desk-camera")
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                }
+                .controlSize(.small)
+                Button("Board") { model.visualBoard?.toggle() }
+                    .controlSize(.small)
+            }
+
             Button {
                 openWindow(id: "conversation-history")
                 NSApplication.shared.activate(ignoringOtherApps: true)

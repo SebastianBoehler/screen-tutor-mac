@@ -4,7 +4,23 @@ import Security
 @MainActor
 final class APIKeyStore {
     private let service = "com.sebastianboehler.ScreenTutor"
-    private let account = "openai-api-key"
+    private let account: String
+    private let requiredPrefix: String
+    private let providerName: String
+
+    init(
+        account: String = "openai-api-key",
+        requiredPrefix: String = "sk-",
+        providerName: String = "OpenAI"
+    ) {
+        self.account = account
+        self.requiredPrefix = requiredPrefix
+        self.providerName = providerName
+    }
+
+    static func openRouter() -> APIKeyStore {
+        APIKeyStore(account: "openrouter-api-key", requiredPrefix: "sk-or-", providerName: "OpenRouter")
+    }
 
     var hasAPIKey: Bool {
         (try? load()) != nil
@@ -34,7 +50,9 @@ final class APIKeyStore {
 
     func save(_ key: String) throws {
         let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedKey.hasPrefix("sk-") else { throw KeychainError.invalidKey }
+        guard trimmedKey.hasPrefix(requiredPrefix) else {
+            throw KeychainError.invalidKey(providerName: providerName, prefix: requiredPrefix)
+        }
         guard let data = trimmedKey.data(using: .utf8) else {
             throw KeychainError.invalidData
         }
@@ -73,14 +91,14 @@ final class APIKeyStore {
 }
 
 enum KeychainError: LocalizedError {
-    case invalidKey
+    case invalidKey(providerName: String, prefix: String)
     case invalidData
     case status(OSStatus)
 
     var errorDescription: String? {
         switch self {
-        case .invalidKey:
-            "Enter a valid OpenAI API key beginning with sk-."
+        case .invalidKey(let providerName, let prefix):
+            "Enter a valid \(providerName) API key beginning with \(prefix)."
         case .invalidData:
             "The API key could not be read from Keychain."
         case .status(let status):

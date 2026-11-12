@@ -18,7 +18,11 @@ final class AppModel {
 
     let captureService: ActiveWindowCaptureService
     let screenTools: ScreenToolCoordinator
-    let cameraTools: CameraToolCoordinator
+    let deskCamera: DeskCameraService
+    let deskObserver: DeskObserver
+    let desktopActions = DesktopActions()
+    @ObservationIgnored var visualBoard: VisualBoardController?
+    @ObservationIgnored var lastInjectedDeskObservationID: UUID?
     let realtimeClient: RealtimeClient
     let idleTimer = ListeningIdleTimer()
     var screenToolTask: Task<Void, Never>?
@@ -54,14 +58,40 @@ final class AppModel {
         let captureService = ActiveWindowCaptureService()
         self.captureService = captureService
         screenTools = ScreenToolCoordinator(captureService: captureService)
-        cameraTools = CameraToolCoordinator(captureService: CameraCaptureService())
         self.history = history ?? ConversationHistoryModel()
         self.realtimeClient = realtimeClient ?? RealtimeClient()
-        settings = AppSettingsModel(
+        let settings = AppSettingsModel(
             apiKeyStore: APIKeyStore(),
             captureService: captureService,
             launchAtLoginService: LaunchAtLoginService()
         )
+        self.settings = settings
+        let deskCamera = DeskCameraService()
+        self.deskCamera = deskCamera
+        deskObserver = DeskObserver(camera: deskCamera, settings: settings)
+        deskObserver.deliverInterjection = { [weak self] observation, jpeg in
+            await self?.deliverDeskInterjection(observation, jpeg: jpeg) ?? false
+        }
+        deskObserver.conversationContext = { [weak self] in
+            self?.observerConversationContext() ?? ""
+        }
+        deskObserver.onTaskChanged = { [weak self] task in
+            self?.visualBoard?.setTask(task)
+        }
+    }
+
+    var deskStatus: String {
+        guard deskCamera.isRunning else { return "Desk camera off" }
+        var parts = [deskCamera.activeDeviceName ?? "Desk camera"]
+        if deskObserver.isAnalyzing {
+            parts.append("looking…")
+        } else if deskObserver.isWatching {
+            parts.append(
+                deskObserver.latest.map { "watching · last look \(DeskObservation.relative($0.capturedAt))" }
+                    ?? "watching"
+            )
+        }
+        return parts.joined(separator: " · ")
     }
 
     var statusDetail: String {

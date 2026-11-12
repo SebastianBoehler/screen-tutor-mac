@@ -84,7 +84,9 @@ extension AppModel {
 
     func enterListening() {
         phase = .listening
-        guard !isMicrophoneMuted else {
+        // While the desk observer is watching, silence usually means the learner is
+        // writing, so keep the microphone open instead of auto-muting.
+        guard !isMicrophoneMuted, !deskObserver.isWatching else {
             idleTimer.cancel()
             return
         }
