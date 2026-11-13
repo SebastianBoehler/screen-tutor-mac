@@ -27,6 +27,8 @@ final class AppModel {
     @ObservationIgnored let lessonPlayer = LessonPlayerController()
     @ObservationIgnored let annotationAgent = AnnotationAgent(capture: DisplayCaptureService())
     @ObservationIgnored let youtube = YouTubeCatalog()
+    @ObservationIgnored var lessonChapters: [VideoChapter] = []
+    let learner = LearnerStore()
     @ObservationIgnored var visualBoard: VisualBoardController?
     @ObservationIgnored var lastInjectedDeskObservationID: UUID?
     let realtimeClient: RealtimeClient
@@ -93,6 +95,9 @@ final class AppModel {
         }
         deskObserver.conversationContext = { [weak self] in
             self?.observerConversationContext() ?? ""
+        }
+        lessonPlayer.onAutoPause = { [weak self] seconds in
+            self?.lessonPlayerAutoPaused(at: seconds)
         }
         deskObserver.onTaskChanged = { [weak self] task in
             self?.visualBoard?.setTask(task)

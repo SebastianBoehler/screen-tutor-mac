@@ -7,6 +7,13 @@ struct DeskTask: Equatable, Sendable, Codable {
     let prompt: String
     let expectedEvidence: String
     let assignedAt: Date
+    /// Practice (help allowed), warm-up or exit ticket (no help). Nil means practice.
+    var kind: TaskKind?
+    /// Learner-model subskill this task checks, if any.
+    var topic: String?
+    var subskill: String?
+
+    var taskKind: TaskKind { kind ?? .practice }
 }
 
 enum DeskProgress: String, Codable, Sendable {

@@ -38,6 +38,7 @@ final class RealtimeProtocolTests: XCTestCase {
             tools.compactMap { $0["name"] as? String },
             [
                 "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
+                "start_topic", "record_evidence", "show_progress", "review_due",
                 "list_windows", "capture_window", "point_at_screen_position",
                 "annotate_screen", "clear_annotations", "find_videos", "play_video", "control_video",
                 "open_url", "open_application", "create_document",

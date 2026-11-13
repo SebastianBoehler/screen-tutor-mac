@@ -110,6 +110,15 @@ Ordered by expected learning value per unit of effort.
 
 ### P0: make learning visible across sessions
 
+**Status (2026-11-13): built.** Items 1–5 are in the app:
+- **Code:**
+  - `ScreenTutor/Learning/` (level rules, spacing, interleaving, scoreboards, persistence)
+  - tools `start_topic` / `record_evidence` / `show_progress` / `review_due`
+  - `assign_task` kinds (`practice`, `warm_up`, `exit_ticket`)
+  - auto-pausing lesson player
+- **Tests:** unit tests, plus a live auto-pause test.
+- **Not yet done:** testing with real learners. FSRS-style scheduling remains future work.
+
 1. **Learner model and skill map.**
    - **What:** per topic, 4–10 subskills, each at level 0–5 (Jane Street's scale), stored locally.
    - **Raising a level:** only on two independent checks, at least one unprompted recall.

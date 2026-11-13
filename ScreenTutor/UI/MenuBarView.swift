@@ -84,6 +84,11 @@ struct MenuBarView: View {
                 .controlSize(.small)
                 Button("Board") { model.visualBoard?.toggle() }
                     .controlSize(.small)
+                Button("Progress") {
+                    model.visualBoard?.show(title: "Progress", markdown: model.learner.progressMarkdown())
+                }
+                .controlSize(.small)
+                .help("Skill map, review dates, and this session's scoreboards")
             }
 
             Button {

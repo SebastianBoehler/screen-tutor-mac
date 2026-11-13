@@ -77,10 +77,11 @@ final class VisualBoardController: NSObject, WKNavigationDelegate {
         struct TaskPayload: Encodable {
             let title: String
             let prompt: String
+            let label: String
         }
         let payload = Payload(
             visual: visual,
-            task: task.map { TaskPayload(title: $0.title, prompt: $0.prompt) }
+            task: task.map { TaskPayload(title: $0.title, prompt: $0.prompt, label: $0.taskKind.boardLabel) }
         )
         guard
             let data = try? JSONEncoder().encode(payload),
@@ -147,7 +148,7 @@ final class VisualBoardController: NSObject, WKNavigationDelegate {
         }
         window.renderBoard=async function(p){
           let h='';
-          if(p.task){h+='<div class="task"><div class="label">Your task</div><h3>'+esc(p.task.title)+'</h3>'+md(p.task.prompt)+'</div>'}
+          if(p.task){h+='<div class="task"><div class="label">'+esc(p.task.label||'Your task')+'</div><h3>'+esc(p.task.title)+'</h3>'+md(p.task.prompt)+'</div>'}
           if(p.visual){h+='<h1>'+esc(p.visual.title)+'</h1>'+md(p.visual.markdown)}
           if(!h){h='<p class="empty">The tutor\\'s visuals appear here.</p>'}
           const root=document.getElementById('root'); root.innerHTML=h;

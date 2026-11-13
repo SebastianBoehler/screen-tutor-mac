@@ -12,12 +12,14 @@ extension AppModel {
         do {
             switch event.type {
             case "session.created":
+                learner.beginSession()
                 try await realtimeClient.send(
                     RealtimeSessionUpdateEvent.screenTutor(
                         model: settings.realtimeModel,
                         language: settings.tutorLanguage,
                         tutorInstructions: settings.tutorInstructions,
-                        reasoningEffort: settings.reasoningEffort
+                        reasoningEffort: settings.reasoningEffort,
+                        learnerContext: learner.sessionContext()
                     ),
                     connectionID: connectionID
                 )

@@ -14,7 +14,8 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
         model: RealtimeModel,
         language: TutorLanguage,
         tutorInstructions: String,
-        reasoningEffort: ReasoningEffort
+        reasoningEffort: ReasoningEffort,
+        learnerContext: String = ""
     ) -> RealtimeSessionUpdateEvent {
         RealtimeSessionUpdateEvent(
             eventID: "evt_session_\(UUID().uuidString)",
@@ -23,7 +24,8 @@ struct RealtimeSessionUpdateEvent: Encodable, Sendable {
                 model: model.rawValue,
                 instructions: RealtimeConstants.tutorInstructions(
                     language: language,
-                    customTutorInstructions: tutorInstructions
+                    customTutorInstructions: tutorInstructions,
+                    learnerContext: learnerContext
                 ),
                 outputModalities: ["audio"],
                 tools: RealtimeFunctionTool.all,

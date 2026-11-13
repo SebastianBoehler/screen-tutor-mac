@@ -34,25 +34,41 @@ extension AppModel {
                     "notes": deskObserver.recentNotes()
                 ])
             case "assign_task":
+                let kind = arguments.optionalString("kind").flatMap(TaskKind.init(rawValue:)) ?? .practice
                 let task = deskObserver.assignTask(
                     title: try arguments.string("title"),
                     prompt: try arguments.string("task"),
-                    expectedEvidence: try arguments.string("expected_evidence")
+                    expectedEvidence: try arguments.string("expected_evidence"),
+                    kind: kind,
+                    topic: arguments.optionalString("topic"),
+                    subskill: arguments.optionalString("subskill")
                 )
                 if !deskObserver.isWatching, settings.observerEnabled {
                     await deskObserver.startWatching()
                 }
                 result = .ok([
                     "task_id": task.id.uuidString,
+                    "kind": kind.rawValue,
                     "board": "pinned",
-                    "observer": deskObserver.isWatching ? "watching the desk" : "camera not running"
+                    "observer": deskObserver.isWatching ? "watching the desk" : "camera not running",
+                    "rule": kind.isUnaided
+                        ? "No hints or cues until the learner says they are done; if they ask for help, help, then finish it as assisted."
+                        : "Help with the least support that unlocks progress."
                 ])
             case "finish_task":
-                deskObserver.finishTask(
-                    outcome: try arguments.string("outcome"),
-                    note: arguments.optionalString("note") ?? ""
-                )
-                result = .ok(["status": "closed"])
+                let outcome = try arguments.string("outcome")
+                let note = arguments.optionalString("note") ?? ""
+                var fields = ["status": "closed"]
+                if let task = deskObserver.finishTask(outcome: outcome, note: note) {
+                    let change = learner.recordTaskOutcome(
+                        kind: task.taskKind, outcome: outcome, topic: task.topic, subskill: task.subskill, note: note
+                    )
+                    if let change {
+                        fields["level"] = "\(change.subskill): \(change.from) → \(change.to)/5"
+                    }
+                    fields["scoreboard"] = LearnerReport.scoreboards(learner.currentSession)
+                }
+                result = .ok(fields)
             case "show_visual":
                 guard let visualBoard else { throw DeskToolError.boardUnavailable }
                 visualBoard.show(
@@ -133,6 +149,8 @@ extension AppModel {
     /// so it never talks over the learner or an ongoing answer.
     func deliverDeskInterjection(_ observation: DeskObservation, jpeg: Data) async -> Bool {
         guard let interjection = observation.payload.interjection else { return false }
+        // During a warm-up or exit ticket the tutor gives no help; only "looks finished" may speak.
+        if deskObserver.activeTask?.taskKind.isUnaided == true, interjection.kind != .completed { return true }
         let text = """
             <desk_observer> Automated note, not spoken by the learner. \
             Reason to consider speaking: \(interjection.kind.rawValue) — \(interjection.reason). \

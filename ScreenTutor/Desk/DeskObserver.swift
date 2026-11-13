@@ -65,13 +65,23 @@ final class DeskObserver {
         pendingInterjection = nil
     }
 
-    func assignTask(title: String, prompt: String, expectedEvidence: String) -> DeskTask {
+    func assignTask(
+        title: String,
+        prompt: String,
+        expectedEvidence: String,
+        kind: TaskKind = .practice,
+        topic: String? = nil,
+        subskill: String? = nil
+    ) -> DeskTask {
         let task = DeskTask(
             id: UUID(),
             title: title,
             prompt: prompt,
             expectedEvidence: expectedEvidence,
-            assignedAt: Date()
+            assignedAt: Date(),
+            kind: kind,
+            topic: topic,
+            subskill: subskill
         )
         activeTask = task
         gate.reset()
@@ -79,13 +89,16 @@ final class DeskObserver {
         return task
     }
 
-    func finishTask(outcome: String, note: String) {
+    @discardableResult
+    func finishTask(outcome: String, note: String) -> DeskTask? {
+        let finished = activeTask
         if let activeTask {
             completedTasks.append("\(activeTask.title): \(outcome)\(note.isEmpty ? "" : " — \(note)")")
         }
         activeTask = nil
         pendingInterjection = nil
         onTaskChanged?(nil)
+        return finished
     }
 
     /// Analyses the current frame immediately (used by "Analyze now" and the tutor's tools).

@@ -24,7 +24,14 @@ ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount 
 - **Tasks on paper** — the tutor can `assign_task`; the task is pinned on the Tutor Board and the observer checks your paper against it until `finish_task` records an honest outcome (independent, assisted, abandoned)
 - **Tutor Board** — a floating panel that renders Markdown, LaTeX math (KaTeX) and Mermaid diagrams for things that are hard to follow by ear
 - **Screen annotations** — the tutor says what to mark ("circle the η in the update rule, label it step size") and boxes, circles, underlines, arrows, a spotlight or short notes draw themselves over any app in about 1.5 s, in the order the tutor talks about them. Labels are placed so they never cover the marked text or each other
-- **Lesson videos** — the tutor finds YouTube videos and plays them in ScreenTutor's own player window, then pauses to ask a prediction, replays or loops a short section, slows it down, or jumps to a chapter; it can also annotate a paused frame
+- **Learning across sessions** — ScreenTutor keeps a local learner model:
+  - **Skill map:** topics split into subskills at levels 0–5. ScreenTutor's own rules change the levels, not the voice model. A level rises only after two checks, one of them recalled without help; a failed review lowers it.
+  - **Placement:** a short diagnostic places you when a topic starts.
+  - **Spaced review:** spaced, interleaved warm-ups on paper open each session (review after 1, 2, 4, 8 and 21 days by level).
+  - **Two scoreboards:** practice with help (independent / assisted / abandoned) and checks without help (warm-ups and exit tickets).
+  - **Unaided checks:** during a warm-up or exit ticket the tutor gives no hints, and the desk observer stays quiet unless the work looks finished.
+  - Open it with **Progress** in the menu bar.
+- **Lesson videos** — the tutor finds YouTube videos and plays them in ScreenTutor's own player window, asks a prediction first, lets the player pause itself at chapter ends for a recall question, has you explain the key idea on paper afterwards, and can replay or loop a section, slow it down, or annotate a paused frame
 - **Mac actions** — open a URL, open an installed app, or write a Word (`.docx`), Markdown or RTF document into `~/Downloads/ScreenTutor` and open it
 - **Screen awareness** — on request, the tutor lists visible windows, captures only the relevant one, and can move a rendered teaching cursor to a precise point
 - Desk context is attached automatically to each spoken turn as a short text note; the tutor calls `look_at_desk` when it needs the actual image

@@ -54,12 +54,15 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
     private var webView: WKWebView?
     private(set) var state = LessonPlayerState()
     private var readyWaiters: [CheckedContinuation<Void, Error>] = []
+    /// Called when the player paused itself at a planned point (seconds).
+    var onAutoPause: ((Double) -> Void)?
+    private(set) var pausePoints: [Double] = []
 
     var isOpen: Bool { panel?.isVisible == true }
     var windowNumber: Int? { panel.map(\.windowNumber) }
 
     /// Opens the player (or reuses it) and waits until the video is ready.
-    func play(videoID: String, title: String, start: Double = 0) async throws {
+    func play(videoID: String, title: String, start: Double = 0, pauseAt: [Double] = []) async throws {
         guard YouTubeCatalog.isValidVideoID(videoID) else { throw YouTubeError.invalidVideoID }
         let webView = ensureWindow(title: title)
         state = LessonPlayerState(videoID: videoID, title: title)
@@ -67,6 +70,29 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
         panel?.title = title.isEmpty ? "Lesson video" : title
         panel?.orderFrontRegardless()
         try await waitUntilReady(timeout: 12)
+        try await setPauses(pauseAt)
+    }
+
+    /// Planned points where the video pauses itself (segmenting for recall questions).
+    func setPauses(_ seconds: [Double]) async throws {
+        pausePoints = Array(Set(seconds.filter { $0 > 0 })).sorted()
+        let list = pausePoints.map { String(format: "%.1f", $0) }.joined(separator: ",")
+        try await run("st.setPauses([\(list)])")
+    }
+
+    /// Chapter ends after `start`, at least `minimumGap` apart, at most `limit`.
+    nonisolated static func chapterPauses(_ chapters: [VideoChapter], after start: Double, minimumGap: Double = 90, limit: Int = 8) -> [Double] {
+        var points: [Double] = []
+        var last = start
+        for chapter in chapters where Double(chapter.seconds) > start + 45 {
+            let point = Double(chapter.seconds)
+            if point - last >= minimumGap {
+                points.append(point)
+                last = point
+            }
+            if points.count == limit { break }
+        }
+        return points
     }
 
     func play() async throws { try await run("st.play()") }
@@ -186,6 +212,10 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
             state.loop = nil
         }
         if object["ready"] as? Bool == true { resolveWaiters(.success(())) }
+        if let point = object["autoPause"] as? Double {
+            pausePoints.removeAll { abs($0 - point) < 0.5 }
+            onAutoPause?(point)
+        }
     }
 
     // The embedded player refuses to play without an https referrer, so the page
@@ -199,7 +229,7 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
         <style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#p{position:absolute;inset:0;width:100%;height:100%}</style>
         </head><body><div id="p"></div>
         <script>
-        let player = null, loopRange = null;
+        let player = null, loopRange = null, pauses = [], lastTime = 0;
         const post = (o) => window.webkit.messageHandlers.player.postMessage(JSON.stringify(o));
         function snapshot() {
           if (!player || !player.getCurrentTime) return {};
@@ -221,7 +251,18 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
         };
         setInterval(() => {
           if (!player || !player.getCurrentTime) return;
-          if (loopRange && player.getCurrentTime() >= loopRange.end) player.seekTo(loopRange.start, true);
+          const now = player.getCurrentTime();
+          if (loopRange && now >= loopRange.end) player.seekTo(loopRange.start, true);
+          // Planned pauses fire only when playback runs across them, not when seeking past.
+          if (player.getPlayerState() === 1 && now - lastTime < 2) {
+            const hit = pauses.find((p) => lastTime < p && now >= p);
+            if (hit !== undefined) {
+              player.pauseVideo();
+              pauses = pauses.filter((p) => p !== hit);
+              post({ autoPause: hit });
+            }
+          }
+          lastTime = now;
           post(snapshot());
         }, 500);
         window.st = {
@@ -231,7 +272,8 @@ final class LessonPlayerController: NSObject, WKScriptMessageHandler, NSWindowDe
           seek: (s) => player.seekTo(s, true),
           rate: (r) => player.setPlaybackRate(r),
           loop: (a, b) => { loopRange = { start: a, end: b }; player.seekTo(a, true); player.playVideo(); },
-          unloop: () => { loopRange = null; }
+          unloop: () => { loopRange = null; },
+          setPauses: (list) => { pauses = list; }
         };
         </script>
         <script src="https://www.youtube.com/iframe_api"></script>

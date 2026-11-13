@@ -264,6 +264,18 @@ final class LessonPlayerLiveTests: XCTestCase {
         XCTAssertLessThan(player.state.time, 604, "loop should jump back to 600")
         try await player.setRate(1.5)
         XCTAssertEqual(player.state.rate, 1.5)
+        try await player.clearLoop()
+        try await player.setRate(1)
+
+        // A planned pause fires when playback runs across it, then the player is paused.
+        var paused: Double?
+        player.onAutoPause = { paused = $0 }
+        try await player.seek(to: 100)
+        try await player.setPauses([104])
+        try await player.play()
+        try await waitFor("auto-pause at 1:44") { paused == 104 }
+        try await waitFor("paused after auto-pause") { player.state.playerState == 2 }
+        XCTAssertEqual(player.state.time, 104, accuracy: 1.5)
         player.close()
     }
 
