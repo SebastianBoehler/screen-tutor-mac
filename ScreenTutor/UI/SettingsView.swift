@@ -125,7 +125,7 @@ struct SettingsView: View {
                 Text(
                     "Group mode runs in the study room server (room/ in this repository): learners join "
                         + "from a browser with their mic and desk camera, and the tutor listens, watches "
-                        + "each desk, and writes on a shared board. Start it with "bun run dev" in room/."
+                        + "each desk, and writes on a shared board. Start it with bun run dev in room/."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
