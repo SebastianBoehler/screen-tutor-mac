@@ -1,46 +1,70 @@
 # Study Room
 
-Group mode for ScreenTutor: a LiveKit video room where a small study group joins with microphones and the cameras above their desks, and a voice tutor joins as a participant. The tutor listens to the group, looks at each learner's paper, and writes formulas, diagrams and tasks on a board that everyone sees.
+Group mode for ScreenTutor: a small study group joins a video room from their browsers with their microphones and the cameras above their desks. A voice tutor listens to the whole group, looks at each learner's paper, and writes formulas, diagrams and tasks on a board that everyone sees.
+
+There is no media server, agent framework or SDK. The only thing you need is an OpenAI API key.
 
 ```
- Browser (each learner)            LiveKit (Cloud or local)            Tutor agent (Python)
- mic + desk camera  ─────────────▶  room  ◀───────────────────────────  OpenAI Realtime voice
- video grid, captions               data topic "study"                  desk watcher per learner
- shared board, tasks, desk status ◀──────────────────────────────────── board / tasks / desks
+ Browser (each learner)                 Room server (Bun, ~1 file per concern)       OpenAI
+ ───────────────────────                ─────────────────────────────────────       ──────
+ desk camera ◀── WebRTC, peer to peer ──▶ other learners' browsers
+ mic → 24 kHz PCM16 ── WebSocket ──────▶  mixer (sum + speaker energy) ── WebSocket ──▶ Realtime (gpt-realtime-2.1)
+ speaker ◀─────────── tutor PCM ───────── relay                         ◀─ audio, tool calls
+ desk change gate → JPEG on change ────▶  desk observer ─────────────── HTTPS ──────▶ Responses (gpt-5.4-mini)
+ board, tasks, desks ◀── room state ───── tools: board, tasks, look_at_desk
 ```
 
-## What the tutor does
-
-- **Listens to the group.** OpenAI Realtime hears one learner at a time; the agent follows LiveKit's active speaker (with a short debounce, never cutting someone off mid-sentence) and tells the model who it is now hearing.
-- **Teaches like ScreenTutor solo mode**, using the LecturePilot-derived policy (attempt first, least support, faded steps, transfer, honest mastery), plus group rules: address people by name, rotate questions, do not let the fastest person answer for everyone, let learners explain to each other.
-- **Watches every desk camera.** The same on-device change gate as the Mac app decides when a page changed; then the frame goes to an OpenRouter vision model (default `google/gemini-3.5-flash-lite`, zero data retention). The tutor can `look_at_desk(name)` for the actual image or read `desk_notes`. Confident errors, stalls and finished tasks can make the tutor speak up to that learner (45 s cooldown, only while nobody is talking).
-- **Shared board and tasks.** `show_on_board` renders Markdown, KaTeX math and Mermaid diagrams for everyone; `assign_task` pins a task for one learner or everyone; `finish_task` records independent / assisted / abandoned.
-- **No computer control.** The room tutor can never click on anyone's Mac; that stays opt-in and local in the ScreenTutor app.
+- **Video** goes directly between browsers (full mesh, up to 6 people). The server only relays the WebRTC signaling messages. Desk cameras are sent as "detail" content at up to 2.5 Mbit/s so handwriting stays readable.
+- **Voice**: every browser sends its microphone as raw 24 kHz PCM over the room WebSocket. The server mixes all of them into one stream for one Realtime session per room, over a raw WebSocket, so the API key never reaches a browser. The tutor's audio is sent back to every browser, which plays it through a local WebRTC loopback so the browser's echo canceller removes it from the microphone.
+- **Who said what**: the mixer tracks how loud each learner was during a turn. When the Realtime voice activity detector commits a turn, the server inserts `[room] Heard: Anna, Ben` right after it.
+- **When the tutor answers**: with one learner, always. With several learners, the server waits for the transcript and answers only when someone addresses the tutor ("Tutor, …"), when someone presses **Ask tutor**, or within 25 s of the tutor's last words. Otherwise the turn stays in context as group discussion.
+- **Desks**: each browser runs the same change gate as the Mac app on its own camera. It computes a 64×48 fingerprint once a second and sends a photo only when the page has materially changed and the image has been still for 1.5 s, or when an active task has shown no progress for 90 s. The server asks a fast vision model for a structured observation (summary, LaTeX transcription, progress, a located issue, an optional interjection). `look_at_desk(name)` asks that learner's browser for a fresh photo and gives it to the Realtime model as an image.
+- **Teaching** follows ScreenTutor's LecturePilot-derived policy (attempt first, least support, faded steps, transfer, honest mastery), plus group rules: address people by name, rotate questions, let learners explain to each other, and keep derivations on the board.
+- **No computer control.** The room tutor never touches anyone's computer. Computer control stays opt-in and local in the Mac app.
 
 ## Run it
 
-Needs [uv](https://docs.astral.sh/uv/), [bun](https://bun.sh), and credentials in `room/.env.local` (see `.env.example`), or point `STUDY_ROOM_ENV_FILE` at an existing env file:
+Needs [Bun](https://bun.sh) ≥ 1.3.
 
 ```bash
-cp room/.env.example room/.env.local   # then fill in the keys
-room/dev.sh                            # agent + web on http://localhost:3000
+cd room
+cp .env.example .env.local   # set OPENAI_API_KEY
+bun install                   # dev-only: TypeScript types, no runtime dependencies
+bun run dev                   # http://localhost:3000
 ```
 
-- **LiveKit Cloud:** set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` from your project. The agent registers as `study-tutor`, and every room token carries an explicit dispatch for it, so other agents on the same project are not affected.
-- **Fully local:** `brew install livekit`, run `livekit-server --dev`, and use `LIVEKIT_URL=ws://localhost:7880`, `LIVEKIT_API_KEY=devkey`, `LIVEKIT_API_SECRET=secret`.
-- `OPENAI_API_KEY` is required for the voice; `OPENROUTER_API_KEY` enables desk observation. If the voice fails (for example a rejected key), the room shows a status line and the board and desk notes keep working.
+Open the page, enter your name, share the invite link, and pick your desk camera. An iPhone via Continuity Camera shows up as a normal browser camera. `?fake=1` on a room URL replaces the camera and microphone with a synthetic desk (paper with a growing derivation) and silence, for testing without devices.
 
-Open the page, enter your name, share the room code or invite link, and pick your desk camera (an iPhone via Continuity Camera shows up as a normal browser camera). For people outside your network, deploy `room/web` (for example to Vercel with the same env vars) and run the agent anywhere that can reach LiveKit; browsers need HTTPS for camera access on anything but localhost.
+Optional settings (see `.env.example`):
+
+- `OPENROUTER_API_KEY` or a `DESK_OBSERVER_MODEL` containing a slash switches the observer to OpenRouter, e.g. `google/gemini-3.5-flash-lite`.
+- `STUDY_TUTOR_MODEL` sets the Realtime model.
+- `ICE_SERVERS` adds a TURN server for learners on networks that block peer-to-peer connections.
+
+Without `OPENAI_API_KEY` the room still works as a video room with desk notes (if an OpenRouter key is set), and the header says the tutor's voice is off.
+
+To reach learners outside your network, deploy the server anywhere Bun runs, behind HTTPS (browsers only allow cameras on HTTPS or localhost), with `bun run start`.
+
+## Why not GPT-Live or a media server?
+
+- **GPT-Live-1** (`/v1/live/sessions`) is OpenAI's newer full-duplex voice model, with hosted delegation to a Responses model for reasoning and tools. It accepts only audio and text, though, and the tutor's core job is to look at handwritten work. The Realtime API takes images and function tools in the same session, so it stays the voice layer for now. Swapping the voice layer only touches `src/server/tutor.ts`.
+- **A media server** (LiveKit, mediasoup and similar) is what lets rooms grow past about 6 people, record them, or join over phone lines. A study group doesn't need any of that, so peer-to-peer video plus a 40 ms audio mixer is enough.
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
-| `agent/agent.py` | LiveKit agent: session, speaker following, tools, sync, interjections |
-| `agent/desk_watch.py` | Per-learner frame capture, change gate, OpenRouter observer |
-| `agent/prompts.py` | Group tutor instructions and observer prompt |
-| `agent/test_desk_watch.py` | `cd room/agent && .venv/bin/python -m unittest test_desk_watch.py` |
-| `web/src/app/api/token/route.ts` | Room tokens with explicit `study-tutor` dispatch |
-| `web/src/app/room/[code]/page.tsx` | Video grid, captions, controls, sync |
-| `web/src/components/` | Shared board (Markdown + KaTeX + Mermaid), tasks, desk status |
-| `web/src/lib/protocol.ts` | Message types on the `study` data topic |
+| `server.ts` | Entry point; reads env and starts the server |
+| `src/server/app.ts` | `Bun.serve`: pages, `/ws/:room` WebSocket, room registry |
+| `src/server/room.ts` | Participants, signaling relay, turn policy, tools, desk observations, interjections |
+| `src/server/tutor.ts` | Raw Realtime WebSocket client: session, audio in/out, barge-in truncation, tool loop |
+| `src/server/mixer.ts` | 40 ms PCM mixer with per-speaker energy |
+| `src/server/observer.ts` | Desk observer over OpenAI Responses or OpenRouter |
+| `src/server/prompts.ts` | Tutor and observer prompts |
+| `src/client/room.ts` | Room page: media, controls, rendering |
+| `src/client/mesh.ts` | Peer-to-peer WebRTC with perfect negotiation |
+| `src/client/audio.ts` | AudioWorklet microphone capture and echo-cancelled tutor playback |
+| `src/client/desk.ts`, `src/shared/deskGate.ts` | Desk change gate (same thresholds as the Swift `DeskChangeGate`) |
+| `src/client/markdown.ts` | Board rendering: marked + KaTeX + Mermaid, raw HTML escaped |
+| `src/shared/protocol.ts` | Message types on the room WebSocket |
+| `test/` | `bun test`: gate, mixer, observer parsing, and a full room flow against a fake Realtime server |

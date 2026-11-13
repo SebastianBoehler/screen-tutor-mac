@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Study Room</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  </head>
+  <body>
+    <main class="lobby" id="prejoin">
+      <form class="lobby-card" id="prejoin-form">
+        <h1>Join <span id="prejoin-code"></span></h1>
+        <video id="preview" class="preview" autoplay playsinline muted></video>
+        <label>Your name<input id="prejoin-name" autocomplete="name" maxlength="40" required /></label>
+        <label>Camera (point it at your desk)<select id="prejoin-camera"></select></label>
+        <button type="submit">Join</button>
+        <p class="muted small" id="prejoin-status"></p>
+      </form>
+    </main>
+
+    <div class="room-layout" id="room" hidden>
+      <header class="room-header">
+        <strong id="room-code"></strong>
+        <span class="tutor-pill" id="tutor-pill">Tutor offline</span>
+        <span class="muted small" id="tutor-detail"></span>
+        <button class="link" id="copy-link" type="button">Copy invite link</button>
+      </header>
+      <section class="stage">
+        <div class="grid" id="grid"></div>
+        <div class="captions" id="captions" hidden></div>
+        <nav class="controls">
+          <button type="button" id="mic">Mute</button>
+          <button type="button" id="cam">Camera off</button>
+          <select id="camera" title="Camera"></select>
+          <label class="toggle"><input type="checkbox" id="desk" checked /> Tutor watches my desk</label>
+          <button type="button" id="ask" title="Your next sentence goes to the tutor">Ask tutor</button>
+          <button type="button" id="leave" class="danger">Leave</button>
+        </nav>
+      </section>
+      <aside class="board" id="board-panel">
+        <div id="tasks"></div>
+        <div id="board"><p class="muted">The tutor's board appears here.</p></div>
+        <div class="desks" id="desks"></div>
+      </aside>
+    </div>
+    <script type="module" src="../src/client/room.ts"></script>
+  </body>
+</html>

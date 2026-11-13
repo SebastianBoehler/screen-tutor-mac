@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Study Room</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="lobby">
+      <form class="lobby-card" id="lobby">
+        <h1>Study room</h1>
+        <p class="muted">Study together on video with a voice tutor that watches your desks and keeps a shared board.</p>
+        <label>Your name<input id="name" autocomplete="name" maxlength="40" required /></label>
+        <label>Room code<input id="code" pattern="[a-z0-9][a-z0-9\-]{2,39}" maxlength="40" required /></label>
+        <button type="submit">Join room</button>
+        <p class="muted small">Anyone with the room link can join (up to 6 people). Video goes directly between browsers.</p>
+      </form>
+    </main>
+    <script type="module" src="../src/client/lobby.ts"></script>
+  </body>
+</html>
