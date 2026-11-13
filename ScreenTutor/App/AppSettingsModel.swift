@@ -21,11 +21,14 @@ final class AppSettingsModel {
     private(set) var deskProactivity: DeskProactivity
     private(set) var computerControlEnabled: Bool
     private(set) var computerModel: String
+    private(set) var overlayModel: String
     private(set) var inputControlPermissionGranted = false
     private(set) var studyRoomURL: String
 
     static let defaultObserverModel = "google/gemini-3.5-flash-lite"
     static let defaultComputerModel = "google/gemini-3.5-flash"
+    /// Fastest model that placed marks correctly in our overlay benchmark (Nov 2026).
+    static let defaultOverlayModel = "deepseek/deepseek-v4.1-flash"
     static let defaultStudyRoomURL = "http://localhost:3000"
 
     private let apiKeyStore: APIKeyStore
@@ -47,6 +50,7 @@ final class AppSettingsModel {
     private static let deskProactivityKey = "com.sebastianboehler.ScreenTutor.deskProactivity"
     private static let computerControlKey = "com.sebastianboehler.ScreenTutor.computerControl"
     private static let computerModelKey = "com.sebastianboehler.ScreenTutor.computerModel"
+    private static let overlayModelKey = "com.sebastianboehler.ScreenTutor.overlayModel"
     private static let studyRoomURLKey = "com.sebastianboehler.ScreenTutor.studyRoomURL"
 
     init(
@@ -78,6 +82,7 @@ final class AppSettingsModel {
         computerControlEnabled = userDefaults.bool(forKey: Self.computerControlKey)
         computerModel = userDefaults.string(forKey: Self.computerModelKey)
             ?? Self.defaultComputerModel
+        overlayModel = userDefaults.string(forKey: Self.overlayModelKey) ?? Self.defaultOverlayModel
         studyRoomURL = userDefaults.string(forKey: Self.studyRoomURLKey) ?? Self.defaultStudyRoomURL
         refresh()
     }
@@ -166,6 +171,12 @@ final class AppSettingsModel {
         let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
         computerModel = trimmed.isEmpty ? Self.defaultComputerModel : trimmed
         userDefaults.set(computerModel, forKey: Self.computerModelKey)
+    }
+
+    func setOverlayModel(_ model: String) {
+        let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        overlayModel = trimmed.isEmpty ? Self.defaultOverlayModel : trimmed
+        userDefaults.set(overlayModel, forKey: Self.overlayModelKey)
     }
 
     func setStudyRoomURL(_ value: String) {

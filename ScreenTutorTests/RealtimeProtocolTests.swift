@@ -39,7 +39,8 @@ final class RealtimeProtocolTests: XCTestCase {
             [
                 "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
                 "list_windows", "capture_window", "point_at_screen_position",
-                "open_url", "search_youtube", "open_application", "create_document",
+                "annotate_screen", "clear_annotations", "find_videos", "play_video", "control_video",
+                "open_url", "open_application", "create_document",
                 "click_in_window", "type_text", "press_keys", "scroll_window",
                 "do_on_computer", "stop_computer_task"
             ]

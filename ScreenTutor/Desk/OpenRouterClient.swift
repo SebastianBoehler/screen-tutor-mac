@@ -14,7 +14,32 @@ struct OpenRouterClient: Sendable {
         system: String,
         userText: String,
         jpegData: Data?,
-        maxTokens: Int = 900
+        maxTokens: Int = 900,
+        reasoning: OpenRouterReasoning? = nil
+    ) async throws -> OpenRouterCompletion {
+        do {
+            return try await send(
+                apiKey: apiKey, model: model, system: system, userText: userText,
+                jpegData: jpegData, maxTokens: maxTokens, reasoning: reasoning
+            )
+        } catch OpenRouterError.http(400, let message)
+            where reasoning == .off && message.localizedCaseInsensitiveContains("reasoning is mandatory") {
+            // Some models cannot turn reasoning off; use the smallest budget instead.
+            return try await send(
+                apiKey: apiKey, model: model, system: system, userText: userText,
+                jpegData: jpegData, maxTokens: maxTokens, reasoning: .minimal
+            )
+        }
+    }
+
+    private func send(
+        apiKey: String,
+        model: String,
+        system: String,
+        userText: String,
+        jpegData: Data?,
+        maxTokens: Int,
+        reasoning: OpenRouterReasoning?
     ) async throws -> OpenRouterCompletion {
         var content: [OpenRouterRequest.Part] = [.init(type: "text", text: userText, imageURL: nil)]
         if let jpegData {
@@ -35,7 +60,8 @@ struct OpenRouterClient: Sendable {
             responseFormat: .init(type: "json_object"),
             temperature: 0.2,
             maxTokens: maxTokens,
-            provider: .init(sort: "throughput", dataCollection: "deny", zdr: true)
+            provider: .init(sort: "throughput", dataCollection: "deny", zdr: true),
+            reasoning: reasoning.map(OpenRouterRequest.Reasoning.init)
         )
 
         var request = URLRequest(url: Self.endpoint, timeoutInterval: 30)
@@ -65,6 +91,13 @@ struct OpenRouterClient: Sendable {
             completionTokens: decoded.usage?.completionTokens
         )
     }
+}
+
+/// How much hidden reasoning a model may do before answering. Overlays and
+/// grounding are latency-bound, so they turn it off.
+enum OpenRouterReasoning: Sendable, Equatable {
+    case off
+    case minimal
 }
 
 struct OpenRouterCompletion: Sendable {
@@ -101,9 +134,10 @@ private struct OpenRouterRequest: Encodable {
     let temperature: Double
     let maxTokens: Int
     let provider: Provider
+    let reasoning: Reasoning?
 
     enum CodingKeys: String, CodingKey {
-        case model, messages, temperature, provider
+        case model, messages, temperature, provider, reasoning
         case responseFormat = "response_format"
         case maxTokens = "max_tokens"
     }
@@ -130,6 +164,18 @@ private struct OpenRouterRequest: Encodable {
 
     struct ResponseFormat: Encodable {
         let type: String
+    }
+
+    struct Reasoning: Encodable {
+        let enabled: Bool?
+        let effort: String?
+
+        init(_ setting: OpenRouterReasoning) {
+            switch setting {
+            case .off: enabled = false; effort = nil
+            case .minimal: enabled = nil; effort = "minimal"
+            }
+        }
     }
 
     struct Provider: Encodable {

@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var openRouterKey = ""
     @State private var observerModelDraft = ""
     @State private var computerModelDraft = ""
+    @State private var overlayModelDraft = ""
     @State private var studyRoomURLDraft = ""
 
     var body: some View {
@@ -72,6 +73,27 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
             }
 
+            Section("Screen annotations and videos") {
+                HStack {
+                    TextField("Annotation model", text: $overlayModelDraft)
+                        .font(.body.monospaced())
+                    Button("Save") { model.setOverlayModel(overlayModelDraft) }
+                        .disabled(overlayModelDraft == model.overlayModel)
+                    Button("Default") {
+                        model.setOverlayModel(AppSettingsModel.defaultOverlayModel)
+                        overlayModelDraft = model.overlayModel
+                    }
+                }
+                Text(
+                    "The tutor can box, circle, underline, point at and spotlight things on your "
+                        + "screen. Text is found on this Mac; a fast OpenRouter vision model only picks "
+                        + "what to mark. Videos the tutor picks open in its own player, so it can pause, "
+                        + "replay, loop and slow them down while you talk."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
             Section("Computer control") {
                 Toggle(
                     "Let the tutor control the mouse and keyboard",
@@ -102,6 +124,7 @@ struct SettingsView: View {
                     Button("Default") {
                         model.setComputerModel(AppSettingsModel.defaultComputerModel)
                         computerModelDraft = model.computerModel
+            overlayModelDraft = model.overlayModel
                     }
                 }
                 Text(

@@ -5,7 +5,7 @@ import Foundation
 extension AppModel {
     static let deskToolNames: Set<String> = [
         "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
-        "open_url", "search_youtube", "open_application", "create_document"
+        "open_url", "open_application", "create_document"
     ]
 
     /// Handles a desk or action tool. Returns false when the tool belongs elsewhere.
@@ -62,9 +62,6 @@ extension AppModel {
                 result = .ok(["board": "shown"])
             case "open_url":
                 let url = try desktopActions.openURL(try arguments.string("url"))
-                result = .ok(["opened": url.absoluteString])
-            case "search_youtube":
-                let url = try desktopActions.searchYouTube(try arguments.string("query"))
                 result = .ok(["opened": url.absoluteString])
             case "open_application":
                 let appName = try await desktopActions.openApplication(named: try arguments.string("name"))

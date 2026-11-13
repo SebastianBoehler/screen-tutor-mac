@@ -23,7 +23,9 @@ ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount 
 - **Proactive tutoring** — when the observer flags an error you have moved past, a stall, finished work, or (in Active mode) a natural check-in, the tutor speaks first with a short cue or question — never while you or it are talking, and with a cooldown
 - **Tasks on paper** — the tutor can `assign_task`; the task is pinned on the Tutor Board and the observer checks your paper against it until `finish_task` records an honest outcome (independent, assisted, abandoned)
 - **Tutor Board** — a floating panel that renders Markdown, LaTeX math (KaTeX) and Mermaid diagrams for things that are hard to follow by ear
-- **Mac actions** — open a URL, search YouTube, open an installed app, or write a Word (`.docx`), Markdown or RTF document into `~/Downloads/ScreenTutor` and open it
+- **Screen annotations** — the tutor says what to mark ("circle the η in the update rule, label it step size") and boxes, circles, underlines, arrows, a spotlight or short notes draw themselves over any app in about 1.5 s, in the order the tutor talks about them. Labels are placed so they never cover the marked text or each other
+- **Lesson videos** — the tutor finds YouTube videos and plays them in ScreenTutor's own player window, then pauses to ask a prediction, replays or loops a short section, slows it down, or jumps to a chapter; it can also annotate a paused frame
+- **Mac actions** — open a URL, open an installed app, or write a Word (`.docx`), Markdown or RTF document into `~/Downloads/ScreenTutor` and open it
 - **Screen awareness** — on request, the tutor lists visible windows, captures only the relevant one, and can move a rendered teaching cursor to a precise point
 - Desk context is attached automatically to each spoken turn as a short text note; the tutor calls `look_at_desk` when it needs the actual image
 - The microphone stays open while the desk observer is watching (silence usually means you are writing); otherwise it auto-pauses after 20 seconds
@@ -44,6 +46,38 @@ Computer control is off by default. It acts only when you ask or agree, never ty
 3. When the page changed and the image has been still for 1.5 seconds (at most every 4 seconds), the frame goes to the OpenRouter vision model with the active task, the previous observation, and the last spoken exchange. It returns JSON: summary, faithful LaTeX transcription, progress, an optional located issue, and an optional interjection with a suggested pedagogical move.
 4. If the interjection kind is allowed by the chosen proactivity and the cooldown has passed, ScreenTutor waits until the conversation is idle, adds a `<desk_observer>` note plus the frame to the Realtime conversation, and asks the voice tutor to respond — typically one short cue like "check the sign in your second line".
 5. When you speak, the newest observer note is attached after your turn so the tutor knows what is on the paper without an extra round trip.
+
+## How screen annotations work
+
+1. `annotate_screen` captures the display under the pointer, hiding ScreenTutor's own windows except the lesson player.
+2. On the Mac, Vision text recognition finds every text line together with word-level boxes. When ScreenTutor is trusted for Accessibility (and not sandboxed), it also reads the frontmost app's controls from the accessibility tree.
+3. The model gets a 1024 px screenshot with reference marks drawn on it, plus a numbered list of elements (`t12 [x0,y0,x1,y1] "text"`):
+   - a faint 0–1000 grid labelled along the edges
+   - small id tags on the elements
+
+   It returns which element (and which substring) to mark. Free coordinates are only for figures or video frames. The default model is `deepseek/deepseek-v4.1-flash` via OpenRouter, with reasoning off and zero data retention.
+4. Element ids resolve to the exact on-screen word boxes. Prefers whole words, so "eta" never lands inside "theta".
+5. Click-through panels, one per display, draw the marks with animated strokes and place labels so they don't collide.
+
+The voice tutor waits up to 3 s for the result, so it can say what was drawn; slower plans keep drawing in the background.
+
+Measured on synthetic slides (Nov 2026):
+- **Text targets:** the circle lands on the requested word in about 1.5 s.
+- **Figure target** ("circle the minimum of the loss curve"), median error over 3 runs:
+
+  | Model | Plain | Grid | Grid + tags |
+  |---|---|---|---|
+  | DeepSeek V4.1 Flash | 17 px | 9 px | 2 px |
+  | Gemini 3.1 Flash Lite | 31 px | 30 px | 74 px |
+  | Gemma 4 26B | 101 px | 65 px | 78 px |
+
+  The grid helps every model, so it stays on.
+
+## How the lesson player works
+
+- **Finding videos:** `find_videos` reads YouTube's public search page (no API key): ids, titles, channels and lengths. `play_video` also reads the video's chapter timestamps from its description. YouTube now blocks transcripts without a token, so chapters and titles are what the tutor uses to jump to a concept.
+- **Playback:** the video plays through the official IFrame Player API inside a WKWebView in a floating window. `control_video` covers play, pause, seek, back/forward, speed, loop A–B, status and close, and reports position, duration and loop state back to the tutor.
+- Videos that forbid embedding return an error, and the tutor picks another.
 
 ## How computer control works
 

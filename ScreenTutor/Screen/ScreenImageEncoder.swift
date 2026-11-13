@@ -20,6 +20,13 @@ struct ScreenImageEncoder {
         return nil
     }
 
+    /// One downscaled JPEG, for latency-bound model calls where a smaller
+    /// image matters more than the byte budget.
+    func jpegData(from source: CGImage, maximumDimension: Int, quality: CGFloat = 0.8) -> Data? {
+        guard let image = resized(source, maximumDimension: maximumDimension) else { return nil }
+        return encode(image, quality: quality)
+    }
+
     private func resized(_ source: CGImage, maximumDimension: Int) -> CGImage? {
         let longestSide = max(source.width, source.height)
         guard longestSide > maximumDimension else { return source }

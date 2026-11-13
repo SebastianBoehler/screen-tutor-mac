@@ -23,6 +23,10 @@ final class AppModel {
     let desktopActions = DesktopActions()
     let inputController = InputController()
     let computerAgent: ComputerAgent
+    @ObservationIgnored let overlay = OverlayController()
+    @ObservationIgnored let lessonPlayer = LessonPlayerController()
+    @ObservationIgnored let annotationAgent = AnnotationAgent(capture: DisplayCaptureService())
+    @ObservationIgnored let youtube = YouTubeCatalog()
     @ObservationIgnored var visualBoard: VisualBoardController?
     @ObservationIgnored var lastInjectedDeskObservationID: UUID?
     let realtimeClient: RealtimeClient
