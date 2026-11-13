@@ -35,6 +35,10 @@ ScreenTutor is a native, open-source menu-bar app for studying at a desk. Mount 
 
 Computer control is off by default. It acts only when you ask or agree, never types passwords or payment details, signs in, buys, sends messages, accepts terms, changes system settings or deletes files, and it stops immediately when you move the mouse, say "stop", or press **Stop computer task** in the menu.
 
+## Research notes
+
+- [Landscape, learning science, and what to build next](docs/research/2026-11-13-landscape-and-learning-science.md): competitor table, 2025–26 AI-tutoring trials, evidence-based teaching principles mapped to ScreenTutor features, and a prioritized roadmap.
+
 ## Study room (group mode)
 
 `room/` adds a shared video study room with no media server and no SDKs, and only an OpenAI API key is required. Learners join from a browser with their mic and desk camera, video goes directly between browsers, and a small Bun server mixes everyone's audio into one raw OpenAI Realtime WebSocket. The tutor knows who spoke, answers when addressed, watches every desk with the same change gate, and keeps a shared board (Markdown, math, Mermaid), tasks, and desk status in sync for everyone. Open it from the menu bar with **Study room with others…**. See [room/README.md](room/README.md).
