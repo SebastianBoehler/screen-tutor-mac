@@ -1,6 +1,6 @@
 # Contributing to ScreenTutor
 
-Thanks for helping make screen-aware tutoring more useful, private, and accessible.
+Thanks for helping make course-grounded tutoring more useful, private, and accessible.
 
 ## Before you start
 
@@ -9,7 +9,28 @@ Thanks for helping make screen-aware tutoring more useful, private, and accessib
 - Open an issue before a large architectural change so the direction can be discussed first.
 - Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
-## Local setup
+## Web client setup
+
+The current product direction is the canvas-first client in `web/`. Use Bun 1.3 or later:
+
+```bash
+cd web
+bun install --frozen-lockfile
+bun run dev
+```
+
+Before a PR, run `bun run format:check`, `bun run test`, `bun run build` and
+`bun run test:e2e` (install Chromium with `bunx playwright install chromium` first).
+Provider-backed voice checks require your own key and real hardware. Never add private course
+files or real credentials to test fixtures. Use a controlled provider only inside tests and
+report clearly when a test does not call a live provider.
+
+Keep new files around 300 lines or fewer. Reuse the tokens and controls in `web/src/styles/`.
+Keep learning state independent of viewport layout and preserve source provenance and assistance
+history. Keep illustrative examples explicitly labeled, ungraded and separate from course sources.
+Do not add silent provider/model substitutions.
+
+## Native prototype setup
 
 You need macOS 15 or newer, Xcode 16.4 or newer, and an OpenAI API key with Realtime access. XcodeGen is only needed when source files move or the project configuration changes.
 
@@ -31,7 +52,7 @@ Replace `YOUR_TEAM_ID` in `Config/LocalSigning.xcconfig` with the Team ID shown 
 5. Add or update focused tests when behavior changes.
 6. Use a conventional commit such as `fix: handle interrupted playback` or `feat(ui): improve highlight contrast`.
 
-ScreenTutor deliberately highlights without clicking or typing. Changes that add computer control, capture pixels without a model-selected user turn, or change credential handling need prior design discussion and a clear safety model.
+The web client has no computer-control bridge. Keep OS tools, remote hosting and credential handling explicit and separately reviewed. The native prototype contains opt-in computer-control experiments.
 
 ## Validate
 
