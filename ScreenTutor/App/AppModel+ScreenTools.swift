@@ -70,6 +70,14 @@ extension AppModel {
 
         beginToolActivity(name: item.name, turn: turn)
 
+        if try await handleWorkspaceToolCall(item, userItemID: userItemID, turn: turn,
+                                             generation: generation, connectionID: connectionID) { return }
+
+        if try await handleNativeToolCall(item, userItemID: userItemID, turn: turn,
+                                          generation: generation, connectionID: connectionID) {
+            return
+        }
+
         if item.name == "point_at_screen_position" {
             try await handleTeachingPointerCall(
                 item,

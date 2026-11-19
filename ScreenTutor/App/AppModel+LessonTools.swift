@@ -67,27 +67,37 @@ extension AppModel {
     /// Waits briefly so the tutor hears what was drawn; slower plans finish in
     /// the background so the tutor never goes silent for long.
     private func annotateScreen(instruction: String, seconds: Double) async throws -> ToolResult {
+        try requireTeachingHintsAllowed()
         guard let apiKey = settings.loadOpenRouterKey() else { throw OpenRouterError.missingKey }
         let model = settings.overlayModel
         let keep = lessonPlayer.isOpen ? [lessonPlayer.windowNumber].compactMap { $0 } : []
         let agent = annotationAgent
+        let revision = overlay.revision
         let task = Task { @MainActor in
             try await agent.annotate(instruction: instruction, apiKey: apiKey, model: model, keepingWindowNumbers: keep)
         }
-        let show: @MainActor (AnnotationResult) -> Void = { [weak self] result in
+        let show: @MainActor (AnnotationResult) -> Bool = { [weak self] result in
+            guard let self, self.overlay.revision == revision else { return false }
             var scene = result.scene
             scene.duration = seconds
-            if !scene.marks.isEmpty { self?.overlay.show(scene) }
+            if !scene.marks.isEmpty { return self.overlay.show(scene, ifRevisionMatches: revision) }
+            return true
         }
 
         guard let outcome = await Self.firstOutcome(of: task, within: 3) else {
             Task { @MainActor in
-                if let result = try? await task.value { show(result) }
+                do { _ = show(try await task.value) }
+                catch {
+                    guard self.overlay.revision == revision else { return }
+                    self.errorMessage = "Screen annotation failed: \(error.localizedDescription)"
+                }
             }
             return .ok(["status": "drawing", "note": "The marks appear in a moment; keep talking about them."])
         }
         let result = try outcome.get()
-        show(result)
+        guard show(result) else {
+            return .failure(code: "annotation_superseded", message: "The teaching context changed before these marks were ready.")
+        }
         var fields = [
             "status": result.scene.marks.isEmpty ? "nothing drawn" : "drawn",
             "marks": result.scene.marks.map { $0.label.map { "\($0)" } ?? $0.kind.rawValue }.joined(separator: "; "),

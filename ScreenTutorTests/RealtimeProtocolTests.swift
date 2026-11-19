@@ -40,6 +40,8 @@ final class RealtimeProtocolTests: XCTestCase {
                 "look_at_desk", "get_desk_notes", "assign_task", "finish_task", "show_visual",
                 "start_topic", "record_evidence", "show_progress", "review_due",
                 "list_windows", "capture_window", "point_at_screen_position",
+                "inspect_app", "activate_control", "highlight_control", "set_learning_goal",
+                "search_course_materials", "present_flashcard", "organize_workspace", "record_learning_insight",
                 "annotate_screen", "clear_annotations", "find_videos", "play_video", "control_video",
                 "open_url", "open_application", "create_document",
                 "click_in_window", "type_text", "press_keys", "scroll_window",
@@ -69,7 +71,7 @@ final class RealtimeProtocolTests: XCTestCase {
             tools.first { $0["name"] as? String == "point_at_screen_position" }
         )
         XCTAssertTrue(
-            (pointerTool["description"] as? String)?.contains("Always use this") == true
+            (pointerTool["description"] as? String)?.contains("prefer highlight_control") == true
         )
         let pointerParameters = try XCTUnwrap(pointerTool["parameters"] as? [String: Any])
         XCTAssertEqual(

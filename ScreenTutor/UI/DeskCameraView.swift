@@ -4,6 +4,7 @@ import SwiftUI
 /// controls, the active task, and the observer's running notes.
 struct DeskCameraView: View {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     private var camera: DeskCameraService { model.deskCamera }
     private var observer: DeskObserver { model.deskObserver }
@@ -140,7 +141,7 @@ struct DeskCameraView: View {
                 Spacer()
                 Button("Look now") { Task { await observer.analyzeNow() } }
                     .disabled(!camera.isRunning || observer.isAnalyzing || !settings.hasOpenRouterKey)
-                Button("Board") { model.visualBoard?.toggle() }
+                Button("Workspace") { openWindow(id: "learning-workspace") }
             }
             if !settings.hasOpenRouterKey {
                 Label("Add an OpenRouter key in Settings to enable the observer.", systemImage: "key")

@@ -19,6 +19,8 @@ struct OverlayMark: Identifiable, Sendable, Equatable {
     var color: OverlayColor
     /// Seconds after the scene starts, so marks appear in speaking order.
     var delay: Double
+    /// A real native target, resolved locally while this scene remains visible.
+    var anchor: NativeOverlayAnchor?
 
     init(
         id: UUID = UUID(),
@@ -26,7 +28,8 @@ struct OverlayMark: Identifiable, Sendable, Equatable {
         rect: CGRect,
         label: String? = nil,
         color: OverlayColor = .yellow,
-        delay: Double = 0
+        delay: Double = 0,
+        anchor: NativeOverlayAnchor? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -34,6 +37,7 @@ struct OverlayMark: Identifiable, Sendable, Equatable {
         self.label = label
         self.color = color
         self.delay = delay
+        self.anchor = anchor
     }
 }
 

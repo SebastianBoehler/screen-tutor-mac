@@ -38,6 +38,10 @@ extension AppModel {
         let connectionID = realtimeConnectionID
         realtimeConnectionID = nil
         idleTimer.cancel()
+        overlay.clear()
+        nativeApps.invalidate()
+        computerAgent.stop()
+        if !retainingConversationForReconnect { learningGoal = nil }
         if phase != .idle { phase = .stopping }
 
         await settleScreenToolTask(cancelling: true)

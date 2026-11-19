@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class RealtimeErrorRecoveryTests: XCTestCase {
     func testCorrelatedResponseCreateErrorReturnsCurrentTurnToListening() async {
-        let model = AppModel()
+        let model = makeTestAppModel()
         let turn = model.turnTracker.advance()
         model.phase = .thinking
         model.pendingResponseCreates["evt_create"] = turn
@@ -25,7 +25,7 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
     }
 
     func testCorrelatedSafeCancelErrorIsIgnored() async {
-        let model = AppModel()
+        let model = makeTestAppModel()
         model.pendingResponseCancels["resp_done"] = "evt_cancel"
 
         await model.handleRealtimeError(
@@ -43,7 +43,7 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
     }
 
     func testCompletedResponseKeepsCorrelationForLateSafeCancelError() async throws {
-        let model = AppModel()
+        let model = makeTestAppModel()
         let connectionID = RealtimeConnectionID()
         let turn = model.turnTracker.advance()
         model.realtimeConnectionID = connectionID
@@ -79,7 +79,7 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
     }
 
     func testWebRTCPlaybackStaysSpeakingUntilOutputBufferDrains() async throws {
-        let model = AppModel()
+        let model = makeTestAppModel()
         let connectionID = RealtimeConnectionID()
         let turn = model.turnTracker.advance()
         model.realtimeConnectionID = connectionID
@@ -116,7 +116,7 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
     }
 
     func testSessionSetupErrorReturnsAppToRetryableIdleState() async {
-        let model = AppModel()
+        let model = makeTestAppModel()
         model.phase = .connecting
 
         await model.handleRealtimeError(
@@ -140,7 +140,7 @@ final class RealtimeErrorRecoveryTests: XCTestCase {
         let history = ConversationHistoryModel(
             store: ConversationLogStore(rootDirectoryURL: directory)
         )
-        let model = AppModel(history: history)
+        let model = makeTestAppModel(history: history)
         model.beginConversationHistoryIfNeeded()
         let conversationID = try XCTUnwrap(model.historyIdentity.current)
         let connectionID = RealtimeConnectionID()

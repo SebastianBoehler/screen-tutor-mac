@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class MicrophoneMuteTests: XCTestCase {
     func testAssistantPlaybackKeepsTutorMicrophoneLiveForBargeIn() {
-        let model = AppModel()
+        let model = makeTestAppModel()
         model.realtimeConnectionID = RealtimeConnectionID()
         model.phase = .speaking
         model.isMicrophoneMuted = false
@@ -17,7 +17,7 @@ final class MicrophoneMuteTests: XCTestCase {
     func testMuteKeepsConnectionResponseAndSpeakingPhaseAlive() async {
         let transport = MicrophoneRecordingTransport()
         let client = RealtimeClient(makeTransport: { transport })
-        let model = AppModel(realtimeClient: client)
+        let model = makeTestAppModel(realtimeClient: client)
         let connectionID = RealtimeConnectionID()
         try? await client.connect(
             connectionID: connectionID,
@@ -45,7 +45,7 @@ final class MicrophoneMuteTests: XCTestCase {
     func testUnmuteRestoresInputWithoutReplacingConversationState() async {
         let transport = MicrophoneRecordingTransport()
         let client = RealtimeClient(makeTransport: { transport })
-        let model = AppModel(realtimeClient: client)
+        let model = makeTestAppModel(realtimeClient: client)
         let connectionID = RealtimeConnectionID()
         try? await client.connect(
             connectionID: connectionID,

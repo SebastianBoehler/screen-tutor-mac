@@ -6,6 +6,17 @@ struct ScreenTutorApp: App {
     private var appDelegate
 
     var body: some Scene {
+        Window("ScreenTutor", id: "learning-workspace") {
+            LearningShell(model: appDelegate.model)
+        }
+        .defaultSize(width: 1_160, height: 800)
+        .windowToolbarStyle(.unifiedCompact)
+
+        Window("Your learning", id: "study-dashboard") {
+            StudyDashboardView(model: appDelegate.model)
+        }
+        .defaultSize(width: 780, height: 760)
+
         MenuBarExtra {
             MenuBarView(model: appDelegate.model)
         } label: {

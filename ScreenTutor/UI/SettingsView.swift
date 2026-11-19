@@ -34,7 +34,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Desk observer (OpenRouter)") {
+            Section("OpenRouter — screen, desk and computer") {
                 SecureField("OpenRouter API key", text: $openRouterKey)
                     .textContentType(.password)
                 HStack {
@@ -124,7 +124,6 @@ struct SettingsView: View {
                     Button("Default") {
                         model.setComputerModel(AppSettingsModel.defaultComputerModel)
                         computerModelDraft = model.computerModel
-            overlayModelDraft = model.overlayModel
                     }
                 }
                 Text(
@@ -345,6 +344,7 @@ struct SettingsView: View {
             tutorInstructionsDraft = model.tutorInstructions
             observerModelDraft = model.observerModel
             computerModelDraft = model.computerModel
+            overlayModelDraft = model.overlayModel
             studyRoomURLDraft = model.studyRoomURL
         }
     }

@@ -26,13 +26,6 @@ extension AppModel {
             }
             guard generation == sessionGeneration else { return }
             settings.refresh()
-            guard captureService.hasPermission || captureService.requestPermission() else {
-                throw ScreenCaptureError.permissionDenied
-            }
-            settings.refresh()
-            guard settings.screenPermissionGranted else {
-                throw AppModelError.screenPermissionRequiresRestart
-            }
             guard generation == sessionGeneration else { return }
 
             phase = .connecting

@@ -79,7 +79,7 @@ final class ConversationHistoryLifecycleTests: XCTestCase {
     private func makeModel() -> AppModel {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScreenTutorHistoryLifecycleTests-\(UUID().uuidString)")
-        return AppModel(
+        return makeTestAppModel(
             history: ConversationHistoryModel(
                 store: ConversationLogStore(rootDirectoryURL: directory)
             )

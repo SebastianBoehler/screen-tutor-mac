@@ -45,13 +45,15 @@ extension AppModel {
                     "level": "\(change.from) → \(change.to)/5 (\(LearnerRules.levelName(change.to)))",
                     "next_review": LearnerReport.relative(change.dueAt, now: Date())
                 ]
+                fields["learning_context"] = try tutorSupportContext.json()
+                if tutorSupportContext.nextMove == .transfer { overlay.clear() }
                 if change.to == change.from, kind == .prompted, change.to >= 3 {
                     fields["note"] = "Prompted checks cannot raise past 3; check again later from memory."
                 }
                 result = .ok(fields)
             case "show_progress":
                 let markdown = learner.progressMarkdown(topic: arguments.optionalString("topic"))
-                visualBoard?.show(title: "Progress", markdown: markdown)
+                try workspace.presentArtifact(id: "learning-progress", title: "Progress", markdown: markdown, section: "Learning evidence")
                 result = .ok(["board": "shown", "progress": markdown])
             case "review_due":
                 let due = learner.warmUp()

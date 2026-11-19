@@ -23,13 +23,17 @@ final class AppModel {
     let desktopActions = DesktopActions()
     let inputController = InputController()
     let computerAgent: ComputerAgent
+    let nativeApps: NativeAppService
+    var learningGoal: LearningGoal?
+    let courses: CourseLibrary
+    let workspace: LearningWorkspaceStore
+    var sourceToOpen: CourseSourceLocation?
     @ObservationIgnored let overlay = OverlayController()
     @ObservationIgnored let lessonPlayer = LessonPlayerController()
     @ObservationIgnored let annotationAgent = AnnotationAgent(capture: DisplayCaptureService())
     @ObservationIgnored let youtube = YouTubeCatalog()
     @ObservationIgnored var lessonChapters: [VideoChapter] = []
-    let learner = LearnerStore()
-    @ObservationIgnored var visualBoard: VisualBoardController?
+    let learner: LearnerStore
     @ObservationIgnored var lastInjectedDeskObservationID: UUID?
     let realtimeClient: RealtimeClient
     let idleTimer = ListeningIdleTimer()
@@ -61,14 +65,30 @@ final class AppModel {
 
     init(
         history: ConversationHistoryModel? = nil,
-        realtimeClient: RealtimeClient? = nil
+        realtimeClient: RealtimeClient? = nil,
+        nativeApps: NativeAppService? = nil,
+        learner: LearnerStore? = nil,
+        settings: AppSettingsModel? = nil,
+        courses: CourseLibrary? = nil,
+        workspace: LearningWorkspaceStore? = nil
     ) {
         let captureService = ActiveWindowCaptureService()
         self.captureService = captureService
         screenTools = ScreenToolCoordinator(captureService: captureService)
         self.history = history ?? ConversationHistoryModel()
         self.realtimeClient = realtimeClient ?? RealtimeClient()
-        let settings = AppSettingsModel(
+        let nativeApps = nativeApps ?? NativeAppService()
+        self.nativeApps = nativeApps
+        self.learner = learner ?? LearnerStore()
+        let courses = courses ?? CourseLibrary()
+        self.courses = courses
+        let workspace = workspace ?? LearningWorkspaceStore()
+        self.workspace = workspace
+        do { try workspace.selectCourse(courses.selectedCourseID) }
+        catch { workspace.errorMessage = error.localizedDescription }
+        learningGoal = workspace.learningGoal
+        overlay.resolveAnchor = { [weak nativeApps] in nativeApps?.resolve($0) }
+        let settings = settings ?? AppSettingsModel(
             apiKeyStore: APIKeyStore(),
             captureService: captureService,
             launchAtLoginService: LaunchAtLoginService()
@@ -100,7 +120,9 @@ final class AppModel {
             self?.lessonPlayerAutoPaused(at: seconds)
         }
         deskObserver.onTaskChanged = { [weak self] task in
-            self?.visualBoard?.setTask(task)
+            guard let self, let task else { return }
+            self.showLearningVisual(id: "task-\(task.id.uuidString)", title: task.title,
+                                    markdown: "**\(task.taskKind.boardLabel)**\n\n\(task.prompt)", section: "Your turn")
         }
     }
 

@@ -19,14 +19,19 @@ targets:
     type: application
     platform: macOS
     sources:
-      - ScreenTutor
+      - path: ScreenTutor
+        excludes:
+          - Resources
+      - path: ScreenTutor/Resources/Learning
+        type: folder
+        buildPhase: resources
     configFiles:
       Debug: Config/Signing.xcconfig
       Release: Config/Signing.xcconfig
     entitlements:
       path: ScreenTutor/ScreenTutor.entitlements
       properties:
-        com.apple.security.app-sandbox: true
+        com.apple.security.app-sandbox: false
         com.apple.security.device.microphone: true
         com.apple.security.device.camera: true
         com.apple.security.network.client: true
@@ -40,7 +45,7 @@ targets:
         PRODUCT_NAME: ScreenTutor
         GENERATE_INFOPLIST_FILE: false
         INFOPLIST_FILE: ScreenTutor/Info.plist
-        ENABLE_APP_SANDBOX: true
+        ENABLE_APP_SANDBOX: false
         CODE_SIGN_ENTITLEMENTS: ScreenTutor/ScreenTutor.entitlements
         SWIFT_OBJC_BRIDGING_HEADER: ScreenTutor/ScreenTutor-Bridging-Header.h
     scheme:
@@ -50,10 +55,24 @@ targets:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - ScreenTutorTests
+      - path: ScreenTutorTests
+        excludes:
+          - Fixtures
     dependencies:
       - target: ScreenTutor
+      - target: NativeStudyFixture
+        link: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sebastianboehler.ScreenTutorTests
         GENERATE_INFOPLIST_FILE: true
+  NativeStudyFixture:
+    type: application
+    platform: macOS
+    sources:
+      - ScreenTutorTests/Fixtures
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sebastianboehler.ScreenTutor.NativeStudyFixture
+        GENERATE_INFOPLIST_FILE: true
+        ENABLE_APP_SANDBOX: false

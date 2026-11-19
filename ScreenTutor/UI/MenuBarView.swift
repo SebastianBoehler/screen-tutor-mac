@@ -82,10 +82,11 @@ struct MenuBarView: View {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                 }
                 .controlSize(.small)
-                Button("Board") { model.visualBoard?.toggle() }
+                Button("Workspace") { openWindow(id: "learning-workspace") }
                     .controlSize(.small)
                 Button("Progress") {
-                    model.visualBoard?.show(title: "Progress", markdown: model.learner.progressMarkdown())
+                    model.showLearningVisual(id: "learning-progress", title: "Progress", markdown: model.learner.progressMarkdown(), section: "Learning evidence")
+                    openWindow(id: "learning-workspace")
                 }
                 .controlSize(.small)
                 .help("Skill map, review dates, and this session's scoreboards")

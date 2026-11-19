@@ -10,7 +10,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         hudController = HUDPanelController(model: model)
-        model.visualBoard = VisualBoardController()
         let teachingPointerController = TeachingPointerController()
         self.teachingPointerController = teachingPointerController
         model.configureTeachingPointer(
@@ -46,6 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKeyController?.unregister()
         model.deskObserver.stopWatching()
         model.deskCamera.stop()
+        model.overlay.clear()
+        model.nativeApps.invalidate()
+        model.computerAgent.stop()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

@@ -19,7 +19,7 @@ extension AppModel {
                         language: settings.tutorLanguage,
                         tutorInstructions: settings.tutorInstructions,
                         reasoningEffort: settings.reasoningEffort,
-                        learnerContext: learner.sessionContext()
+                        learnerContext: studySessionContext
                     ),
                     connectionID: connectionID
                 )
@@ -147,6 +147,7 @@ extension AppModel {
         trackUserHistoryTurn(itemID: itemID, turn: turn)
         phase = .thinking
         try await attachDeskContext(after: itemID, connectionID: connectionID)
+        try await realtimeClient.send(DeskContextItemEvent(text: "<study_context>Automated course and learning context, not learner speech.\n\(studySessionContext)\n</study_context>"), connectionID: connectionID)
         guard isCurrentTurn(turn, generation: generation, connectionID: connectionID) else {
             return
         }

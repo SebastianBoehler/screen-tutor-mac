@@ -64,6 +64,8 @@ extension AppModel {
         }
 
         latestUserTranscript = text
+        do { try workspace.recordMessage(id: itemID, role: "user", text: text) }
+        catch { workspace.errorMessage = error.localizedDescription }
         history.record(
             .message(
                 conversationID: turn.conversationID,
@@ -130,7 +132,7 @@ extension AppModel {
             let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
             !name.isEmpty
         else { return }
-        if name == "list_windows" || name == "capture_window" || name == "look_at_desk" {
+        if name == "list_windows" || name == "capture_window" || name == "look_at_desk" || name == "inspect_app" {
             playScreenInspectionCue()
         }
         updateLiveToolActivity(name: name, status: .started, turn: turn)
@@ -162,6 +164,8 @@ extension AppModel {
             pending.conversationID == historyIdentity.current
         else { return }
 
+        do { try workspace.recordMessage(id: pending.itemID, role: "assistant", text: pending.text) }
+        catch { workspace.errorMessage = error.localizedDescription }
         history.record(
             .message(
                 conversationID: pending.conversationID,

@@ -35,6 +35,7 @@ extension AppModel {
                 ])
             case "assign_task":
                 let kind = arguments.optionalString("kind").flatMap(TaskKind.init(rawValue:)) ?? .practice
+                overlay.clear()
                 let task = deskObserver.assignTask(
                     title: try arguments.string("title"),
                     prompt: try arguments.string("task"),
@@ -56,10 +57,14 @@ extension AppModel {
                         : "Help with the least support that unlocks progress."
                 ])
             case "finish_task":
+                overlay.clear()
                 let outcome = try arguments.string("outcome")
+                if outcome == "assisted", workspace.mode == .exam { try workspace.setMode(.practice) }
                 let note = arguments.optionalString("note") ?? ""
                 var fields = ["status": "closed"]
                 if let task = deskObserver.finishTask(outcome: outcome, note: note) {
+                    try workspace.presentArtifact(id: "task-\(task.id.uuidString)", title: task.title,
+                        markdown: task.prompt + "\n\n**\(outcome.capitalized)** — \(note)", section: "Checked work")
                     let change = learner.recordTaskOutcome(
                         kind: task.taskKind, outcome: outcome, topic: task.topic, subskill: task.subskill, note: note
                     )
@@ -70,12 +75,12 @@ extension AppModel {
                 }
                 result = .ok(fields)
             case "show_visual":
-                guard let visualBoard else { throw DeskToolError.boardUnavailable }
-                visualBoard.show(
-                    title: try arguments.string("title"),
-                    markdown: try arguments.string("markdown")
-                )
-                result = .ok(["board": "shown"])
+                try requireTeachingHintsAllowed()
+                let title = try arguments.string("title")
+                let id = arguments.optionalString("artifact_id") ?? "visual-\(LearnerRules.slug(title))"
+                try workspace.presentArtifact(id: id, title: title, markdown: arguments.string("markdown"),
+                    section: arguments.optionalString("section") ?? "Concepts")
+                result = .ok(["artifact_id": id, "status": "shown_inline_and_on_canvas"])
             case "open_url":
                 let url = try desktopActions.openURL(try arguments.string("url"))
                 result = .ok(["opened": url.absoluteString])
@@ -292,12 +297,10 @@ struct ToolArguments {
 
 enum DeskToolError: LocalizedError {
     case missingArgument(String)
-    case boardUnavailable
 
     var errorDescription: String? {
         switch self {
         case .missingArgument(let key): "Missing required argument “\(key)”."
-        case .boardUnavailable: "The Tutor Board is not available."
         }
     }
 }

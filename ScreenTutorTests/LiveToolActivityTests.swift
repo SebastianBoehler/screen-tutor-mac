@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class LiveToolActivityTests: XCTestCase {
     func testCaptureToolAppearsInOverlayAndPlaysPrivacyCue() {
-        let model = AppModel()
+        let model = makeTestAppModel()
         var cueCount = 0
         model.playScreenInspectionCue = { cueCount += 1 }
 
@@ -26,7 +26,7 @@ final class LiveToolActivityTests: XCTestCase {
     }
 
     func testVisualCaptureToolsPlayCueButPointerDoesNot() {
-        let model = AppModel()
+        let model = makeTestAppModel()
         var cueCount = 0
         model.playScreenInspectionCue = { cueCount += 1 }
 
