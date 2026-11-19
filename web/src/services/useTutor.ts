@@ -97,11 +97,6 @@ export function useTutor(
       );
       if (abort.signal.aborted || current.current.selectedCourseId !== courseId)
         return 'The request was stopped.';
-      if (
-        options.presentation === 'defer' &&
-        current.current.selectedActivityId !== snapshot.selectedActivityId
-      )
-        return 'The prepared view was discarded because the learner changed the active activity.';
       update((value) => {
         const result = applyReply(value, reply, courseId, attemptId, options.presentation);
         if (reply.activity) result.activities[result.activities.length - 1].mode = context.mode;

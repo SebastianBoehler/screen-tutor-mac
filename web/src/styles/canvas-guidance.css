@@ -75,6 +75,14 @@
 .canvas-toolbar {
   flex-wrap: wrap;
 }
+.main-content:has(.is-canvas-view) .canvas-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 8px 20px;
+  background: var(--surface);
+}
 @keyframes tutor-pointer-arrive {
   from {
     opacity: 0;

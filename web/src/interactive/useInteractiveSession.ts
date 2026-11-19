@@ -19,9 +19,12 @@ export function useInteractiveSession(
   const [state, setState] = useState(() => saved ?? (spec ? initialInteractiveState(spec) : null));
   const current = useRef(state);
   const dirty = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbacks = useRef({ onSave, onExplore });
   callbacks.current = { onSave, onExplore };
   const flush = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
     if (dirty.current && current.current) {
       dirty.current = false;
       callbacks.current.onSave(current.current);
@@ -32,14 +35,11 @@ export function useInteractiveSession(
   }, [active]);
   useEffect(() => {
     if (current.current) setLiveInteractive(id, current.current);
-    // Rendering runs locally at interaction speed; durable checkpoints are bounded to once/second.
-    const timer = setInterval(flush, 1000);
     const hide = () => {
       if (document.hidden) flush();
     };
     document.addEventListener('visibilitychange', hide);
     return () => {
-      clearInterval(timer);
       flush();
       clearLiveInteractive(id);
       document.removeEventListener('visibilitychange', hide);
@@ -65,6 +65,7 @@ export function useInteractiveSession(
     if (!current.current?.explored) callbacks.current.onExplore();
     current.current = explored;
     dirty.current = true;
+    if (!timer.current) timer.current = setTimeout(flush, 1000);
     setLiveInteractive(id, explored);
     setState(explored);
   };

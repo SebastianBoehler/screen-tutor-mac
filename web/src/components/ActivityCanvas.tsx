@@ -19,6 +19,7 @@ interface Props {
   materials: Material[];
   draft: string;
   busy: boolean;
+  requestBusy: boolean;
   voiceConnected: boolean;
   active: boolean;
   exploration?: InteractiveState;
@@ -142,7 +143,7 @@ export function ActivityCanvas(props: Props) {
           {(!props.voiceConnected || activity.choices.length > 0) && (
             <button
               className="primary"
-              disabled={busy || revealed || !draft.trim()}
+              disabled={props.requestBusy || revealed || !draft.trim()}
               onClick={() => {
                 interactive.flush();
                 props.onAttempt();
@@ -166,7 +167,12 @@ export function ActivityCanvas(props: Props) {
             </div>
           )}
         </div>
-        <ActivityFeedback activity={activity} events={events} busy={busy} onNext={props.onNext} />
+        <ActivityFeedback
+          activity={activity}
+          events={events}
+          busy={props.requestBusy}
+          onNext={props.onNext}
+        />
       </section>
       {activity.sourceIds.length > 0 && (
         <footer className="sources">

@@ -71,7 +71,7 @@ test('sliders update the curve, exploration is assisted, and values survive relo
     const composer = document.querySelector('.composer-dock')!.getBoundingClientRect();
     return {
       border: getComputedStyle(card).borderTopWidth,
-      sameTop: Math.abs(panel.top - cardBox.top) < 2,
+      belowToolbar: cardBox.top >= panel.top && cardBox.top - panel.top < 100,
       sameWidth: Math.abs(panel.width - cardBox.width) < 20,
       contentWidth: card.querySelector('.artifact-content')!.getBoundingClientRect().width,
       overlaps: composer.top < panel.bottom && composer.bottom <= panel.bottom + 1,
@@ -79,7 +79,7 @@ test('sliders update the curve, exploration is assisted, and values survive relo
   });
   expect(canvasLayout).toMatchObject({
     border: '0px',
-    sameTop: true,
+    belowToolbar: true,
     sameWidth: true,
     overlaps: true,
   });

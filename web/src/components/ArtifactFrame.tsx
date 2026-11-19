@@ -9,6 +9,7 @@ export function ArtifactFrame({
   active = true,
   activityId,
   showInVoice = false,
+  collapseOnLeave = false,
 }: {
   title: string;
   preview: ReactNode;
@@ -17,14 +18,18 @@ export function ArtifactFrame({
   active?: boolean;
   activityId?: string;
   showInVoice?: boolean;
+  collapseOnLeave?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [canvasView, setCanvasView] = useState(false);
   const frameRef = useRef<HTMLElement>(null);
   const id = useId();
   useEffect(() => {
-    if (!active) setCanvasView(false);
-  }, [active]);
+    if (!active) {
+      setCanvasView(false);
+      if (collapseOnLeave) setExpanded(false);
+    }
+  }, [active, collapseOnLeave]);
   useEffect(() => {
     if (active && showInVoice) setExpanded(true);
   }, [active, showInVoice]);

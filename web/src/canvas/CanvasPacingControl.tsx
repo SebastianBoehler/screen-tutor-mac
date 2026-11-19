@@ -4,10 +4,12 @@ export function CanvasPacingControl({
   pacing,
   preparing,
   onStop,
+  voiceConnected,
 }: {
   pacing: ReturnType<typeof useCanvasPacing>;
   preparing: boolean;
   onStop(): void;
+  voiceConnected: boolean;
 }) {
   return (
     <div className="canvas-pacing row wrap">
@@ -32,6 +34,9 @@ export function CanvasPacingControl({
         <button className="secondary" onClick={pacing.show}>
           Show prepared view<span className="sr-only">: {pacing.pending.title}</span>
         </button>
+      )}
+      {!voiceConnected && pacing.held && (
+        <span className="muted">New views wait until you choose “Show prepared view”.</span>
       )}
       {pacing.pending && (
         <span className="sr-only" role="status">

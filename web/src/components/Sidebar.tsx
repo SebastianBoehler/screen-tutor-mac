@@ -102,7 +102,6 @@ export function Sidebar({
             <nav className="activity-nav" aria-label="Saved activities">
               {workspace.activities
                 .filter((item) => item.courseId === workspace.selectedCourseId)
-                .slice(-12)
                 .reverse()
                 .map((item) => (
                   <button
@@ -115,6 +114,7 @@ export function Sidebar({
                     }}
                   >
                     {item.title}
+                    {workspace.canvas?.pendingActivityIds.includes(item.id) && ' · Prepared'}
                   </button>
                 ))}
             </nav>

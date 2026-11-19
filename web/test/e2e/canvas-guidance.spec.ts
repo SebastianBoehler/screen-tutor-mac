@@ -168,6 +168,54 @@ test('held views remain queued after reload and can be opened explicitly', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('background view survives selecting earlier work and remains accessible in canvas view', async ({
+  page,
+}) => {
+  await voiceHarness(page);
+  let count = 0;
+  let pending: Route | undefined;
+  await page.route('**/api/tutor', (route) => {
+    count++;
+    if (count < 3) return reply(route, count);
+    pending = route;
+  });
+  await courseSetup(page);
+  await page.getByRole('button', { name: 'Start with a question' }).click();
+  await page.getByRole('textbox', { name: 'Talk to your tutor' }).fill('Another view');
+  await page.getByRole('button', { name: 'Send to tutor' }).click();
+  const first = page.getByRole('article', { name: 'Shared view 1', exact: true });
+  const second = page.getByRole('article', { name: 'Shared view 2', exact: true });
+  await expect(second).toBeVisible();
+  await page.getByRole('button', { name: 'Talk to tutor', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Listening', exact: true })).toBeVisible();
+  await voiceTool(page, 'prepare-third', 'create_activity', { request: 'Prepare another view' });
+  await expect.poll(() => !!pending).toBe(true);
+  await first.getByRole('heading', { name: 'Shared view 1' }).click();
+  await first.getByRole('button', { name: 'Expand', exact: true }).click();
+  await first.getByRole('button', { name: 'Canvas view', exact: true }).click();
+  await reply(pending!, 3);
+  await expect(page.getByRole('button', { name: /Show prepared view/ })).toBeVisible();
+  await page.getByRole('button', { name: /Show prepared view/ }).click();
+  await expect(page.getByRole('article', { name: 'Shared view 3', exact: true })).toBeVisible();
+});
+
+test('a focused slider does not hold a prepared view indefinitely', async ({ page }) => {
+  await voiceHarness(page);
+  let count = 0;
+  await page.route('**/api/tutor', (route) => reply(route, ++count));
+  await courseSetup(page);
+  await page.getByRole('button', { name: 'Start with a question' }).click();
+  const first = page.getByRole('article', { name: 'Shared view 1', exact: true });
+  await first.getByRole('button', { name: 'Expand', exact: true }).click();
+  await page.getByRole('button', { name: 'Talk to tutor', exact: true }).click();
+  await page.clock.install();
+  await first.getByRole('slider', { name: 'Slope' }).focus();
+  await voiceTool(page, 'prepare-slider', 'create_activity', { request: 'Prepare a new view' });
+  await expect(page.getByRole('button', { name: /Show prepared view/ })).toBeVisible();
+  await page.clock.fastForward(10_000);
+  await expect(page.getByRole('article', { name: 'Shared view 2', exact: true })).toBeVisible();
+});
+
 test('the real investigation comparison respects Hold view and supports tutor pointing', async ({
   page,
 }) => {

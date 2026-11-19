@@ -153,6 +153,7 @@ export default function App() {
                     pacing={app.canvasPacing}
                     preparing={app.tutor.background}
                     onStop={app.tutor.stop}
+                    voiceConnected={app.voice.connected}
                   />
                   <div className="row wrap">
                     <button

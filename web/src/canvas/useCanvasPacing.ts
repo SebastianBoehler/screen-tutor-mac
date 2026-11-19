@@ -14,7 +14,6 @@ export function useCanvasPacing(
     quietAt: performance.now(),
     speaking: false,
     dragging: false,
-    editing: false,
   });
   useEffect(() => {
     timing.current.visibleAt = performance.now();
@@ -36,9 +35,6 @@ export function useCanvasPacing(
       timing.current.quietAt = performance.now();
     };
     const focus = () => {
-      timing.current.editing = !!document.activeElement?.closest(
-        '.main-content input, .main-content textarea, .main-content [contenteditable="true"], .composer textarea',
-      );
       timing.current.quietAt = performance.now();
     };
     document.addEventListener('pointerdown', down);
@@ -69,12 +65,21 @@ export function useCanvasPacing(
     const timer = setInterval(() => {
       const now = performance.now(),
         time = timing.current;
+      const focused = document.activeElement;
+      const editing =
+        focused instanceof HTMLElement &&
+        !!focused.closest('.main-content, .composer') &&
+        (focused.isContentEditable ||
+          focused instanceof HTMLTextAreaElement ||
+          (focused instanceof HTMLInputElement &&
+            ['text', 'search', 'email', 'url', 'tel', 'number'].includes(focused.type))) &&
+        ('value' in focused ? !!String(focused.value).trim() : !!focused.textContent?.trim());
       if (document.hidden || document.getSelection()?.isCollapsed === false) return;
       if (
         canPresent({
           held: !!current.current.canvas?.held,
           speaking: time.speaking,
-          interacting: time.dragging || time.editing,
+          interacting: time.dragging || editing,
           visibleFor: now - time.visibleAt,
           quietFor: now - time.quietAt,
         })

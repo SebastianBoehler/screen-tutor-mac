@@ -211,7 +211,7 @@
   width: calc(100% + 96px);
   margin-inline: -48px;
 }
-.main-content:has(.is-canvas-view) .canvas-toolbar,
+.main-content:has(.is-canvas-view) .canvas-toolbar > .row:not(.canvas-pacing),
 .study-document:has(.is-canvas-view) > div:not(:has(.is-canvas-view)),
 .lesson:has(.is-canvas-view) > :not(.interactive-artifact) {
   display: none;

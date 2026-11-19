@@ -39,6 +39,7 @@ export function InteractiveArtifact({
       active={active}
       activityId={activityId}
       showInVoice={voiceConnected && spec.kind === 'flashcard'}
+      collapseOnLeave={voiceConnected}
     >
       <Suspense fallback={<p role="status">Loading exploration…</p>}>
         {(spec.kind === 'flashcard' || spec.kind === 'fill-blank' || spec.kind === 'linear') && (

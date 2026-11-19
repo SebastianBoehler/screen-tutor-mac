@@ -42,6 +42,34 @@ test('voice preparation acknowledges immediately, deduplicates in-flight work an
   expect(JSON.parse(callbacks.inspect()).presentation.preparing).toBe(false);
 });
 
+test('a spoken answer waits for view preparation without losing its activity', async () => {
+  const current = { current: openCanvasExample(emptyWorkspace()) };
+  let finish!: (value: string) => void;
+  const pending = new Promise<string>((resolve) => {
+    finish = resolve;
+  });
+  const calls: boolean[] = [];
+  const callbacks = canvasVoiceEvents({
+    current,
+    hold() {},
+    error() {},
+    turn() {},
+    investigation: () => '{}',
+    send: {
+      current: async (_request, options) => {
+        calls.push(!!options?.attempt);
+        return options?.attempt ? 'Answer saved' : pending;
+      },
+    },
+  });
+  await callbacks.activity('Prepare', false);
+  const answer = callbacks.activity('My answer', true);
+  expect(calls).toEqual([false]);
+  finish('Prepared');
+  expect(await answer).toBe('Answer saved');
+  expect(calls).toEqual([false, true]);
+});
+
 test('queue control keeps the activity, restarts the real run and gives an exact visual change receipt', async () => {
   const current = { current: openCanvasExample(emptyWorkspace()) };
   const active = current.current.activities[0];

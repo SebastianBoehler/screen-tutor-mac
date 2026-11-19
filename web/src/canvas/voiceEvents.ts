@@ -46,6 +46,7 @@ export function canvasVoiceEvents({
   | 'turn'
 > {
   let preparing = false;
+  let preparation: Promise<void> | null = null;
   const selected = (id: string) => {
     const value = current.current;
     const active = value.activities.find(
@@ -143,21 +144,27 @@ export function canvasVoiceEvents({
     activity: async (request, attempt) => {
       if (isInvestigation(current.current.selectedActivityId))
         return 'Use the guided investigation stage tools for this activity.';
-      if (attempt)
+      if (attempt) {
+        const activityId = current.current.selectedActivityId;
+        if (preparation) await preparation;
+        if (current.current.selectedActivityId !== activityId)
+          return 'The active activity changed before the answer could be submitted. Ask the learner to confirm which activity they answered.';
         return send.current(request, {
           attempt,
           assisted: true,
           inputChannel: 'voice',
           presentation: 'defer',
         });
+      }
       if (preparing)
         return 'A view is already being prepared. Continue the discussion without claiming it is ready.';
       preparing = true;
-      void send
+      preparation = send
         .current(request, { inputChannel: 'voice', presentation: 'defer' })
         .catch((failure: Error) => error(failure.message))
-        .finally(() => {
+        .then(() => {
           preparing = false;
+          preparation = null;
         });
       return 'View preparation started in the background. It is not ready yet. Continue listening or discussing the current idea; inspect before describing the result. Presentation waits for a quiet pause and respects Hold view.';
     },

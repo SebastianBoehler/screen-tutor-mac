@@ -93,6 +93,10 @@ export function CanvasGuide({
     const host = anchor.current?.parentElement;
     if (!host) return;
     const position = () => {
+      if (!cue.target.isConnected || cue.target.getClientRects().length === 0) {
+        setCue(null);
+        return;
+      }
       const parent = host.getBoundingClientRect(),
         target = cue.target.getBoundingClientRect();
       setBounds({
@@ -103,6 +107,13 @@ export function CanvasGuide({
       });
     };
     const observer = new ResizeObserver(position);
+    const mutations = new MutationObserver(position);
+    mutations.observe(host, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['hidden'],
+    });
     observer.observe(host);
     observer.observe(cue.target);
     position();
@@ -121,6 +132,7 @@ export function CanvasGuide({
     );
     return () => {
       observer.disconnect();
+      mutations.disconnect();
       window.removeEventListener('resize', position);
       clearTimeout(timer);
       changed.forEach((element) => element.classList.remove('canvas-change'));
