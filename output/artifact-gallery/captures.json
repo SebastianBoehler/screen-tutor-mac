@@ -1,0 +1,99 @@
+[
+  {
+    "id": "math",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmh9awr-9b0f99ad.png"
+    },
+    "bounds": {
+      "height": 755.140625,
+      "math": 7,
+      "viewportHeight": 1080,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  },
+  {
+    "id": "choice",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmha157-cf49b3ff.png"
+    },
+    "bounds": {
+      "height": 859.71875,
+      "selected": "A\nIt increases.",
+      "viewportHeight": 1440,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  },
+  {
+    "id": "mechanism",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmha1hp-a6278e06.png"
+    },
+    "bounds": {
+      "height": 999.625,
+      "nodes": 3,
+      "viewportHeight": 1440,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  },
+  {
+    "id": "hint",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmhaw2t-df38a493.png"
+    },
+    "bounds": {
+      "height": 877.1875,
+      "hintVisible": true,
+      "viewportHeight": 1440,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  },
+  {
+    "id": "recall",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmhawqn-843ff576.png"
+    },
+    "bounds": {
+      "answerVisible": true,
+      "height": 982.375,
+      "viewportHeight": 1440,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  },
+  {
+    "id": "code",
+    "capture": {
+      "url": "http://localhost:4318/",
+      "screenshotPath": "/Users/sebastianboehler/.t3/userdata/browser-artifacts/browser-screenshot-localhost-mwmhbf1t-3db9b4a7.png"
+    },
+    "bounds": {
+      "code": true,
+      "height": 971.984375,
+      "table": true,
+      "viewportHeight": 1440,
+      "viewportWidth": 1440,
+      "width": 880,
+      "x": 377,
+      "y": 125
+    }
+  }
+]
