@@ -182,6 +182,47 @@ test('voice inspection returns current model data without generating another act
   voice.disconnect();
 });
 
+test('queues typed turns during a response and preserves the connection on recoverable errors', async () => {
+  globals('navigator', {
+    mediaDevices: {
+      getUserMedia: async () => ({ getTracks: () => [track()], getAudioTracks: () => [] }),
+    },
+  });
+  const output = events();
+  const voice = new VoiceSession(output.callbacks);
+  await voice.connect('test-key', context());
+  const channel = TestPeer.channels[0];
+  const emit = (event: unknown) => channel.onmessage!({ data: JSON.stringify(event) });
+  emit({ type: 'response.created' });
+  emit({ type: 'output_audio_buffer.started' });
+  voice.toggleMute();
+  voice.toggleMute();
+  expect(output.statuses.at(-1)).toBe('speaking');
+  voice.sendText('A typed question');
+  expect(channel.sent.filter((item) => JSON.parse(item).type === 'response.create')).toHaveLength(
+    0,
+  );
+  emit({ type: 'error', error: { code: 'conversation_already_has_active_response' } });
+  expect(voice.connected).toBe(true);
+  emit({ type: 'response.done' });
+  expect(channel.sent.filter((item) => JSON.parse(item).type === 'response.create')).toHaveLength(
+    0,
+  );
+  emit({ type: 'output_audio_buffer.stopped' });
+  expect(channel.sent.filter((item) => JSON.parse(item).type === 'response.create')).toHaveLength(
+    1,
+  );
+  voice.updateContext(context());
+  voice.updateContext(context());
+  const items = channel.sent.map((item) => JSON.parse(item));
+  const contexts = items.filter((item) => item.item?.id?.startsWith('context_'));
+  expect(contexts).toHaveLength(2);
+  expect(items.find((item) => item.type === 'conversation.item.delete')?.item_id).toBe(
+    contexts[0].item.id,
+  );
+  voice.disconnect();
+});
+
 test('voice dispatches validated artifact controls and labels typed turns', async () => {
   globals('navigator', {
     mediaDevices: { getUserMedia: async () => ({ getTracks: () => [track()] }) },
@@ -248,9 +289,11 @@ test('voice stage tools share typed sequencing, reject stale submissions, and re
       }),
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
-    return channel.sent
+    const result = channel.sent
       .map((value) => JSON.parse(value))
       .find((value) => value.item?.call_id === id)?.item.output;
+    channel.onmessage!({ data: JSON.stringify({ type: 'response.done' }) });
+    return result;
   };
   const submit = (id: string, stage: string, text: string, choice?: string) =>
     call(id, 'submit_investigation_response', { stage, text, ...(choice ? { choice } : {}) });

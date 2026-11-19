@@ -28,6 +28,11 @@ export class VoiceSession {
   private abort: AbortController | null = null;
   private generation = 0;
   private muted = false;
+  private speaking = false;
+  private responseActive = false;
+  private responsePending = false;
+  private toolCount = 0;
+  private contextId: string | null = null;
   private calls = new Set<string>();
   private turns = new SpeechTurns((speaking) => this.events.turn?.(speaking));
   constructor(private events: VoiceEvents) {}
@@ -119,19 +124,46 @@ export class VoiceSession {
     if (!this.connected) throw new Error('Voice is not connected.');
     this.channel!.send(JSON.stringify(event));
   }
+  private requestResponse() {
+    this.responsePending = true;
+    if (!this.responseActive && !this.speaking && this.toolCount === 0) {
+      this.responsePending = false;
+      this.responseActive = true;
+      this.send({ type: 'response.create' });
+    }
+  }
   private async onEvent(data: string) {
     const generation = this.generation;
     const event = JSON.parse(data);
     this.turns.event(event.type);
-    if (event.type === 'error')
-      throw new Error(
-        'OpenAI could not complete the voice request. Reconnect or check your account access.',
-      );
+    if (event.type === 'error') {
+      if (event.error?.code === 'conversation_already_has_active_response') {
+        this.responsePending = true;
+      } else {
+        this.events.error('OpenAI could not complete that voice request. Try again or reconnect.');
+      }
+      return;
+    }
+    if (event.type === 'response.created') this.responseActive = true;
+    if (event.type === 'response.done') {
+      this.responseActive = false;
+      if (this.responsePending && this.toolCount === 0) this.requestResponse();
+    }
     if (event.type === 'input_audio_buffer.speech_started')
       this.events.status(this.muted ? 'muted' : 'listening');
-    if (event.type === 'output_audio_buffer.started') this.events.status('speaking');
-    if (event.type === 'output_audio_buffer.stopped')
+    if (event.type === 'output_audio_buffer.started') {
+      this.speaking = true;
+      this.events.status('speaking');
+    }
+    if (
+      event.type === 'output_audio_buffer.stopped' ||
+      event.type === 'output_audio_buffer.cleared'
+    ) {
+      this.speaking = false;
       this.events.status(this.muted ? 'muted' : 'listening');
+      if (this.responsePending && !this.responseActive && this.toolCount === 0)
+        this.requestResponse();
+    }
     if (event.type === 'conversation.item.input_audio_transcription.completed')
       this.events.transcript('user', event.transcript);
     if (event.type === 'response.output_audio_transcript.done')
@@ -139,6 +171,7 @@ export class VoiceSession {
     if (event.type !== 'response.function_call_arguments.done') return;
     if (this.calls.has(event.call_id)) return;
     this.calls.add(event.call_id);
+    this.toolCount++;
     let result: string;
     try {
       if (event.name === 'inspect_activity') {
@@ -209,15 +242,19 @@ export class VoiceSession {
           output: result,
         },
       });
-      this.send({ type: 'response.create' });
+      this.toolCount--;
+      this.requestResponse();
     }
   }
   updateContext(context: TutorContext, presentation?: unknown) {
-    if (this.connected)
+    if (this.connected) {
+      if (this.contextId) this.send({ type: 'conversation.item.delete', item_id: this.contextId });
+      this.contextId = `context_${crypto.randomUUID().replaceAll('-', '')}`;
       this.send({
         type: 'conversation.item.create',
         item: {
           type: 'message',
+          id: this.contextId,
           role: 'user',
           content: [
             {
@@ -227,6 +264,7 @@ export class VoiceSession {
           ],
         },
       });
+    }
   }
   shareImage(image: string, text: string) {
     this.send({
@@ -243,7 +281,7 @@ export class VoiceSession {
         ],
       },
     });
-    this.send({ type: 'response.create' });
+    this.requestResponse();
   }
   sendText(text: string) {
     this.send({
@@ -254,14 +292,14 @@ export class VoiceSession {
         content: [{ type: 'input_text', text: `[Typed chat message] ${text}` }],
       },
     });
-    this.send({ type: 'response.create' });
+    this.requestResponse();
   }
   toggleMute() {
     this.muted = !this.muted;
     this.stream?.getAudioTracks().forEach((track) => {
       track.enabled = !this.muted;
     });
-    this.events.status(this.muted ? 'muted' : 'listening');
+    this.events.status(this.muted ? 'muted' : this.speaking ? 'speaking' : 'listening');
   }
   private fail(message: string) {
     this.disconnect();
@@ -281,6 +319,11 @@ export class VoiceSession {
     this.audio.pause();
     this.audio.srcObject = null;
     this.muted = false;
+    this.speaking = false;
+    this.responseActive = false;
+    this.responsePending = false;
+    this.toolCount = 0;
+    this.contextId = null;
     this.calls.clear();
     this.events.status('off');
   }
