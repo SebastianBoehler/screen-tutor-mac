@@ -3,18 +3,24 @@ import { exampleContent, isCanvasExample, queueExampleId } from './exampleConten
 
 const courseName = 'Modellierung und Simulation';
 
+export function exampleCourse(workspace: Workspace) {
+  return (
+    workspace.courses.find((item) => item.name.trim() === courseName) ?? {
+      id: uid(),
+      name: courseName,
+      goal: 'Understand models and simulation through interactive exploration.',
+      examDate: '',
+    }
+  );
+}
+
 export function openCanvasExample(workspace: Workspace, id = queueExampleId): Workspace {
   const example = exampleContent.find((item) => item.id === id);
   if (!example) throw new Error('This canvas example is not available.');
   const existing = workspace.activities.find((item) => item.id === id);
   if (existing)
     return { ...workspace, selectedCourseId: existing.courseId, selectedActivityId: existing.id };
-  const course = workspace.courses.find((item) => item.name.trim() === courseName) ?? {
-    id: uid(),
-    name: courseName,
-    goal: 'Understand models and simulation through interactive exploration.',
-    examDate: '',
-  };
+  const course = exampleCourse(workspace);
   return {
     ...workspace,
     courses: workspace.courses.some((item) => item.id === course.id)

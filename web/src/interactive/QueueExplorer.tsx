@@ -96,6 +96,7 @@ export function QueueExplorer({
       />
       <div className="parameters">
         <Slider
+          parameter="arrivalRate"
           label="Arrival rate λ (per min)"
           min={0.25}
           max={20}
@@ -104,6 +105,7 @@ export function QueueExplorer({
           onChange={(rate) => changeRates(rate, state.serviceRate)}
         />
         <Slider
+          parameter="serviceRate"
           label="Service rate μ (per min)"
           min={0.25}
           max={20}

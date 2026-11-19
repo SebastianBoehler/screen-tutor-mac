@@ -16,6 +16,7 @@ export function useTutor(
 ) {
   const [busy, setBusy] = useState(false);
   const [receiving, setReceiving] = useState(false);
+  const [background, setBackground] = useState(false);
   const [error, setError] = useState('');
   const [latency, setLatency] = useState<number | null>(null);
   const controller = useRef<AbortController | null>(null);
@@ -27,6 +28,8 @@ export function useTutor(
       assisted?: boolean;
       image?: string;
       mode?: 'learn' | 'exam';
+      inputChannel?: 'chat' | 'voice';
+      presentation?: 'immediate' | 'defer';
     } = {},
   ) {
     if (controller.current) throw new Error('Wait for the current activity, or stop it first.');
@@ -71,6 +74,7 @@ export function useTutor(
     controller.current = abort;
     setError('');
     setBusy(true);
+    setBackground(options.inputChannel === 'voice' && !options.attempt);
     setReceiving(false);
     const started = performance.now();
     try {
@@ -83,6 +87,7 @@ export function useTutor(
         {
           provider: connections.provider,
           context,
+          inputChannel: options.inputChannel ?? 'chat',
           messages,
           image: options.image,
         },
@@ -92,8 +97,13 @@ export function useTutor(
       );
       if (abort.signal.aborted || current.current.selectedCourseId !== courseId)
         return 'The request was stopped.';
+      if (
+        options.presentation === 'defer' &&
+        current.current.selectedActivityId !== snapshot.selectedActivityId
+      )
+        return 'The prepared view was discarded because the learner changed the active activity.';
       update((value) => {
-        const result = applyReply(value, reply, courseId, attemptId);
+        const result = applyReply(value, reply, courseId, attemptId, options.presentation);
         if (reply.activity) result.activities[result.activities.length - 1].mode = context.mode;
         return result;
       });
@@ -110,6 +120,7 @@ export function useTutor(
     } finally {
       controller.current = null;
       setBusy(false);
+      setBackground(false);
       setReceiving(false);
     }
   }
@@ -117,6 +128,7 @@ export function useTutor(
     send,
     busy,
     receiving,
+    background,
     error,
     setError,
     latency,

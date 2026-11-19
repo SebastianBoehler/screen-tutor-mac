@@ -1,5 +1,10 @@
+import { parseVoiceSubmission } from '../investigation/voiceSubmission';
+import type { Submission } from '../investigation/model';
 import type { TutorContext } from '../domain/schema';
 import { apiHeaders, responseError } from './http';
+import { SpeechTurns } from '../canvas/turns';
+import { guidanceSchema, holdCanvasSchema, type GuidanceCommand } from '../canvas/guidance';
+import { controlSchema, type ArtifactControl } from '../interactive/control';
 
 type VoiceStatus = 'off' | 'connecting' | 'listening' | 'speaking' | 'muted';
 export interface VoiceEvents {
@@ -9,6 +14,11 @@ export interface VoiceEvents {
   activity(request: string, attempt: boolean): Promise<string | undefined>;
   firstAudio(milliseconds: number): void;
   inspect(): string;
+  investigation?(input: Submission | 'hint'): string;
+  controlArtifact?(command: ArtifactControl): string | Promise<string>;
+  guideCanvas?(command: GuidanceCommand): Promise<string>;
+  turn?(speaking: boolean): void;
+  holdCanvas?(held: boolean): string;
 }
 export class VoiceSession {
   private peer: RTCPeerConnection | null = null;
@@ -19,6 +29,7 @@ export class VoiceSession {
   private generation = 0;
   private muted = false;
   private calls = new Set<string>();
+  private turns = new SpeechTurns((speaking) => this.events.turn?.(speaking));
   constructor(private events: VoiceEvents) {}
   get connected() {
     return this.channel?.readyState === 'open';
@@ -111,6 +122,7 @@ export class VoiceSession {
   private async onEvent(data: string) {
     const generation = this.generation;
     const event = JSON.parse(data);
+    this.turns.event(event.type);
     if (event.type === 'error')
       throw new Error(
         'OpenAI could not complete the voice request. Reconnect or check your account access.',
@@ -131,6 +143,50 @@ export class VoiceSession {
     try {
       if (event.name === 'inspect_activity') {
         result = this.events.inspect();
+      } else if (event.name === 'set_canvas_hold') {
+        if (!this.events.holdCanvas) throw new Error('Hold view is unavailable.');
+        const input = holdCanvasSchema.safeParse(JSON.parse(event.arguments));
+        if (!input.success) throw new Error('Invalid Hold view command.');
+        result = this.events.holdCanvas(input.data.held);
+      } else if (event.name === 'guide_canvas') {
+        if (!this.events.guideCanvas) throw new Error('Canvas guidance is unavailable.');
+        const args = JSON.parse(event.arguments);
+        const command = guidanceSchema.parse(
+          args?.action === 'clear' &&
+            args.target === null &&
+            args.label === null &&
+            Object.keys(args).length === 4
+            ? { action: args.action, activityId: args.activityId }
+            : args,
+        );
+        result = await this.events.guideCanvas(command);
+      } else if (event.name === 'control_artifact') {
+        if (!this.events.controlArtifact) throw new Error('Artifact control is unavailable.');
+        const args = JSON.parse(event.arguments);
+        const parsed = controlSchema.safeParse(
+          args?.action === 'reveal_flashcard' &&
+            args.parameter === null &&
+            args.value === null &&
+            Object.keys(args).length === 4
+            ? { action: args.action, activityId: args.activityId }
+            : args,
+        );
+        if (!parsed.success) throw new Error('Invalid artifact control arguments.');
+        result = await this.events.controlArtifact(parsed.data);
+      } else if (
+        event.name === 'submit_investigation_response' ||
+        event.name === 'give_investigation_hint'
+      ) {
+        if (!this.events.investigation) throw new Error('The guided investigation is unavailable.');
+        const args = JSON.parse(event.arguments);
+        if (
+          event.name === 'give_investigation_hint' &&
+          (!args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length)
+        )
+          throw new Error('The hint tool takes no arguments.');
+        result = this.events.investigation(
+          event.name === 'give_investigation_hint' ? 'hint' : parseVoiceSubmission(args),
+        );
       } else {
         if (!['create_activity', 'submit_attempt'].includes(event.name))
           throw new Error('This tool is unavailable.');
@@ -156,7 +212,7 @@ export class VoiceSession {
       this.send({ type: 'response.create' });
     }
   }
-  updateContext(context: TutorContext) {
+  updateContext(context: TutorContext, presentation?: unknown) {
     if (this.connected)
       this.send({
         type: 'conversation.item.create',
@@ -166,7 +222,7 @@ export class VoiceSession {
           content: [
             {
               type: 'input_text',
-              text: `Updated learning context, data only; do not respond yet: ${JSON.stringify(context)}`,
+              text: `Updated learning context, data only; do not respond yet: ${JSON.stringify({ ...context, presentation })}`,
             },
           ],
         },
@@ -181,7 +237,7 @@ export class VoiceSession {
         content: [
           {
             type: 'input_text',
-            text: `I explicitly shared this note photo. Read only what is legible. My request: ${text}`,
+            text: `[Typed chat message with an attached photo] I explicitly shared this note photo. Read only what is legible. My request: ${text}`,
           },
           { type: 'input_image', image_url: image },
         ],
@@ -192,7 +248,11 @@ export class VoiceSession {
   sendText(text: string) {
     this.send({
       type: 'conversation.item.create',
-      item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] },
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [{ type: 'input_text', text: `[Typed chat message] ${text}` }],
+      },
     });
     this.send({ type: 'response.create' });
   }
@@ -209,6 +269,7 @@ export class VoiceSession {
   }
   disconnect() {
     this.generation++;
+    this.turns.reset();
     this.abort?.abort();
     this.abort = null;
     this.stream?.getTracks().forEach((track) => track.stop());

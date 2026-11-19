@@ -10,6 +10,7 @@ export function Composer({
   latest,
   image,
   disabled,
+  voiceOnly = false,
   onSend,
   onStop,
   onVoice,
@@ -26,6 +27,7 @@ export function Composer({
   latest?: Message;
   image: string;
   disabled: boolean;
+  voiceOnly?: boolean;
   onSend(text: string): Promise<boolean>;
   onStop(): void;
   onVoice(): void;
@@ -72,10 +74,14 @@ export function Composer({
         <textarea
           id="tutor-message"
           rows={1}
-          placeholder="Ask, think out loud, or show your notes…"
+          placeholder={
+            voiceOnly
+              ? 'Write in the canvas, or connect the live tutor…'
+              : 'Ask, think out loud, or show your notes…'
+          }
           value={text}
           maxLength={6000}
-          disabled={disabled}
+          disabled={disabled || voiceOnly}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -91,7 +97,7 @@ export function Composer({
               className="icon-button"
               aria-label="Open note camera"
               title="Show notes"
-              disabled={disabled || busy}
+              disabled={disabled || voiceOnly || busy}
               onClick={onCamera}
             >
               <Camera size={18} />
@@ -101,7 +107,7 @@ export function Composer({
               className="icon-button"
               aria-label="Attach note photo"
               title="Attach photo"
-              disabled={disabled || busy}
+              disabled={disabled || voiceOnly || busy}
               onClick={() => file.current?.click()}
             >
               <Paperclip size={18} />
@@ -154,7 +160,7 @@ export function Composer({
               type="submit"
               className="send-button"
               aria-label="Send to tutor"
-              disabled={disabled || (!text.trim() && !image)}
+              disabled={disabled || voiceOnly || (!text.trim() && !image)}
             >
               <ArrowUp size={19} />
             </button>

@@ -1,5 +1,7 @@
 import { contextSchema } from '../src/domain/schema';
 import type { ProviderFetch, ServerKeys } from './tutor';
+import { investigationVoicePolicy, investigationVoiceTools } from './investigationVoice';
+import { canvasVoicePolicy, canvasVoiceTool, holdCanvasTool } from './canvasVoice';
 import { teachingPolicy, interactivePolicy } from './policy';
 
 export async function voiceResponse(
@@ -25,7 +27,7 @@ export async function voiceResponse(
     JSON.stringify({
       type: 'realtime',
       model: 'gpt-realtime-2.1',
-      instructions: `${teachingPolicy}\n${interactivePolicy}\nFor voice, speak naturally, not JSON. Use create_activity when a rich activity would help. Use submit_attempt to record and assess an actual learner answer. Voice-supported attempts are conservatively assisted. Before answering about the current plot, parameters, or simulation, call inspect_activity to read its current state. Do not claim to see or run an interactive model without that result.\nUntrusted context: ${JSON.stringify(context.data)}`,
+      instructions: `${teachingPolicy}\n${interactivePolicy}\n${investigationVoicePolicy}\n${canvasVoicePolicy}\nThis is a live voice session. Audio input is spoken; messages marked [Typed chat message] are typed, even while voice is connected. Respond naturally to each channel. Use create_activity when a rich activity would help. Use submit_attempt to record and assess an actual learner answer. Ordinary voice-supported attempts are conservatively assisted; guided investigations use the dedicated assistance policy. Before answering about or controlling an artifact, call inspect_activity. When the learner has answered a flashcard or explicitly asks to reveal it, call control_artifact with reveal_flashcard. Never reveal before an answer or explicit request. When asked to adjust a supported parameter, inspect its current value and use control_artifact with an exact valid value. If the parameter, value, or intended change is unclear, ask; do not claim success when the tool fails. Do not claim to see or run an interactive model without inspection.\nUntrusted context: ${JSON.stringify(context.data)}`,
       output_modalities: ['audio'],
       audio: {
         input: {
@@ -39,6 +41,26 @@ export async function voiceResponse(
         output: { voice: 'marin' },
       },
       tools: [
+        ...investigationVoiceTools,
+        canvasVoiceTool,
+        holdCanvasTool,
+        {
+          type: 'function',
+          name: 'control_artifact',
+          description:
+            'Reveal the selected flashcard after an answer or request, or set a supported formula parameter. Inspect first and use the exact selected activity ID. Supported parameters: linear slope and intercept; exponential rate and time; gradient-descent learningRate; queue arrivalRate and serviceRate (restarts the run). Values must match displayed bounds and increments.',
+          parameters: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: ['reveal_flashcard', 'set_parameter'] },
+              activityId: { type: 'string', maxLength: 120 },
+              parameter: { type: ['string', 'null'] },
+              value: { type: ['number', 'null'] },
+            },
+            required: ['action', 'activityId', 'parameter', 'value'],
+            additionalProperties: false,
+          },
+        },
         {
           type: 'function',
           name: 'inspect_activity',

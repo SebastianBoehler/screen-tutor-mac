@@ -34,6 +34,7 @@ export function ExponentialExplorer({
       />
       <div className="parameters">
         <Slider
+          parameter="rate"
           label={`Arrival rate λ (per ${unit})`}
           min={0.1}
           max={8}
@@ -42,6 +43,7 @@ export function ExponentialExplorer({
           onChange={(rate) => onChange({ ...state, rate })}
         />
         <Slider
+          parameter="time"
           label={`Time t (${unit})`}
           min={0}
           max={10}

@@ -6,6 +6,7 @@ export function applyReply(
   reply: TutorReply,
   courseId: string,
   attemptId?: string,
+  presentation: 'immediate' | 'defer' = 'immediate',
 ): Workspace {
   const attempt = workspace.interactions.find((item) => item.id === attemptId);
   const active = workspace.activities.find((item) => item.id === attempt?.activityId);
@@ -23,10 +24,20 @@ export function applyReply(
         mode: active?.mode ?? ('learn' as const),
       }
     : null;
+  const defer = activity && (presentation === 'defer' || workspace.canvas?.held);
   return {
     ...workspace,
+    ...(defer
+      ? {
+          canvas: {
+            ...workspace.canvas,
+            held: workspace.canvas?.held ?? false,
+            pendingActivityIds: [...(workspace.canvas?.pendingActivityIds ?? []), activity.id],
+          },
+        }
+      : {}),
     activities: activity ? [...workspace.activities, activity] : workspace.activities,
-    selectedActivityId: activity?.id ?? workspace.selectedActivityId,
+    selectedActivityId: !defer && activity ? activity.id : workspace.selectedActivityId,
     messages: [
       ...workspace.messages,
       {

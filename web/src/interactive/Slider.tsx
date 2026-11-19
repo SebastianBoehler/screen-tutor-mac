@@ -8,6 +8,7 @@ export function Slider({
   step,
   onChange,
   disabled = false,
+  parameter,
 }: {
   label: string;
   value: number;
@@ -16,10 +17,11 @@ export function Slider({
   step: number;
   onChange(value: number): void;
   disabled?: boolean;
+  parameter?: string;
 }) {
   const id = useId();
   return (
-    <div className="parameter">
+    <div className="parameter" data-canvas-parameter={parameter}>
       <div className="parameter-label">
         <label htmlFor={id}>{label}</label>
         <output htmlFor={id}>{Number(value.toFixed(3))}</output>

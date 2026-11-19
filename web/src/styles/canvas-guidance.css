@@ -1,0 +1,118 @@
+.canvas-guided {
+  position: relative;
+}
+.canvas-guide {
+  height: 0;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+.canvas-guide.is-ready {
+  height: 52px;
+  margin-bottom: 12px;
+}
+.canvas-cue {
+  position: absolute;
+  z-index: 3;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  pointer-events: none;
+  transition:
+    left 220ms ease,
+    top 220ms ease,
+    width 220ms ease,
+    height 220ms ease;
+}
+.canvas-tutor-pointer {
+  position: absolute;
+  left: -12px;
+  top: -12px;
+  color: var(--accent);
+  stroke: white;
+  filter: drop-shadow(0 1px 2px #26375940);
+  animation: tutor-pointer-arrive 280ms ease-out both;
+}
+.canvas-cue-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  width: 100%;
+  gap: 8px;
+  padding-left: 10px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: var(--text-small);
+  line-height: 1.4;
+  pointer-events: auto;
+  box-shadow: 0 2px 8px #26375918;
+}
+.canvas-cue-label span {
+  overflow-wrap: anywhere;
+}
+.canvas-cue-label button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+}
+.canvas-change {
+  animation: canvas-change 850ms ease-out;
+}
+.canvas-pacing button[aria-pressed='true'] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.canvas-pacing {
+  flex-shrink: 0;
+}
+.canvas-toolbar {
+  flex-wrap: wrap;
+}
+@keyframes tutor-pointer-arrive {
+  from {
+    opacity: 0;
+    transform: translate(-6px, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+@keyframes canvas-change {
+  0%,
+  30% {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+    background-color: var(--accent-soft);
+  }
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .canvas-cue {
+    transition: none;
+  }
+  .canvas-tutor-pointer,
+  .canvas-change {
+    animation: none;
+  }
+}
+:is(.lesson, .investigation-canvas):has(.is-canvas-view) > :is(.canvas-guide, .canvas-cue) {
+  display: block;
+}
+.canvas-guided:has(.is-canvas-view) {
+  flex-direction: column;
+}
+.canvas-guided:has(.is-canvas-view) > .canvas-guide.is-ready {
+  margin-top: 12px;
+  padding-inline: 20px;
+}

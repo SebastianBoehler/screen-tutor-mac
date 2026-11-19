@@ -1,5 +1,6 @@
 import type { Material, Workspace } from './models';
 import type { TutorContext } from './schema';
+import { presentedInvestigation, investigationContext, prompts } from '../investigation/model';
 import { getLiveInteractive, summarizeInteractive } from '../interactive/state';
 
 const terms = (text: string) => [
@@ -43,6 +44,8 @@ export function studyContext(
   const exploration = activity
     ? (getLiveInteractive(activity.id) ?? workspace.interactiveStates[activity.id])
     : undefined;
+  const investigation = investigationContext(workspace);
+  const guided = investigation ? presentedInvestigation(workspace) : undefined;
   return {
     course: course.name,
     goal: course.goal,
@@ -63,10 +66,11 @@ export function studyContext(
           `${item.kind}: ${item.verdict}; assisted=${item.assisted}; ${item.text.slice(0, 160)}`,
       )
       .join('\n'),
-    activity: activity ?? null,
+    activity:
+      activity && guided ? { ...activity, question: prompts[guided.stage] } : (activity ?? null),
     activityId: activity?.id ?? null,
     assisted: events.some((item) => item.assisted || item.kind !== 'attempt'),
     revealed: events.some((item) => item.kind === 'reveal'),
-    exploration: exploration ? summarizeInteractive(exploration) : null,
+    exploration: investigation ?? (exploration ? summarizeInteractive(exploration) : null),
   };
 }

@@ -19,7 +19,7 @@ test('empty canvas opens an offline example and preserves its work across reload
   await expect(page.getByText(/Illustrative example/)).toBeVisible();
   await expect(page.getByText('Assisted practice', { exact: true })).toBeVisible();
   await expect(page.getByRole('slider')).toHaveCount(0);
-  expect((await page.locator('.interactive-artifact').boundingBox())!.height).toBeLessThan(230);
+  expect((await page.locator('.interactive-artifact').boundingBox())!.height).toBeLessThan(240);
   await page.getByRole('button', { name: 'Expand', exact: true }).click();
   const arrival = page.getByRole('slider', { name: 'Arrival rate λ (per min)' });
   await expect(arrival).toHaveValue('4');
@@ -47,7 +47,7 @@ test('empty canvas opens an offline example and preserves its work across reload
   await expect(reasoning).toHaveValue(/Random arrivals/);
   await page.getByRole('button', { name: 'Collapse', exact: true }).click();
   await expect(page.getByRole('slider')).toHaveCount(0);
-  await expect(page.locator('.artifact-preview')).toContainText('Event 1');
+  await expect(page.locator('.preview-server')).toHaveText('Busy');
   await page.getByRole('button', { name: 'Expand', exact: true }).click();
   await expect(arrival).toHaveValue('4.25');
   await expect(page.locator('.model-result')).toContainText('Event 1');
@@ -87,45 +87,60 @@ test('examples demonstrate supported rich displays and keep separate drafts and 
       .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   };
+  const probability = page.getByRole('article', {
+    name: 'How long until the next arrival?',
+    exact: true,
+  });
+  const gradient = page.getByRole('article', { name: 'When does a step overshoot?', exact: true });
+  const math = page.getByRole('article', {
+    name: 'A little more demand, a much longer queue',
+    exact: true,
+  });
   await choose('Probability curve');
-  await expect(page.getByRole('img', { name: 'Exponential survival curve preview' })).toBeVisible();
-  const reasoning = page.getByRole('textbox', { name: 'Your answer or reasoning', exact: true });
+  await expect(
+    probability.getByRole('img', { name: 'Exponential survival curve preview' }),
+  ).toBeVisible();
+  const reasoning = probability.getByRole('textbox', {
+    name: 'Your answer or reasoning',
+    exact: true,
+  });
   await reasoning.fill('More frequent arrivals reduce the chance of a long wait.');
-  await page.getByRole('button', { name: 'Save my reasoning', exact: true }).click();
-  await page.getByRole('button', { name: 'Expand', exact: true }).click();
-  const rate = page.getByRole('slider', { name: 'Arrival rate λ (per min)' });
+  await probability.getByRole('button', { name: 'Save my reasoning', exact: true }).click();
+  await probability.getByRole('button', { name: 'Expand', exact: true }).click();
+  const rate = probability.getByRole('slider', { name: 'Arrival rate λ (per min)' });
   await rate.focus();
   await rate.press('ArrowRight');
   await expect(rate).toHaveValue('2.1');
-  await page.getByRole('button', { name: 'Collapse', exact: true }).click();
+  await probability.getByRole('button', { name: 'Collapse', exact: true }).click();
   await choose('Gradient descent');
-  await expect(page.getByRole('img', { name: 'Quadratic loss curve preview' })).toBeVisible();
-  await page.getByRole('button', { name: 'Expand', exact: true }).click();
-  await page.getByRole('button', { name: 'Take one step', exact: true }).click();
-  await expect(page.locator('.model-actions output')).toContainText('x = 1.600');
-  await page.getByRole('button', { name: 'Collapse', exact: true }).click();
-  await expect(page.locator('.artifact-preview')).toContainText('x = 1.600');
+  await expect(gradient.getByRole('img', { name: 'Quadratic loss curve preview' })).toBeVisible();
+  await gradient.getByRole('button', { name: 'Expand', exact: true }).click();
+  await gradient.getByRole('button', { name: 'Take one step', exact: true }).click();
+  await expect(gradient.locator('.model-actions output')).toContainText('x = 1.600');
+  await gradient.getByRole('button', { name: 'Collapse', exact: true }).click();
+  await expect(gradient.locator('.artifact-preview')).toContainText('x = 1.600');
   await choose('Process diagram');
-  await expect(page.locator('.preview-process')).toContainText('Validation');
-  await page.getByRole('button', { name: 'Expand', exact: true }).click();
-  await expect(page.getByRole('figure', { name: 'Concept mechanism' })).toBeVisible();
-  await expect(page.locator('.mechanism-node')).toHaveCount(3);
+  const diagram = page.getByRole('figure', { name: 'Concept mechanism' });
+  await expect(diagram).toBeVisible();
+  await expect(diagram).toContainText('Compare predictions with observations');
+  await expect(diagram.locator('.mechanism-node')).toHaveCount(3);
+  await expect(diagram.getByRole('button')).toHaveCount(0);
   await choose('Math & table');
-  await expect(page.locator('.katex-display')).toBeVisible();
-  await expect(page.getByRole('table')).toBeVisible();
-  await expect(page.getByRole('row')).toHaveCount(4);
+  await expect(math.locator('.katex-display')).toBeVisible();
+  await expect(math.getByRole('table')).toBeVisible();
+  await expect(math.getByRole('row')).toHaveCount(4);
   await expect(page.locator('details')).toHaveCount(0);
   await page.screenshot({ path: info.outputPath('math-and-table.png'), animations: 'disabled' });
   await choose('Probability curve');
   await expect(reasoning).toHaveValue('More frequent arrivals reduce the chance of a long wait.');
-  await page.getByRole('button', { name: 'Expand', exact: true }).click();
+  await probability.getByRole('button', { name: 'Expand', exact: true }).click();
   await expect(rate).toHaveValue('2.1');
   await page.reload();
   await expect(
     page.getByRole('heading', { name: 'How long until the next arrival?' }),
   ).toBeVisible();
   await expect(reasoning).toHaveValue('More frequent arrivals reduce the chance of a long wait.');
-  await page.getByRole('button', { name: 'Expand', exact: true }).click();
+  await probability.getByRole('button', { name: 'Expand', exact: true }).click();
   await expect(rate).toHaveValue('2.1');
   await page.getByRole('button', { name: 'Queue example', exact: true }).click();
   await expect(

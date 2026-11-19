@@ -3,6 +3,10 @@
   margin-inline: auto;
   padding: 28px 48px 48px;
 }
+.study-document > div + div .lesson:not(:has(.is-canvas-view)) {
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 40px;
+}
 .activity-heading {
   margin-block-end: 20px;
 }
@@ -75,9 +79,13 @@
 .mechanism {
   background: #fff;
   border: 1px solid var(--control-border);
-  padding: 30px;
+  padding: 20px;
   border-radius: 12px;
   margin: 32px 0;
+}
+.mechanism figcaption {
+  font-weight: 550;
+  margin-block-end: 16px;
 }
 .mechanism-node {
   display: flex;

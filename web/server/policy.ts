@@ -34,6 +34,9 @@ export const interactivePolicy = `Interactive canvas models:
   exponential: constant-rate Poisson arrivals; fields rate (0.1..8), time (0..10), unit seconds/minutes;
   gradient-descent: L(x)=x²; fields position (-4..4), learningRate (0.01..1.2);
   queue: single-server FCFS M/M/1; fields arrivalRate and serviceRate (0.25..20 per minute).
+  flashcard: fields front and back, concise recall prompt and answer;
+  fill-blank: fields before, after and answer, a single unambiguous missing term;
+  linear: y = slope × x + intercept; fields slope and intercept (-5..5, increments 0.1).
 - When asked for a supported model, create an activity with its interactive spec; do not just describe controls.
 - Prefer these when the concept depends on varying a parameter or watching events unfold. Use short
   body text and one prediction or transfer question. Do not duplicate a diagram when the interactive

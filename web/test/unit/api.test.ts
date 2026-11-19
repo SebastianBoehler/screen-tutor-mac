@@ -88,7 +88,15 @@ describe('local provider boundary', () => {
       const form = init!.body as FormData;
       expect(form.get('sdp')).toBe('v=0');
       const session = JSON.parse(form.get('session') as string);
-      expect(session.tools.map((tool: { name: string }) => tool.name)).toContain('create_activity');
+      const toolNames = session.tools.map((tool: { name: string }) => tool.name);
+      expect(toolNames).toContain('create_activity');
+      expect(toolNames).toContain('control_artifact');
+      expect(session.instructions).toContain('[Typed chat message]');
+      expect(toolNames).toContain('submit_investigation_response');
+      expect(toolNames).toContain('give_investigation_hint');
+      expect(session.instructions).toContain(
+        'Speech, listening and neutral clarification alone are not assistance',
+      );
       expect(session.audio.input.turn_detection.interrupt_response).toBe(true);
       return new Response('v=0\nanswer');
     });

@@ -39,6 +39,7 @@ export function GradientExplorer({
       />
       <div className="parameters">
         <Slider
+          parameter="learningRate"
           label="Learning rate η"
           min={0.01}
           max={1.2}
@@ -47,6 +48,7 @@ export function GradientExplorer({
           onChange={(learningRate) => onChange({ ...state, learningRate })}
         />
         <Slider
+          parameter="position"
           label="Starting position"
           min={-4}
           max={4}

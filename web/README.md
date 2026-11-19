@@ -14,7 +14,7 @@ Open http://127.0.0.1:5173. An empty canvas opens an illustrative queue example 
 Use **Examples** to try the other supported displays. For the tutor, import a document or write a
 lecture note in your course, and add your provider key in **Connections** before starting a lesson.
 
-- Text and rich activities: OpenAI `gpt-5.4-mini` or OpenRouter `google/gemini-3.5-flash`.
+- Text and rich activities: OpenRouter `google/gemini-3.5-flash` by default, or OpenAI `gpt-5.4-mini`.
 - Live voice: OpenAI `gpt-realtime-2.1`, microphone permission and browser audio playback.
 - Note photos: start the camera, capture a frame, then send it. Attaching a photo also works.
 - OpenRouter requests require providers that support structured output and zero data retention;
@@ -138,3 +138,30 @@ question after a delay. Report hardware, browser, assistance and failures separa
 [learning evaluation contract](../docs/learning-design.md).
 
 Current local evidence and limitations: [validation report](../docs/web-validation.md).
+
+## Guided investigation
+
+Reload the app and choose **Guided investigation** in the canvas toolbar. This separate,
+illustrative queue activity works without an API key:
+
+1. Explain your current view, then save a prediction.
+2. A Web Worker runs the existing M/M/1 engine at arrival rates 4 and 4.75/min,
+   with service 5/min. Both runs start empty, use seed 42 and cover 200 simulated minutes.
+3. Expand the comparison within the canvas. Observations and steady-state theory remain separate.
+4. Revise your explanation, then answer a fresh question about arrivals exceeding capacity.
+
+Responses, stage drafts, job status and results persist in IndexedDB. Workspace versions 1 and 2
+migrate without replacing existing courses, drafts or simulation state. Reopening resumes the same
+activity; cancelled/failed jobs require Retry. Reload resumes a running job deterministically.
+Late results update the owning investigation without changing the selected canvas.
+
+For optional live voice, add an OpenAI key in **Connections**, then choose **Talk to tutor**.
+The existing `gpt-realtime-2.1` session can inspect the current stage, response/draft excerpts and
+real experiment results. Dedicated tools save confirmed learner explanations and record hints.
+The local simulation runs independently of the voice response. No additional model agent is launched.
+Ordinary course-grounded tutoring still requires imported material.
+
+Speaking alone does not mark the fresh answer assisted. A requested hint does. Only the fresh
+**yes/no choice** is checked; its explanation stays ungraded. One correct choice does not establish
+mastery or retention. This bounded workflow does not implement general adaptive sequencing,
+automatic evaluation of explanations, or delayed transfer assessment.

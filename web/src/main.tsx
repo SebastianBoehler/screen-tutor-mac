@@ -19,3 +19,7 @@ createRoot(document.getElementById('root')!).render(
 );
 
 import './styles/interactive.css';
+
+import './styles/investigation.css';
+
+import './styles/canvas-guidance.css';

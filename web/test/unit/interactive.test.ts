@@ -144,7 +144,7 @@ test('version-one workspaces preserve existing activities while gaining interact
     selectedActivityId: 'old-activity',
     drafts: { 'old-activity': 'My existing reasoning' },
   });
-  expect(upgraded.version).toBe(2);
+  expect(upgraded.version).toBe(3);
   expect(upgraded.interactiveStates).toEqual({});
   expect(upgraded.courses).toEqual(old.courses);
   expect(upgraded.activities[0].interactive).toBeNull();

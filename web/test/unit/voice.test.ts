@@ -181,3 +181,102 @@ test('voice inspection returns current model data without generating another act
   expect(output.errors).toHaveLength(0);
   voice.disconnect();
 });
+
+test('voice dispatches validated artifact controls and labels typed turns', async () => {
+  globals('navigator', {
+    mediaDevices: { getUserMedia: async () => ({ getTracks: () => [track()] }) },
+  });
+  const output = events();
+  const commands: unknown[] = [];
+  const voice = new VoiceSession({
+    ...output.callbacks,
+    controlArtifact: (command) => {
+      commands.push(command);
+      return 'changed';
+    },
+  });
+  await voice.connect('test-key', context());
+  const channel = TestPeer.channels[0];
+  voice.sendText('Change the slope');
+  expect(channel.sent[0]).toContain('[Typed chat message]');
+  channel.onmessage!({
+    data: JSON.stringify({
+      type: 'response.function_call_arguments.done',
+      call_id: 'flip',
+      name: 'control_artifact',
+      arguments: JSON.stringify({
+        action: 'reveal_flashcard',
+        activityId: 'a',
+        parameter: null,
+        value: null,
+      }),
+    }),
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(commands).toEqual([{ action: 'reveal_flashcard', activityId: 'a' }]);
+  expect(channel.sent.some((value) => value.includes('changed'))).toBe(true);
+  voice.disconnect();
+});
+
+test('voice stage tools share typed sequencing, reject stale submissions, and record explicit help', async () => {
+  const { openInvestigation, submitInvestigation, giveInvestigationHint, updateExperiment } =
+    await import('../../src/investigation/workspace');
+  const { getInvestigation } = await import('../../src/investigation/model');
+  const { runQueueComparison } = await import('../../src/investigation/experiment');
+  globals('navigator', {
+    mediaDevices: { getUserMedia: async () => ({ getTracks: () => [track()] }) },
+  });
+  let workspace = openInvestigation(emptyWorkspace());
+  const output = events();
+  const voice = new VoiceSession({
+    ...output.callbacks,
+    investigation: (input) => {
+      workspace =
+        input === 'hint' ? giveInvestigationHint(workspace) : submitInvestigation(workspace, input);
+      return JSON.stringify({ stage: getInvestigation(workspace)?.stage });
+    },
+  });
+  await voice.connect('test-key', context());
+  const channel = TestPeer.channels[0];
+  const call = async (id: string, name: string, args: unknown) => {
+    channel.onmessage!({
+      data: JSON.stringify({
+        type: 'response.function_call_arguments.done',
+        call_id: id,
+        name,
+        arguments: JSON.stringify(args),
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return channel.sent
+      .map((value) => JSON.parse(value))
+      .find((value) => value.item?.call_id === id)?.item.output;
+  };
+  const submit = (id: string, stage: string, text: string, choice?: string) =>
+    call(id, 'submit_investigation_response', { stage, text, ...(choice ? { choice } : {}) });
+  await submit('one', 'explain', 'Less than capacity should suffice.');
+  expect(getInvestigation(workspace)?.responses.explain?.medium).toBe('voice');
+  expect(await submit('stale', 'explain', 'Old answer')).toContain('moved on');
+  expect(await submit('invalid', 'predict', '')).toContain('1–1,200');
+  await submit('two', 'predict', 'Closer to capacity means more waiting.');
+  expect(getInvestigation(workspace)?.experiment?.status).toBe('queued');
+  expect(channel.sent.filter((value) => JSON.parse(value).type === 'response.create')).toHaveLength(
+    4,
+  );
+  workspace = updateExperiment(workspace, getInvestigation(workspace)!.experiment!.id, {
+    status: 'ready',
+    result: runQueueComparison(),
+  });
+  await submit('three', 'revise', 'Bursts clear more slowly.');
+  await call('hint', 'give_investigation_hint', {});
+  await submit('four', 'apply', 'Demand exceeds capacity.', 'no');
+  expect(workspace.interactions.at(-1)).toMatchObject({ verdict: 'correct', assisted: true });
+  await submit('four', 'apply', 'Demand exceeds capacity.', 'no');
+  expect(workspace.interactions.filter((item) => item.kind === 'attempt')).toHaveLength(1);
+  const before = channel.sent.length;
+  voice.updateContext(context());
+  expect(channel.sent.slice(before).map((value) => JSON.parse(value).type)).toEqual([
+    'conversation.item.create',
+  ]);
+  voice.disconnect();
+});

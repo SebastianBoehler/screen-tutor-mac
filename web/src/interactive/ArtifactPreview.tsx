@@ -6,9 +6,25 @@ export const artifactTitles = {
   queue: 'Queue simulation',
   exponential: 'Probability curve',
   'gradient-descent': 'Gradient descent',
+  flashcard: 'Flashcard',
+  'fill-blank': 'Fill in the blank',
+  linear: 'Linear function',
 };
 
 export function ArtifactPreview({ state }: { state: InteractiveState }) {
+  if (state.kind === 'flashcard' || state.kind === 'fill-blank' || state.kind === 'linear') {
+    return (
+      <div className="artifact-preview">
+        <p className="muted">
+          {state.kind === 'flashcard'
+            ? 'Recall the answer before turning the card.'
+            : state.kind === 'fill-blank'
+              ? 'Complete the missing term, then check it.'
+              : 'Change the slope and intercept to see how the line moves.'}
+        </p>
+      </div>
+    );
+  }
   if (state.kind === 'queue') {
     const summary = queueSummary(state.simulation, state.arrivalRate, state.serviceRate);
     return (
@@ -23,7 +39,9 @@ export function ArtifactPreview({ state }: { state: InteractiveState }) {
             λ {state.arrivalRate} / min · μ {state.serviceRate} / min
           </p>
           <p className="muted">
-            Event {summary.events} · {summary.inSystem} in system
+            {state.arrivalRate >= state.serviceRate
+              ? 'Arrivals match or exceed service capacity; the queue can keep growing.'
+              : 'Service is faster than arrivals on average; a queue can still form.'}
           </p>
         </div>
       </div>
@@ -55,8 +73,8 @@ export function ArtifactPreview({ state }: { state: InteractiveState }) {
         </p>
         <p className="muted">
           {exponential
-            ? `Arrival rate λ = ${state.rate}`
-            : `Learning rate η = ${state.learningRate} · ${state.trail.length - 1} steps`}
+            ? 'The curve shows the chance of waiting longer than a given time.'
+            : 'Each step follows the slope toward lower loss; large steps can overshoot.'}
         </p>
       </div>
     </div>

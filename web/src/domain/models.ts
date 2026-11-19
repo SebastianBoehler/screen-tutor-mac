@@ -1,4 +1,6 @@
 import type { ActivityContent, Verdict } from './schema';
+import type { Investigation } from '../investigation/model';
+import type { CanvasPacing } from '../canvas/pacing';
 import type { InteractiveState } from '../interactive/state';
 
 export interface Course {
@@ -52,7 +54,7 @@ export interface Settings {
   restEnd: string;
 }
 export interface Workspace {
-  version: 2;
+  version: 3;
   courses: Course[];
   materials: Material[];
   activities: Activity[];
@@ -63,10 +65,12 @@ export interface Workspace {
   selectedActivityId: string | null;
   drafts: Record<string, string>;
   interactiveStates: Record<string, InteractiveState>;
+  investigations: Record<string, Investigation>;
+  canvas?: CanvasPacing;
   settings: Settings;
 }
 export const emptyWorkspace = (): Workspace => ({
-  version: 2,
+  version: 3,
   courses: [],
   materials: [],
   activities: [],
@@ -77,6 +81,7 @@ export const emptyWorkspace = (): Workspace => ({
   selectedActivityId: null,
   drafts: {},
   interactiveStates: {},
+  investigations: {},
   settings: { dailyMinutes: 30, restStart: '22:00', restEnd: '08:00' },
 });
 export const uid = () => crypto.randomUUID();

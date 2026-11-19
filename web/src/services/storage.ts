@@ -22,7 +22,7 @@ export async function loadWorkspace(): Promise<Workspace> {
     const request = tx.objectStore('workspace').get('current');
     request.onsuccess = () => {
       const value = request.result;
-      if (value && value.version !== 1 && value.version !== 2)
+      if (value && value.version !== 1 && value.version !== 2 && value.version !== 3)
         reject(new Error('This workspace version is unsupported. Your data was not modified.'));
       else resolve(value ? migrateWorkspace(value) : emptyWorkspace());
     };

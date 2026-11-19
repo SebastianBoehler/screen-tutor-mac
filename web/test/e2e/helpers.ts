@@ -33,6 +33,7 @@ export async function courseSetup(page: Page) {
   });
   await expect(page.getByText('model-systems.txt', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Open connections', exact: true }).click();
+  await page.getByLabel('Text and activity provider').selectOption('openai');
   await page.getByLabel('OpenAI API key', { exact: true }).fill('test-only-key');
   await page.getByRole('button', { name: 'Use these connections' }).click();
   await navigation(page, 'Study');

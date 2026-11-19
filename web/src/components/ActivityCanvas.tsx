@@ -1,3 +1,4 @@
+import { CanvasGuide } from '../canvas/CanvasGuide';
 import { lazy, Suspense } from 'react';
 import type { Activity, Interaction, Material } from '../domain/models';
 import { isCanvasExample } from '../domain/exampleContent';
@@ -18,6 +19,8 @@ interface Props {
   materials: Material[];
   draft: string;
   busy: boolean;
+  voiceConnected: boolean;
+  active: boolean;
   exploration?: InteractiveState;
   onInteractiveState(value: InteractiveState): void;
   onExplore(): void;
@@ -30,6 +33,8 @@ interface Props {
 }
 export function ActivityCanvas(props: Props) {
   const { activity, interactions, draft, busy } = props;
+  const titleId = `activity-title-${activity.id}`;
+  const reasoningId = `reasoning-${activity.id}`;
   const events = interactions.filter((item) => item.activityId === activity.id);
   const revealed = events.some((item) => item.kind === 'reveal');
   const hinted = events.some((item) => item.kind === 'hint');
@@ -41,12 +46,22 @@ export function ActivityCanvas(props: Props) {
     props.exploration,
     props.onInteractiveState,
     props.onExplore,
+    props.active,
   );
   const canExplore = !exam || assisted;
   return (
-    <article className="lesson" aria-labelledby="activity-title">
+    <article
+      className="lesson canvas-guided"
+      id={`activity-${activity.id}`}
+      aria-labelledby={titleId}
+    >
+      <CanvasGuide
+        activityId={activity.id}
+        active={props.active}
+        voiceConnected={props.voiceConnected}
+      />
       <header className="activity-heading">
-        <h1 id="activity-title">{activity.title}</h1>
+        <h1 id={titleId}>{activity.title}</h1>
         {exam && (
           <span className="mode-label">
             {assisted ? 'Practice exam · assisted' : 'Unaided practice'}
@@ -71,10 +86,17 @@ export function ActivityCanvas(props: Props) {
             <InteractiveArtifact
               spec={activity.interactive}
               state={interactive.state}
+              active={props.active}
+              activityId={activity.id}
+              voiceConnected={props.voiceConnected}
               onChange={interactive.change}
               onCheckpoint={interactive.flush}
             />
           </Suspense>
+        ) : props.voiceConnected ? (
+          <p className="model-note">
+            Answer aloud to the live tutor. The tutor can record your response.
+          </p>
         ) : (
           <button className="secondary exploration-gate" onClick={props.onExplore}>
             Open exploration (assisted)
@@ -102,11 +124,11 @@ export function ActivityCanvas(props: Props) {
           </fieldset>
         ) : (
           <>
-            <label className="sr-only" htmlFor="reasoning">
+            <label className="sr-only" htmlFor={reasoningId}>
               Your answer or reasoning
             </label>
             <textarea
-              id="reasoning"
+              id={reasoningId}
               value={draft}
               onChange={(event) => props.onDraft(event.target.value)}
               disabled={busy || revealed}
@@ -117,20 +139,22 @@ export function ActivityCanvas(props: Props) {
           </>
         )}
         <div className="row wrap between activity-actions">
-          <button
-            className="primary"
-            disabled={busy || revealed || !draft.trim()}
-            onClick={() => {
-              interactive.flush();
-              props.onAttempt();
-            }}
-          >
-            {isCanvasExample(activity.id)
-              ? 'Save my reasoning'
-              : exam
-                ? 'Save my answer'
-                : 'Check my reasoning'}
-          </button>
+          {(!props.voiceConnected || activity.choices.length > 0) && (
+            <button
+              className="primary"
+              disabled={busy || revealed || !draft.trim()}
+              onClick={() => {
+                interactive.flush();
+                props.onAttempt();
+              }}
+            >
+              {isCanvasExample(activity.id)
+                ? 'Save my reasoning'
+                : exam
+                  ? 'Save my answer'
+                  : 'Check my reasoning'}
+            </button>
+          )}
           {!revealed && (
             <div className="row wrap">
               <button className="text-button" disabled={busy} onClick={props.onHint}>

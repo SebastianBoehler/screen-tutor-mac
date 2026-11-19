@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useInvestigation } from '../investigation/useInvestigation';
+import { isInvestigation } from '../investigation/model';
 import type { InteractiveState } from '../interactive/state';
 import { now, uid, type Course } from '../domain/models';
 import { studyContext } from '../domain/retrieval';
@@ -11,6 +13,8 @@ import { isCanvasExample } from '../domain/exampleContent';
 import { useWorkspace } from './useWorkspace';
 import { useTutor, type Connections } from './useTutor';
 import { VoiceSession, type VoiceStatus } from './voice';
+import { canvasPresentation, canvasVoiceEvents } from '../canvas/voiceEvents';
+import { useCanvasPacing } from '../canvas/useCanvasPacing';
 
 export type Page = 'study' | 'materials' | 'plan' | 'memory';
 export function useLearning() {
@@ -22,8 +26,17 @@ export function useLearning() {
     if (value !== current.current) update(() => value);
   }, [store.ready, current, update]);
   const [page, setPage] = useState<Page>('study');
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('off');
+  const liveVoice = !['off', 'connecting'].includes(voiceStatus);
+  const investigation = useInvestigation(workspace, current, update, store.ready, liveVoice);
+  const canvasPacing = useCanvasPacing(
+    workspace,
+    current,
+    update,
+    store.ready && page === 'study' && liveVoice,
+  );
   const [connections, setConnections] = useState<Connections>({
-    provider: 'openai',
+    provider: 'openrouter',
     openaiKey: '',
     openrouterKey: '',
   });
@@ -32,7 +45,6 @@ export function useLearning() {
     openrouter: false,
   });
   const [error, setError] = useState('');
-  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('off');
   const [firstAudio, setFirstAudio] = useState<number | null>(null);
   const tutor = useTutor(current, update, connections);
   const sendRef = useRef(tutor.send);
@@ -43,17 +55,6 @@ export function useLearning() {
         status: setVoiceStatus,
         error: setError,
         firstAudio: setFirstAudio,
-        inspect: () => {
-          const value = current.current;
-          const active = value.activities.find((item) => item.id === value.selectedActivityId);
-          const context = studyContext(value, active?.concept ?? '', active?.mode ?? 'learn');
-          return JSON.stringify({
-            activity: active?.title,
-            question: active?.question,
-            exploration: context.exploration ? JSON.parse(context.exploration) : null,
-            assisted: context.assisted,
-          });
-        },
         transcript: (role, content) => {
           if (!content?.trim()) return;
           const courseId = current.current.selectedCourseId;
@@ -66,7 +67,14 @@ export function useLearning() {
               ],
             }));
         },
-        activity: (request, attempt) => sendRef.current(request, { attempt, assisted: true }),
+        ...canvasVoiceEvents({
+          current,
+          hold: canvasPacing.hold,
+          send: sendRef,
+          investigation: investigation.voice,
+          turn: canvasPacing.turn,
+          error: setError,
+        }),
       }),
   );
   useEffect(() => {
@@ -91,9 +99,18 @@ export function useLearning() {
     if (voice.connected && current.current.selectedCourseId) {
       voice.updateContext(
         studyContext(current.current, activity?.concept ?? '', activity?.mode ?? 'learn'),
+        canvasPresentation(workspace),
       );
     }
-  }, [voice, current, activity?.id, workspace.interactions.length]);
+  }, [
+    voice,
+    current,
+    activity?.id,
+    workspace.interactions.length,
+    workspace.investigations,
+    workspace.canvas,
+    workspace.activities.length,
+  ]);
   const run = (text: string, options?: Parameters<typeof tutor.send>[1]) => {
     setError('');
     return tutor.send(text, options).catch((error) => {
@@ -132,10 +149,13 @@ export function useLearning() {
     setError('');
     tutor.setError('');
   }
-  function checkReasoning() {
-    if (activity && isCanvasExample(activity.id)) update(saveExampleReasoning);
+  function checkReasoning(id = activity?.id) {
+    if (!id) return;
+    if (current.current.selectedActivityId !== id)
+      update((value) => ({ ...value, selectedActivityId: id }));
+    if (isCanvasExample(id)) update(saveExampleReasoning);
     else
-      void run(`My attempt: ${current.current.drafts[activity?.id ?? ''] ?? ''}`, {
+      void run(`My attempt: ${current.current.drafts[id] ?? ''}`, {
         attempt: true,
         assisted: voice.connected,
       });
@@ -162,10 +182,13 @@ export function useLearning() {
     }));
     setPage('materials');
   }
-  function event(kind: 'hint' | 'reveal' | 'explore') {
-    if (!activity || !course) return;
+  function event(kind: 'hint' | 'reveal' | 'explore', id = activity?.id) {
+    const target = current.current.activities.find((item) => item.id === id);
+    if (!target) return;
     if (
-      workspace.interactions.some((item) => item.activityId === activity.id && item.kind === kind)
+      current.current.interactions.some(
+        (item) => item.activityId === target.id && item.kind === kind,
+      )
     )
       return;
     update((value) => ({
@@ -174,8 +197,8 @@ export function useLearning() {
         ...value.interactions,
         {
           id: uid(),
-          courseId: course.id,
-          activityId: activity.id,
+          courseId: target.courseId,
+          activityId: target.id,
           at: now(),
           kind,
           text:
@@ -209,7 +232,7 @@ export function useLearning() {
     setError('');
     try {
       const context = studyContext(current.current, course?.goal ?? '', activity?.mode ?? 'learn');
-      if (!context.sources.length)
+      if (!context.sources.length && !isInvestigation(current.current.selectedActivityId))
         throw new Error('Add course material or a lecture note before connecting the tutor.');
       await voice.connect(connections.openaiKey, context);
     } catch (error) {
@@ -218,6 +241,7 @@ export function useLearning() {
   }
   return {
     ...store,
+    canvasPacing,
     page,
     setPage,
     course,
@@ -237,7 +261,34 @@ export function useLearning() {
     tutor,
     run,
     selectCourse,
+    selectActivity: (id: string) => {
+      if (isInvestigation(id)) investigation.open();
+      else
+        update((value) => ({
+          ...value,
+          selectedActivityId: id,
+          ...(value.canvas
+            ? {
+                canvas: {
+                  ...value.canvas,
+                  pendingActivityIds: value.canvas.pendingActivityIds.filter(
+                    (pending) => pending !== id,
+                  ),
+                },
+              }
+            : {}),
+        }));
+      setPage('study');
+    },
     openExample,
+    investigation,
+    openInvestigation: () => {
+      voice.disconnect();
+      investigation.open();
+      setPage('study');
+      setError('');
+      tutor.setError('');
+    },
     checkReasoning,
     saveExploration,
     sendMessage,

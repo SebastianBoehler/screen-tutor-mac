@@ -68,6 +68,7 @@ export const contextSchema = z.object({
 });
 export type TutorContext = z.infer<typeof contextSchema>;
 export const tutorRequestSchema = z.object({
+  inputChannel: z.enum(['chat', 'voice']).optional(),
   provider: z.enum(['openai', 'openrouter']),
   context: contextSchema,
   messages: z

@@ -5,7 +5,8 @@ import { exportWorkspace } from './services/storage';
 import { WorkspaceHeader, ErrorBanner } from './components/WorkspaceHeader';
 import { Sidebar } from './components/Sidebar';
 import { EmptyCanvas } from './components/EmptyCanvas';
-import { ActivityCanvas } from './components/ActivityCanvas';
+import { CanvasPacingControl } from './canvas/CanvasPacingControl';
+import { StudyCanvas } from './components/StudyCanvas';
 import { ExamplePicker } from './components/ExamplePicker';
 import { Composer } from './components/Composer';
 import { CourseForm } from './components/CourseForm';
@@ -44,7 +45,6 @@ export default function App() {
   const [source, setSource] = useState<{ id: string; page: number } | null>(null);
   const materials = workspace.materials.filter((item) => item.courseId === course?.id);
   const messages = workspace.messages.filter((item) => item.courseId === course?.id);
-  const draft = activity ? (workspace.drafts[activity.id] ?? '') : '';
   const showSource = (id: string, page: number) => setSource({ id, page });
   const selectedSource = workspace.materials.find((item) => item.id === source?.id);
   const start = (exam = false) => {
@@ -89,8 +89,10 @@ export default function App() {
           app.selectCourse(id);
         }}
         onActivity={(id) => {
-          update((value) => ({ ...value, selectedActivityId: id }));
-          app.setPage('study');
+          app.selectActivity(id);
+          requestAnimationFrame(() =>
+            document.getElementById(`activity-${id}`)?.scrollIntoView({ block: 'start' }),
+          );
         }}
         onNew={() => {
           if (!app.tutor.busy) {
@@ -147,6 +149,11 @@ export default function App() {
             ) : (
               <>
                 <div className="canvas-toolbar">
+                  <CanvasPacingControl
+                    pacing={app.canvasPacing}
+                    preparing={app.tutor.background}
+                    onStop={app.tutor.stop}
+                  />
                   <div className="row wrap">
                     <button
                       className="text-button"
@@ -154,6 +161,13 @@ export default function App() {
                       onClick={() => app.openExample()}
                     >
                       Queue example
+                    </button>
+                    <button
+                      className="text-button"
+                      disabled={app.tutor.busy}
+                      onClick={app.openInvestigation}
+                    >
+                      Guided investigation
                     </button>
                     <ExamplePicker disabled={app.tutor.busy} onOpen={app.openExample} />
                     {course && materials.length > 0 && (
@@ -177,33 +191,12 @@ export default function App() {
                   </div>
                 </div>
                 {activity ? (
-                  <ActivityCanvas
-                    key={activity.id}
-                    activity={activity}
-                    interactions={workspace.interactions}
-                    materials={materials}
-                    draft={draft}
-                    busy={app.tutor.busy}
-                    exploration={workspace.interactiveStates[activity.id]}
-                    onInteractiveState={(state) => app.saveExploration(activity.id, state)}
-                    onExplore={() => app.event('explore')}
-                    onDraft={(text) =>
-                      update((value) => ({
-                        ...value,
-                        drafts: { ...value.drafts, [activity.id]: text },
-                      }))
-                    }
-                    onAttempt={app.checkReasoning}
-                    onHint={() => app.event('hint')}
-                    onReveal={() => app.event('reveal')}
-                    onNext={next}
-                    onSource={showSource}
-                  />
+                  <StudyCanvas app={app} onNext={next} onSource={showSource} />
                 ) : (
                   <EmptyCanvas
                     course={course}
                     hasMaterial={materials.length > 0}
-                    busy={app.tutor.busy}
+                    busy={app.tutor.busy && !app.tutor.background}
                     onNew={() => setNewCourse(true)}
                     onMaterials={() => app.setPage('materials')}
                     onStart={() => start()}
@@ -223,12 +216,13 @@ export default function App() {
         </main>
         {app.page === 'study' && (
           <Composer
-            busy={app.tutor.busy}
+            busy={app.tutor.busy && !app.tutor.background}
             receiving={app.tutor.receiving}
             status={app.voiceStatus}
             latest={messages.filter((item) => item.role === 'assistant').at(-1)}
             image={image}
-            disabled={!course || !materials.length}
+            disabled={!course || (!materials.length && !app.investigation.active)}
+            voiceOnly={app.investigation.active && !app.voice.connected}
             onSend={async (text) => {
               const sent = image;
               const delivered = await app.sendMessage(text, sent || undefined);

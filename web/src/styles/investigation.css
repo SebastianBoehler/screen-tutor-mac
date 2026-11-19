@@ -1,0 +1,122 @@
+.investigation-canvas {
+  width: min(100%, 880px);
+  margin: 0 auto;
+  padding: 28px 48px 48px;
+  display: grid;
+  gap: 24px;
+}
+.investigation-canvas header {
+  display: grid;
+  gap: 12px;
+}
+.investigation-canvas h1 {
+  font-size: clamp(28px, 3vw, 38px);
+}
+.investigation-canvas h1:focus {
+  outline: none;
+}
+.investigation-plan,
+.investigation-voice {
+  font-size: var(--text-small);
+  max-width: 68ch;
+}
+.investigation-question {
+  display: grid;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.investigation-question form,
+.investigation-job,
+.investigation-complete {
+  display: grid;
+  gap: 16px;
+}
+.investigation-question textarea {
+  resize: vertical;
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--surface);
+  line-height: 1.6;
+}
+.investigation-question textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.investigation-question fieldset {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+.investigation-question fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-right: 24px;
+}
+.investigation-question input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+.investigation-canvas blockquote {
+  margin: 0;
+  padding: 12px 16px;
+  border-left: 3px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.investigation-canvas blockquote p {
+  white-space: pre-wrap;
+}
+.investigation-preview {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.investigation-preview .row {
+  gap: 24px;
+}
+.investigation-table {
+  overflow-x: auto;
+}
+.investigation-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.investigation-table caption {
+  text-align: left;
+  padding: 12px 0;
+}
+.investigation-table th,
+.investigation-table td {
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+}
+@media (max-width: 760px) {
+  .investigation-canvas {
+    padding: 24px 20px 40px;
+    gap: 20px;
+  }
+  .investigation-question .primary {
+    width: 100%;
+  }
+}
+.investigation-canvas:has(.is-canvas-view) > :not(.interactive-artifact) {
+  display: none;
+}
+.investigation-canvas:has(.is-canvas-view) {
+  width: 100%;
+  padding: 0;
+}
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  .investigation-canvas {
+    padding-inline: 28px;
+  }
+}

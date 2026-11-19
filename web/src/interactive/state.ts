@@ -3,6 +3,9 @@ import { createQueue, queueSummary, type QueueState } from './queueEngine';
 import { loss, survivalProbability } from './mathematics';
 
 export type InteractiveState =
+  | { kind: 'flashcard'; revealed: boolean; explored: boolean }
+  | { kind: 'fill-blank'; response: string; checked: boolean; explored: boolean }
+  | { kind: 'linear'; slope: number; intercept: number; explored: boolean }
   | { kind: 'exponential'; rate: number; time: number; explored: boolean }
   | {
       kind: 'gradient-descent';
@@ -21,6 +24,12 @@ export type InteractiveState =
 
 export function initialInteractiveState(spec: InteractiveSpec): InteractiveState {
   switch (spec.kind) {
+    case 'flashcard':
+      return { kind: spec.kind, revealed: false, explored: false };
+    case 'fill-blank':
+      return { kind: spec.kind, response: '', checked: false, explored: false };
+    case 'linear':
+      return { kind: spec.kind, slope: spec.slope, intercept: spec.intercept, explored: false };
     case 'exponential':
       return { kind: spec.kind, rate: spec.rate, time: spec.time, explored: false };
     case 'gradient-descent':
@@ -49,6 +58,21 @@ export const clearLiveInteractive = (id: string) => liveStates.delete(id);
 export const getLiveInteractive = (id: string) => liveStates.get(id);
 export function summarizeInteractive(state: InteractiveState): string {
   switch (state.kind) {
+    case 'flashcard':
+      return JSON.stringify({ model: state.kind, revealed: state.revealed });
+    case 'fill-blank':
+      return JSON.stringify({
+        model: state.kind,
+        response: state.response.slice(0, 120),
+        checked: state.checked,
+      });
+    case 'linear':
+      return JSON.stringify({
+        model: state.kind,
+        slope: state.slope,
+        intercept: state.intercept,
+        explored: state.explored,
+      });
     case 'exponential':
       return JSON.stringify({
         model: state.kind,
