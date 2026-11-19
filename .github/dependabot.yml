@@ -6,3 +6,9 @@ updates:
       interval: monthly
     labels:
       - dependencies
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies

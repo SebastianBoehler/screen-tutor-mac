@@ -1,0 +1,121 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  height: 100dvh;
+  min-height: 320px;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--sidebar);
+  padding: 20px 14px 14px;
+  border-inline-end: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 28px;
+  letter-spacing: -0.025em;
+  font-size: 17px;
+}
+.brand > svg {
+  color: #515c45;
+}
+.destinations,
+.course-nav,
+.activity-nav {
+  display: grid;
+  gap: 3px;
+}
+.sidebar nav button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: transparent;
+  border: 0;
+  text-align: start;
+  border-radius: 7px;
+  min-height: 44px;
+  padding: 9px 12px;
+  font-size: var(--text-small);
+  color: #65695e;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sidebar nav button:hover:not(:disabled) {
+  background: #e8ebe3;
+}
+.sidebar nav button.active {
+  background: #e5e9df;
+  color: #30382a;
+  font-weight: 550;
+}
+.sidebar-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #69715f;
+  margin: 26px 10px 10px;
+}
+.sidebar-label.row {
+  margin-block: 16px 2px;
+}
+.sidebar-label .icon-button {
+  margin-inline-end: -10px;
+}
+.course-dot {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid #9ba58d;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.course-nav .active .course-dot {
+  border-color: #566448;
+  background: #566448;
+}
+.sidebar .activity-nav button {
+  font-size: var(--text-small);
+  line-height: 1.45;
+  padding-inline-start: 14px;
+}
+.sidebar-empty {
+  font-size: var(--text-small);
+  color: #69715f;
+  margin: 0 12px;
+}
+.sidebar-bottom {
+  margin-block-start: auto;
+  padding: 36px 10px 0;
+  display: grid;
+  gap: 12px;
+}
+.local-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #69715f;
+  font-size: var(--text-small);
+}
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8a9879;
+}
+.settings-link {
+  border: 0;
+  background: transparent;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  text-align: start;
+  color: #666d5e;
+  font-size: var(--text-small);
+  padding: 0;
+}

@@ -1,0 +1,55 @@
+.empty-canvas {
+  padding: clamp(40px, 7dvh, 90px) 48px 40px;
+  max-width: 850px;
+  margin-inline: auto;
+}
+.empty-mark {
+  color: #6e7a60;
+  margin-block-end: 24px;
+}
+.empty-canvas > .eyebrow {
+  display: block;
+  margin-block-end: 18px;
+}
+.empty-canvas h1 {
+  font-size: clamp(34px, 4.2vw, 52px);
+  white-space: pre-line;
+  line-height: 1.12;
+}
+.empty-description {
+  max-width: 46ch;
+  font-size: var(--text-body);
+  line-height: 1.8;
+  color: var(--muted);
+  margin-block: 24px 28px;
+}
+.empty-principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--muted);
+  margin-block-start: 48px;
+}
+.empty-principles span {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.empty-principles svg {
+  flex-shrink: 0;
+  margin-block-start: 4px;
+}
+.session-start {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+.session-start > label {
+  font-size: var(--text-small);
+  font-weight: 500;
+}
+.session-start button {
+  justify-self: start;
+}
